@@ -12,7 +12,13 @@
   flex: 1;
   opacity: 1;
   padding: 20px;
-  text-align: center;
+}
+
+.right-module h1,
+.right-module ul,
+.right-module li,
+.right-module p {
+  opacity: 1;
 }
 
 .right-module img {
