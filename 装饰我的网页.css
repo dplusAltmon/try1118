@@ -10,17 +10,17 @@
 
 .right-module {
   flex: 1;
-  opacity: 1; 
-  padding: 20px;
-}
-
-.right-module h2,
-.right-module p,
-.right-module b {
   opacity: 1;
+  padding: 20px;
+  text-align: center;
 }
 
 .right-module img {
+  display: block;
+  margin: 20px auto;
+}
+
+.video-frame {
   display: block;
   margin: 20px auto;
 }
