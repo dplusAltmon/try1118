@@ -1,34 +1,34 @@
-/* 整体容器样式 */
 .container {
   display: flex;
 }
 
-/* 左边模块样式 */
 .left-module {
   width: 200px;
   background-color: #B7C88E;
   padding: 20px;
 }
 
-/* 右边模块样式 */
 .right-module {
   flex: 1;
   background-image: url('https://github.com/dplusAltmon/try1118/blob/main/BG.png');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  background-attachment: fixed; 
   opacity: 0.2;
   padding: 20px;
+  position: relative; 
+  z-index: 0; 
 }
 
-/* 右边模块文字样式，确保文字不透明度100% */
 .right-module h2,
 .right-module p,
 .right-module b {
   opacity: 1;
+  position: relative; 
+  z-index: 1; 
 }
 
-/* 让图片在右边模块里合理显示 */
 .right-module img {
   display: block;
   margin: 20px auto;
