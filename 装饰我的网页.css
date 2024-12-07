@@ -12,6 +12,7 @@
   flex: 1;
   opacity: 1;
   padding: 20px;
+  text-align: center; /* 添加此行，让模块内元素水平居中对齐 */
 }
 
 .right-module h1,
