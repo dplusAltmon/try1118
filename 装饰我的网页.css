@@ -1,19 +1,17 @@
-/* 整体容器样式 */
 .container {
   display: flex;
 }
 
-/* 左边模块样式 */
 .left-module {
   width: 200px;
-  background-color: #98FB98; /* 牛油果浅绿色 */
+  background-color: #B7C88E; 
   padding: 20px;
 }
 
 /* 右边模块样式 */
 .right-module {
   flex: 1;
-  background-image: url('一.jpg'); /* 这里使用与HTML中配图相同的文件名，确保在同一目录下能正确引用 */
+  background-image: url('BG.png'); /* 这里使用与HTML中配图相同的文件名，确保在同一目录下能正确引用 */
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
