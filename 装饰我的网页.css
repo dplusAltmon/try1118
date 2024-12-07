@@ -13,7 +13,7 @@
 /* 右边模块样式 */
 .right-module {
   flex: 1;
-  background-image: url('forest.jpg'); /* 这里替换为你实际的绿色森林图片路径 */
+  background-image: url('一.jpg'); /* 这里使用与HTML中配图相同的文件名，确保在同一目录下能正确引用 */
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
