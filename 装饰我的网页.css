@@ -1,22 +1,31 @@
+/* 整体容器样式 */
 .container {
   display: flex;
 }
 
+/* 左边模块样式 */
 .left-module {
   width: 200px;
-  background-color: #B7C88E; 
+  background-color: #B7C88E;
   padding: 20px;
 }
 
 /* 右边模块样式 */
 .right-module {
   flex: 1;
-  background-image: url('BG.png'); /* 这里使用与HTML中配图相同的文件名，确保在同一目录下能正确引用 */
+  background-image: url('https://github.com/dplusAltmon/try1118/blob/main/BG.png');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
   opacity: 0.2;
   padding: 20px;
+}
+
+/* 右边模块文字样式，确保文字不透明度100% */
+.right-module h2,
+.right-module p,
+.right-module b {
+  opacity: 1;
 }
 
 /* 让图片在右边模块里合理显示 */
