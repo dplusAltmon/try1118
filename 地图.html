@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>2024年中国人口地图</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+    <style>
+        #main {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main"></div>
+    <script>
+        // 初始化图表
+        var myChart = echarts.init(document.getElementById('main'));
+
+        // 数据
+        var populationData = [
+            {name: '北京', value: 22000000},
+            {name: '天津', value: 15600000},
+            {name: '河北', value: 75000000},
+            {name: '山西', value: 37000000},
+            {name: '内蒙古', value: 24000000},
+            {name: '辽宁', value: 43000000},
+            {name: '吉林', value: 27000000},
+            {name: '黑龙江', value: 31000000},
+            {name: '上海', value: 24000000},
+            {name: '江苏', value: 80000000},
+            {name: '浙江', value: 60000000},
+            {name: '安徽', value: 56000000},
+            {name: '福建', value: 39000000},
+            {name: '江西', value: 45000000},
+            {name: '山东', value: 100000000},
+            {name: '河南', value: 96000000},
+            {name: '湖北', value: 59000000},
+            {name: '湖南', value: 66000000},
+            {name: '广东', value: 113000000},
+            {name: '广西', value: 49000000},
+            {name: '海南', value: 10000000},
+            {name: '重庆', value: 34000000},
+            {name: '四川', value: 83000000},
+            {name: '贵州', value: 36000000},
+            {name: '云南', value: 48000000},
+            {name: '西藏', value: 3500000},
+            {name: '陕西', value: 39000000},
+            {name: '甘肃', value: 26000000},
+            {name: '青海', value: 6000000},
+            {name: '宁夏', value: 7000000},
+            {name: '新疆', value: 25000000},
+            {name: '台湾', value: 23600000} // 添加台湾地区的人口数据
+        ];
+
+        // 配置项
+        var option = {
+            title: {
+                text: '2024年中国人口地图',
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    return params.name + ': ' + params.value + ' 人';
+                }
+            },
+            visualMap: {
+                min: 0,
+                max: 113000000,
+                left: 'left',
+                top: 'bottom',
+                text: ['高', '低'],           // 文本，默认为数值文本
+                calculable: true
+            },
+            series: [
+                {
+                    name: '中国地图',
+                    type: 'map',
+                    mapType: 'china',
+                    roam: true, // 是否开启鼠标缩放和平移漫游
+                    label: {
+                        show: true
+                    },
+                    data: populationData
+                }
+            ]
+        };
+
+        // 使用配置项和数据显示图表
+        myChart.setOption(option);
+    </script>
+</body>
+</html>
