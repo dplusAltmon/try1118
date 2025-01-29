@@ -2,7 +2,7 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 3;
+    padding: 0;
     background-color: #f4f4f4;
 }
 
@@ -11,7 +11,7 @@ h1 {
     font-family: 'Brush Script MT', cursive;
     font-style: italic;
     text-align: center;
-    font-size: 2em;
+    font-size: 3em;
     color: #333;
     margin: 20px 0;
 }
@@ -21,13 +21,13 @@ h1 {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 30px;
+    gap: 20px;
     padding: 20px;
 }
 
 /* 数据统计图片样式 */
 .statistic-images img {
-    max-width: 60%;
+    max-width: 100%;
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -37,24 +37,19 @@ h1 {
 .interactive-section {
     text-align: center;
     margin: 20px;
-    position: relative; /* 设置为相对定位，作为子元素定位的参考 */
 }
 
 /* 交互区域标题样式 */
 .interactive-section h2 {
     font-weight: bold;
     cursor: pointer;
-    position: absolute; /* 绝对定位 */
-    top: 50%; /* 垂直居中 */
-    left: 50%; /* 水平居中 */
-    transform: translate(-50%, -50%); /* 修正偏移 */
-    z-index: 1; /* 确保文字在图片之上 */
-    color: white; /* 文字颜色，可根据需要调整 */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 添加文字阴影，增强可读性 */
+    font-size: 2.5em; /* 增大字体大小 */
+    color: #FF5733; /* 更改字体颜色，使其更显眼 */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 添加文字阴影，增强立体感 */
 }
 
 #riize-section h2 {
-    color: black;
+    color: #FF5733;
 }
 
 #smtr25-section h2 {
@@ -64,12 +59,11 @@ h1 {
 
 /* 交互区域图片样式 */
 .interactive-section img {
-    max-width: 30%;
+    max-width: 100%;
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
-    display: block; /* 确保图片为块级元素 */
 }
 
 /* 视频模态框样式 */
