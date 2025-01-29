@@ -4,6 +4,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: #f4f4f4;
+    text-align: center; /* 全局文字居中 */
 }
 
 /* 网页标题样式 */
@@ -31,6 +32,8 @@ h1 {
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block; /* 图片居中 */
+    margin: 0 auto;
 }
 
 /* 交互区域样式 */
@@ -43,6 +46,7 @@ h1 {
 .interactive-section h2 {
     font-weight: bold;
     cursor: pointer;
+    margin-bottom: 10px; /* 增加底部间距 */
 }
 
 #riize-section h2 {
@@ -61,6 +65,8 @@ h1 {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
+    display: block; /* 图片居中 */
+    margin: 0 auto;
 }
 
 /* 视频模态框样式 */
@@ -74,3 +80,10 @@ h1 {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* 视频模态框中的视频居中 */
+.video-modal video {
+    display: block;
+    margin: 0 auto;
+}
