@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SM新男团SHOWTIME</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- 网页标题 -->
+    <h1>SM新男团SHOWTIME</h1>
+
+    <!-- 四张数据统计图片 -->
+    <div class="statistic-images">
+        <img src="statistic1.png" alt="数据展示图片1">
+        <img src="statistic2.png" alt="数据展示图片2">
+        <img src="statistic3.png" alt="数据展示图片3">
+        <img src="statistic4.png" alt="数据展示图片4">
+    </div>
+
+    <!-- RIIZE 交互区域 -->
+    <div class="interactive-section" id="riize-section">
+        <h2 onclick="openVideo('riize-video')">RIIZE</h2>
+        <img src="riize_bg.png" alt="RIIZE 背景图" onclick="openVideo('riize-video')">
+        <p>这里是 RIIZE 的文字介绍。</p>
+        <!-- 视频模态框 -->
+        <div class="video-modal" id="riize-video">
+            <span class="close" onclick="closeVideo('riize-video')">&times;</span>
+            <video width="800" height="600" controls>
+                <source src="riize_video.mp4" type="video/mp4">
+                您的浏览器不支持视频播放。
+            </video>
+        </div>
+    </div>
+
+    <!-- SMTR25 交互区域 -->
+    <div class="interactive-section" id="smtr25-section">
+        <h2 onclick="openVideo('smtr25-video')">SMTR25</h2>
+        <img src="smtr25_bg.png" alt="SMTR25 背景图" onclick="openVideo('smtr25-video')">
+        <p>这里是 SMTR25 的文字介绍。</p>
+        <!-- 视频模态框 -->
+        <div class="video-modal" id="smtr25-video">
+            <span class="close" onclick="closeVideo('smtr25-video')">&times;</span>
+            <video width="800" height="600" controls>
+                <source src="smtr25_video.mp4" type="video/mp4">
+                您的浏览器不支持视频播放。
+            </video>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
