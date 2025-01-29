@@ -2,7 +2,7 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 0;
+    padding: 3;
     background-color: #f4f4f4;
 }
 
@@ -11,7 +11,7 @@ h1 {
     font-family: 'Brush Script MT', cursive;
     font-style: italic;
     text-align: center;
-    font-size: 3em;
+    font-size: 2em;
     color: #333;
     margin: 20px 0;
 }
@@ -21,13 +21,13 @@ h1 {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 20px;
+    gap: 30px;
     padding: 20px;
 }
 
 /* 数据统计图片样式 */
 .statistic-images img {
-    max-width: 100%;
+    max-width: 60%;
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -64,7 +64,7 @@ h1 {
 
 /* 交互区域图片样式 */
 .interactive-section img {
-    max-width: 100%;
+    max-width: 30%;
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
