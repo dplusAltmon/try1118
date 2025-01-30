@@ -3,7 +3,8 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    /* 烟花状浅蓝渐变背景 */
+    background: radial-gradient(circle, #e0f7fa 0%, #b2ebf2 100%);
 }
 
 /* 网页标题样式 */
@@ -43,18 +44,23 @@ h1 {
 .interactive-section h2 {
     font-weight: bold;
     cursor: pointer;
-    font-size: 2.5em; /* 增大字体大小 */
-    color: #FF5733; /* 更改字体颜色，使其更显眼 */
+    font-size: 3.5em; /* 增大字体大小 */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 添加文字阴影，增强立体感 */
+    /* 使用 BM Hanna 11yrs Old 字体，若无则使用备用字体 */
+    font-family: 'BM Hanna 11yrs Old', Arial, sans-serif; 
+    /* 减小 padding 值以缩小垫框尺寸 */
+    padding: 5px 10px; 
+    border-radius: 15px;
 }
 
 #riize-section h2 {
-    color: #FF5733;
+    color: black;
+    background-color: rgba(255, 255, 0, 0.3); /* 圆角透明度较低的黄色垫框 */
 }
 
 #smtr25-section h2 {
-    color: white;
-    background-color: #333;
+    color: black;
+    background-color: rgba(255, 192, 203, 0.3); /* 圆角透明度较低的粉色垫框 */
 }
 
 /* 交互区域图片样式 */
@@ -78,13 +84,14 @@ h1 {
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.9);
 }
+
 /* 关闭按钮样式 */
 .close {
     color: white;
     position: absolute;
     top: 10px;
     right: 20px;
-    font - size: 30px;
-    font - weight: bold;
+    font-size: 30px;
+    font-weight: bold;
     cursor: pointer;
 }
