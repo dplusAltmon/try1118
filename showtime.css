@@ -8,7 +8,7 @@ body {
 
 /* 网页标题样式 */
 h1 {
-    font-family: 'Brush Script MT', cursive;
+    font-family: 'Copperplate Gothic', cursive;
     font-style: italic;
     text-align: center;
     font-size: 3em;
@@ -27,7 +27,7 @@ h1 {
 
 /* 数据统计图片样式 */
 .statistic-images img {
-    max-width: 100%;
+    max-width: 60%;
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -59,7 +59,7 @@ h1 {
 
 /* 交互区域图片样式 */
 .interactive-section img {
-    max-width: 100%;
+    max-width: 60%;
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
