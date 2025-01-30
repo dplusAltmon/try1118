@@ -55,12 +55,10 @@ h1 {
 
 #riize-section h2 {
     color: black;
-    background-color: rgba(255, 255, 0,0.5); /* 圆角透明度较低的黄色垫框 */
 }
 
 #smtr25-section h2 {
     color: black;
-    background-color: rgba(255, 192, 203, 0.5); /* 圆角透明度较低的粉色垫框 */
 }
 
 /* 交互区域图片样式 */
