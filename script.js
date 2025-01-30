@@ -1,5 +1,5 @@
 // 打开视频模态框的函数
-function openVideo('riize_video') {
+function openVideo(videoId) {
     var modal = document.getElementById(videoId);
     if (modal) {
         modal.style.display = "block";
@@ -7,7 +7,7 @@ function openVideo('riize_video') {
 }
 
 // 关闭视频模态框的函数
-function closeVideo('riize_video') {
+function closeVideo(videoId) {
     var modal = document.getElementById(videoId);
     if (modal) {
         modal.style.display = "none";
