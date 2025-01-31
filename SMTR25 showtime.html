@@ -14,11 +14,40 @@
 
     <!-- 四张数据统计图片 -->
     <div class="statistic-images">
-        <img src="SM新男团词频.png" alt="数据展示图片1">
-        <img src="SM新男团词网.png" alt="数据展示图片2">
-        <img src="SM新男团词云.png" alt="数据展示图片3">
-        <img src="小提琴图.png" alt="数据展示图片4">
-        <img src="高频词共现热力图.png" alt="数据展示图片5">
+        <figure>
+            <img src="SM新男团词频.png" alt="数据展示图片1">
+            <figcaption>
+                此图是按照词频高低排序的柱状图<br>
+                直观展示了爬取的SM新男团相关文本中各个词汇的出现频率<br>
+                通过词频统计，我们可以清晰地看到哪些词汇在描述 SM 新男团时被频繁提及，从而了解大众关注的重点词汇和热门话题。</figcaption>
+        </figure>
+        <figure>
+            <img src="SM新男团词网.png" alt="数据展示图片2">
+            <figcaption>
+                词网图直观地呈现了 SM 新男团相关词汇之间的关联<br>
+                线条的连接和粗细反映了词汇之间的紧密程度<br>
+                有助于我们发现不同概念之间的潜在联系，深入挖掘 SM 新男团相关话题的内在逻辑。</figcaption>
+        </figure>
+        <figure>
+            <img src="SM新男团词云.png" alt="数据展示图片3">
+            <figcaption>
+                词云图以可视化的方式展示了 SM 新男团相关文本中的高频词汇。<br>
+                词汇的大小与出现频率成正比，大的词汇表示其在文本中出现更为频繁。<br>
+                通过词云图，我们可以快速把握 SM 新男团相关话题的核心内容。</figcaption>
+        </figure>
+        <figure>
+            <img src="小提琴图.png" alt="数据展示图片4">
+            <figcaption>
+                小提琴图用于展示特定关键词在相关文本中的分布情况。<br>
+                它结合了箱线图和核密度图的特点，既能显示数据的中位数、四分位数等统计信息，又能展示数据的分布形状，帮助我们深入了解关键词的出现模式。</figcaption>
+        </figure>
+        <figure>
+            <img src="高频词共现热力图.png" alt="数据展示图片5">
+            <figcaption>
+                高频词共现热力图通过颜色的深浅表示不同高频词汇之间的共现频次。<br>
+                颜色越深，表示这两个词汇在文本中同时出现的次数越多。<br>
+                该图有助于我们发现高频词汇之间的协同关系，进一步探索 SM 新男团相关话题的潜在结构。</figcaption>
+        </figure>
     </div>
 
     <!-- RIIZE 交互区域 -->
@@ -27,15 +56,16 @@
         <img src="riize_bg.png" alt="RIIZE 背景图" onclick="openVideo('riize_video')">
         <p class="group-info">
             点击标题/图片播放视频。<br>
-            RIIZE。别名拉椅子，是SM ENTERTAINMENT于2023年9月推出的不新男团。组合命运多舛，某成员在一众声讨被迫退团。<br>
-            时至今日，7RIIZE还是6RIIZE仍存在争议。
+            RIIZE。别名拉椅子，是 SM ENTERTAINMENT 于 2023 年 9 月推出的不新男团。组合命运多舛，某成员在一众声讨被迫退团。<br>
+            时至今日，7RIIZE 还是 6RIIZE 仍存在争议。
         </p>
         <!-- 视频模态框 -->
         <div class="video-modal" id="riize_video">
             <span class="close" onclick="closeVideo('riize_video')">&times;</span>
             <video width="800" height="600" controls>
                 <source src="riize_video.mp4" type="video/mp4">
-                您的浏览器不支持视频播放。
+                    您的浏览器不支持视频播放。
+                </source>
             </video>
         </div>
     </div>
@@ -46,15 +76,16 @@
         <img src="smtr25_bg.png" alt="SMTR25 背景图" onclick="openVideo('smtr25_video')">
         <p class="group-info">
             点击标题/图片播放视频。<br>
-            SMTR25是SM ENTERTAINMENT于公司30周年演唱会上推出的25位男练习生，简称SMTR25，全称为SM TRAINEE 2025。<br>
-            不知猴年马月才能出道。
+            SMTR25 是 SM ENTERTAINMENT 于公司 30 周年演唱会上推出的 25 位男练习生，简称 SMTR25，全称为 SM TRAINEE 2025。<br>
+            该组合最终人选未定，预计2025年下半年出道。
         </p>
         <!-- 视频模态框 -->
         <div class="video-modal" id="smtr25_video">
             <span class="close" onclick="closeVideo('smtr25_video')">&times;</span>
             <video width="800" height="600" controls>
                 <source src="smtr25_video.mp4" type="video/mp4">
-                您的浏览器不支持视频播放。
+                    您的浏览器不支持视频播放。
+                </source>
             </video>
         </div>
     </div>
