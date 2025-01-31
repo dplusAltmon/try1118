@@ -93,7 +93,8 @@ h1 {
     font-weight: bold;
     cursor: pointer;
 }
-/* 新增：分组信息文字样式 */
+/* 分组信息文字样式 */
 .group-info {
     font-size: 2em; /* 放大字体，可根据需要调整 */
+    text-align: center; /* 使文字居中 */
 }
