@@ -1,0 +1,38 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <script type="text/javascript"><![CDATA[
+    // 随机数工具函数
+    function random(min, max) { return Math.random() * (max - min) + min; }
+    
+    // 绘制随机二叉树的递归函数
+    function drawTree(x, y, length, angle, depth) {
+      if (depth <= 0) return;
+      
+      // 计算子节点坐标
+      const newX = x + Math.cos(angle) * length;
+      const newY = y + Math.sin(angle) * length;
+      
+      // 随机线条样式
+      const color = `hsl(${random(120, 200)}, ${random(50, 80)}%, ${random(30, 60)}%)`; // 蓝绿色系
+      const width = random(1, 4);
+      
+      // 创建线条元素
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", x);
+      line.setAttribute("y1", y);
+      line.setAttribute("x2", newX);
+      line.setAttribute("y2", newY);
+      line.setAttribute("stroke", color);
+      line.setAttribute("stroke-width", width);
+      document.querySelector("svg").appendChild(line);
+      
+      // 递归绘制左右子树（随机角度和长度衰减）
+      const branchAngle = random(0.3, 0.8); // 左右分支角度差
+      const newLength = length * random(0.6, 0.8); // 长度衰减
+      drawTree(newX, newY, newLength, angle - branchAngle, depth - 1); // 左子树
+      drawTree(newX, newY, newLength, angle + branchAngle, depth - 1); // 右子树
+    }
+    
+    // 从底部中间开始绘制，初始角度向上（-90度转换为弧度），深度为8层
+    drawTree(400, 550, 100, -Math.PI/2, 8);
+  ]]></script>
+</svg>
