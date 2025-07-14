@@ -1,0 +1,56 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .koch-line { stroke: #3498db; stroke-width: 1; fill: none; }
+  </style>
+  <script type="text/javascript"><![CDATA[
+    // 科赫曲线生成函数：将线段(x1,y1)-(x2,y2)按迭代次数n生成科赫分形
+    function koch(x1, y1, x2, y2, n) {
+      if (n === 0) {
+        // 递归终止：直接绘制线段
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("class", "koch-line");
+        document.querySelector("svg").appendChild(line);
+        return;
+      }
+      
+      // 计算线段长度和角度
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.sqrt(dx*dx + dy*dy) / 3; // 1/3长度
+      const angle = Math.atan2(dy, dx); // 线段角度
+      
+      // 计算5个关键点：起点→A→B→C→终点
+      const xA = x1 + dx/3;
+      const yA = y1 + dy/3;
+      
+      const xC = x1 + dx*2/3;
+      const yC = y1 + dy*2/3;
+      
+      // 计算B点（凸起的等边三角形顶点）
+      const xB = xA + len * Math.cos(angle - Math.PI/3); // 向左偏60度
+      const yB = yA + len * Math.sin(angle - Math.PI/3);
+      
+      // 递归绘制4段线段
+      koch(x1, y1, xA, yA, n-1);
+      koch(xA, yA, xB, yB, n-1);
+      koch(xB, yB, xC, yC, n-1);
+      koch(xC, yC, x2, y2, n-1);
+    }
+    
+    // 绘制科赫雪花（由3条科赫曲线组成等边三角形）
+    const size = 400; // 雪花大小
+    const x0 = 100; const y0 = 400; // 左下角起点
+    const x1 = x0 + size; const y1 = y0; // 右下角
+    const x2 = x0 + size/2; const y2 = y0 - (size * Math.sqrt(3)/2); // 顶部
+    
+    // 迭代次数：3次即可呈现明显分形特征（最大建议5次，避免性能问题）
+    const iterations = 3;
+    koch(x0, y0, x1, y1, iterations); // 底边
+    koch(x1, y1, x2, y2, iterations); // 右腰
+    koch(x2, y2, x0, y0, iterations); // 左腰
+  ]]></script>
+</svg>
