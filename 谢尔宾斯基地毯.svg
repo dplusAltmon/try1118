@@ -1,0 +1,38 @@
+<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .carpet-square { fill: #2c3e50; stroke: #ecf0f1; stroke-width: 0.5; }
+  </style>
+  <script type="text/javascript"><![CDATA[
+    // 谢尔宾斯基地毯生成函数：在(x,y)位置绘制边长为s的正方形，迭代次数n
+    function carpet(x, y, s, n) {
+      if (n === 0) {
+        // 递归终止：绘制实心正方形
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", s);
+        rect.setAttribute("height", s);
+        rect.setAttribute("class", "carpet-square");
+        document.querySelector("svg").appendChild(rect);
+        return;
+      }
+      
+      const newSize = s / 3; // 每个小正方形的边长
+      
+      // 绘制9个小正方形，跳过中间一个
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          // 跳过中间位置(i=1,j=1)的正方形（挖空）
+          if (i !== 1 || j !== 1) {
+            const newX = x + i * newSize;
+            const newY = y + j * newSize;
+            carpet(newX, newY, newSize, n-1); // 递归绘制子正方形
+          }
+        }
+      }
+    }
+    
+    // 从左上角(50,50)开始绘制，边长400，迭代4次
+    carpet(50, 50, 400, 4);
+  ]]></script>
+</svg>
