@@ -1,61 +1,89 @@
 <svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
   <style>
-    .text-branch { font-family: "SimHei", "黑体", sans-serif; text-anchor: middle; dominant-baseline: middle; }
-    .text-leaf { font-family: "KaiTi", "楷体", sans-serif; text-anchor: middle; dominant-baseline: middle; }
+    .node { font-family: "SimHei", "黑体", sans-serif; text-anchor: middle; dominant-baseline: middle; }
+    .branch { stroke: #2e7d32; stroke-width: 2; stroke-opacity: 0.7; }
   </style>
   <script type="text/javascript"><![CDATA[
-    // 文字库
-    const words = "腰酸背痛爱吃爱玩爱睡觉".split('');
+    // 词组库（保持完整不分开）
+    const phrases = ["腰酸背痛", "爱吃", "爱玩", "爱睡觉"];
     
-    // 随机数生成函数
-    function random(min, max) {
-      return Math.random() * (max - min) + min;
-    }
+    // 词组颜色映射（绿色系）
+    const colors = {
+      "腰酸背痛": "#1b5e20", // 深绿
+      "爱吃": "#2e7d32",    // 中绿
+      "爱玩": "#43a047",    // 浅绿
+      "爱睡觉": "#81c784"   // 淡绿
+    };
     
-    // 文字树绘制函数
-    function drawTextTree(x, y, length, angle, depth) {
-      if (depth <= 0) return;
+    // 词组字体大小映射
+    const fontSizes = {
+      "腰酸背痛": 22,
+      "爱吃": 18,
+      "爱玩": 18,
+      "爱睡觉": 16
+    };
+    
+    // 绘制二叉树节点
+    function drawNode(x, y, phrase, level) {
+      // 绘制词组文本
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", x);
+      text.setAttribute("y", y);
+      text.setAttribute("class", "node");
+      text.setAttribute("font-size", fontSizes[phrase]);
+      text.setAttribute("fill", colors[phrase]);
+      text.setAttribute("font-weight", "bold");
+      text.textContent = phrase;
+      document.querySelector("svg").appendChild(text);
       
-      // 计算新的终点位置
-      const newX = x + Math.cos(angle) * length;
-      const newY = y + Math.sin(angle) * length;
+      // 计算子节点位置（根据层级动态调整间距）
+      const spacing = 200 / (level + 1);
+      const childY = y + 100;
       
-      // 随机选择文字
-      const word = words[Math.floor(Math.random() * words.length)];
+      // 根据词组选择子节点内容（模拟二叉树分支规则）
+      let leftPhrase, rightPhrase;
       
-      // 树干和主要树枝使用较大的文字和深色
-      if (depth > 3) {
-        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute("x", (x + newX) / 2);
-        text.setAttribute("y", (y + newY) / 2);
-        text.setAttribute("class", "text-branch");
-        text.setAttribute("font-size", 14 + depth * 2);
-        text.setAttribute("fill", `hsl(${30}, ${70}%, ${20 + depth * 5}%)`);
-        text.setAttribute("transform", `rotate(${(angle * 180 / Math.PI) + 90}, ${(x + newX) / 2}, ${(y + newY) / 2})`);
-        text.textContent = word;
-        document.querySelector("svg").appendChild(text);
-      } else {
-        // 小树枝和树叶使用较小的文字和浅色
-        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute("x", newX);
-        text.setAttribute("y", newY);
-        text.setAttribute("class", "text-leaf");
-        text.setAttribute("font-size", 10 + depth * 2);
-        text.setAttribute("fill", `hsl(${120 - depth * 20}, ${80}%, ${40 + depth * 10}%)`);
-        text.textContent = word;
-        document.querySelector("svg").appendChild(text);
+      if (phrase === "腰酸背痛") {
+        leftPhrase = "爱吃";
+        rightPhrase = "爱玩";
+      } else if (phrase === "爱吃") {
+        leftPhrase = "爱玩";
+        rightPhrase = "爱睡觉";
+      } else if (phrase === "爱玩") {
+        leftPhrase = "爱睡觉";
+        rightPhrase = "腰酸背痛";
+      } else { // 爱睡觉
+        leftPhrase = "腰酸背痛";
+        rightPhrase = "爱吃";
       }
       
-      // 随机分支角度和长度
-      const branchAngle = random(0.3, 0.8);
-      const newLength = length * random(0.6, 0.8);
-      
-      // 递归绘制左右分支
-      drawTextTree(newX, newY, newLength, angle - branchAngle, depth - 1);
-      drawTextTree(newX, newY, newLength, angle + branchAngle, depth - 1);
+      // 如果不是最后一层，绘制子节点和连接线
+      if (level < 3) {
+        // 左子节点
+        const leftX = x - spacing;
+        drawBranch(x, y, leftX, childY);
+        drawNode(leftX, childY, leftPhrase, level + 1);
+        
+        // 右子节点
+        const rightX = x + spacing;
+        drawBranch(x, y, rightX, childY);
+        drawNode(rightX, childY, rightPhrase, level + 1);
+      }
     }
     
-    // 从底部中心开始绘制树
-    drawTextTree(400, 550, 100, -Math.PI/2, 7);
+    // 绘制树枝连接线
+    function drawBranch(x1, y1, x2, y2) {
+      const branch = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      branch.setAttribute("x1", x1);
+      branch.setAttribute("y1", y1 + 15); // 微调起点位置
+      branch.setAttribute("x2", x2);
+      branch.setAttribute("y2", y2 - 20); // 微调终点位置
+      branch.setAttribute("class", "branch");
+      branch.setAttribute("stroke-linecap", "round");
+      document.querySelector("svg").appendChild(branch);
+    }
+    
+    // 从根节点开始绘制二叉树
+    drawNode(400, 100, "腰酸背痛", 1);
   ]]></script>
 </svg>
