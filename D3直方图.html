@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>2024年文化产业营业收入直方图</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* 基础样式 */
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 30px; }
+        .container { width: 1000px; margin: 0 auto; }
+        .chart-title { font-size: 22px; font-weight: bold; text-align: center; margin: 20px 0; }
+        .chart-subtitle { font-size: 14px; color: #666; text-align: center; margin-bottom: 30px; }
+        
+        /* 图表样式 */
+        .chart-container { border: 1px solid #eee; padding: 20px; border-radius: 8px; background: #fafafa; }
+        .bar { transition: fill 0.3s; }
+        .bar:hover { fill: #2c3e50; } /* 鼠标悬停效果 */
+        .axis-label { font-size: 12px; text-anchor: middle; }
+        .axis text { font-size: 11px; }
+        .axis-title { font-size: 14px; font-weight: bold; text-anchor: middle; }
+        
+        /* 签名样式（可修改颜色、位置） */
+        .signature { 
+            font-family: "SimSun", serif; 
+            font-size: 14px; 
+            color: #000; /* 黑色字体 */
+            text-align: right; 
+            margin-top: 10px; 
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chart-title">2024年文化产业各行业营业收入及增速</div>
+        <div class="chart-subtitle">数据来源：国家统计局（2025年6月发布）</div>
+        <div class="chart-container" id="chart"></div>
+        <div class="signature" id="signature">22计传张颖惠</div>
+    </div>
+
+    <script>
+        // 1. 从统计局数据中提取适合直方图的行业营业收入数据
+        const industryData = [
+            { name: "新闻信息服务", revenue: 22276, growth: 8.6 },
+            { name: "内容创作生产", revenue: 38827, growth: 8.4 },
+            { name: "创意设计服务", revenue: 38890, growth: 7.2 },
+            { name: "文化传播渠道", revenue: 19898, growth: 4.5 },
+            { name: "文化投资运营", revenue: 1439, growth: 0.3 },
+            { name: "文化娱乐休闲服务", revenue: 4292, growth: 1.2 },
+            { name: "文化辅助生产", revenue: 26598, growth: 6.2 },
+            { name: "文化装备生产", revenue: 7820, growth: 11.2 },
+            { name: "文化消费终端生产", revenue: 31382, growth: 6.8 }
+        ];
+
+        // 2. 图表配置（可个性化修改尺寸）
+        const width = 900;
+        const height = 500;
+        const margin = { top: 40, right: 30, bottom: 100, left: 80 }; // 底部留足空间放行业名称
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+
+        // 3. 创建SVG容器
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // 4. 定义比例尺
+        const xScale = d3.scaleBand()
+            .domain(industryData.map(d => d.name))
+            .range([0, innerWidth])
+            .padding(0.1);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(industryData, d => d.revenue)])
+            .range([innerHeight, 0]);
+
+        // 5. 绘制柱状图
+        svg.selectAll(".bar")
+            .data(industryData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => xScale(d.name))
+            .attr("y", d => yScale(d.revenue))
+            .attr("width", xScale.bandwidth())
+            .attr("height", d => innerHeight - yScale(d.revenue))
+            .attr("fill", d => d.growth > 7 ? "#3498db" : "#95a5a6"); // 增速超7%用深蓝色
+
+        // 6. 添加坐标轴
+        // X轴（行业名称）
+        svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(0,${innerHeight})`)
+            .call(d3.axisBottom(xScale))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)") // 文字旋转避免重叠
+            .style("text-anchor", "end")
+            .attr("font-size", 11);
+
+        // Y轴（营业收入，单位：亿元）
+        svg.append("g")
+            .attr("class", "axis")
+            .call(d3.axisLeft(yScale).tickFormat(d => d / 1000 + "k")); // 单位转换为"千亿元"
+
+        // 7. 添加坐标轴标题
+        svg.append("text")
+            .attr("class", "axis-title")
+            .attr("x", innerWidth / 2)
+            .attr("y", innerHeight + margin.bottom - 20)
+            .text("文化产业各行业");
+
+        svg.append("text")
+            .attr("class", "axis-title")
+            .attr("x", -innerHeight / 2)
+            .attr("y", -margin.left + 20)
+            .attr("transform", "rotate(-90)")
+            .text("营业收入（千亿元）");
+
+        // 8. 添加数据标签（显示具体数值）
+        svg.selectAll(".label")
+            .data(industryData)
+            .enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("x", d => xScale(d.name) + xScale.bandwidth() / 2)
+            .attr("y", d => yScale(d.revenue) - 5)
+            .attr("text-anchor", "middle")
+            .attr("font-size", 11)
+            .text(d => (d.revenue / 10000).toFixed(1) + "万亿");
+
+        // 9. 添加增速标注（在柱形顶部显示增长率）
+        svg.selectAll(".growth-label")
+            .data(industryData)
+            .enter()
+            .append("text")
+            .attr("class", "growth-label")
+            .attr("x", d => xScale(d.name) + xScale.bandwidth() / 2)
+            .attr("y", d => yScale(d.revenue) - 20)
+            .attr("text-anchor", "middle")
+            .attr("font-size", 10)
+            .attr("fill", "#e74c3c")
+            .text(d => "增速 " + d.growth + "%");
+    </script>
+</body>
+</html>
