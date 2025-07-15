@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025上半年中国区域经济三维可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f1c30 0%, #1e3a5f 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #e0f7fa;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* 3D可视化区域 */
+        #visualization-container {
+            flex: 0.7;
+            position: relative;
+        }
+        
+        /* 数据面板区域 */
+        .data-panel {
+            flex: 0.3;
+            background: rgba(15, 30, 45, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            overflow-y: auto;
+            border-left: 1px solid rgba(41, 98, 255, 0.3);
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(41, 98, 255, 0.5);
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .legend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .legend-visual {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        
+        .legend-label {
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .data-section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+            color: #4facfe;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 2px;
+        }
+        
+        .region-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .region-btn {
+            padding: 12px;
+            background: rgba(25, 55, 109, 0.5);
+            border: 1px solid rgba(41, 98, 255, 0.3);
+            border-radius: 8px;
+            color: #e0f7fa;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .region-btn:hover, .region-btn.active {
+            background: linear-gradient(90deg, #2962ff 0%, #1e88e5 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(41, 98, 255, 0.4);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(25, 55, 109, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(41, 98, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(41, 98, 255, 0.5);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .insights {
+            background: rgba(25, 55, 109, 0.3);
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid rgba(41, 98, 255, 0.2);
+        }
+        
+        .insight {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            border-left: 3px solid #4facfe;
+            line-height: 1.6;
+        }
+        
+        .signature {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(41, 98, 255, 0.3);
+            text-align: center;
+        }
+        
+        .signature-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #4facfe;
+        }
+        
+        .signature-content {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+        
+        .control-btn {
+            padding: 12px 20px;
+            background: rgba(25, 55, 109, 0.7);
+            border: 1px solid rgba(41, 98, 255, 0.3);
+            border-radius: 30px;
+            color: #e0f7fa;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: linear-gradient(90deg, #2962ff 0%, #1e88e5 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(41, 98, 255, 0.4);
+        }
+        
+        .info-box {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+            z-index: 10;
+            border: 1px solid rgba(41, 98, 255, 0.5);
+            display: none;
+        }
+        
+        .info-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #4facfe;
+        }
+        
+        .info-content {
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="visualization-container">
+            <!-- Three.js场景将在这里渲染 -->
+            <div class="controls">
+                <button class="control-btn" id="resetBtn">重置视图</button>
+                <button class="control-btn" id="animateBtn">播放动画</button>
+            </div>
+            <div class="info-box" id="infoBox">
+                <div class="info-title" id="infoTitle">地区信息</div>
+                <div class="info-content" id="infoContent">鼠标悬停在图表上查看详情</div>
+            </div>
+        </div>
+        
+        <div class="data-panel">
+            <div class="header">
+                <h1>2025上半年区域经济数据</h1>
+                <p class="subtitle">三维多维度数据可视化分析</p>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-visual" style="background: linear-gradient(to top, #2962ff, #00f2fe); height: 80px;"></div>
+                        <div class="legend-label">圆柱高度 = GDP总量</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-visual" style="background: #4facfe; width: 80px;"></div>
+                        <div class="legend-label">长方体宽度 = 人口规模</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-visual" style="background: linear-gradient(to right, #ff7e5f, #feb47b);"></div>
+                        <div class="legend-label">颜色 = 人均GDP</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-section">
+                <h2 class="section-title">地区选择</h2>
+                <div class="region-selector" id="regionSelector">
+                    <!-- 地区按钮将通过JS动态生成 -->
+                </div>
+            </div>
+            
+            <div class="data-section">
+                <h2 class="section-title">经济指标</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="gdpValue">--</div>
+                        <div class="stat-label">GDP总量 (亿元)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="populationValue">--</div>
+                        <div class="stat-label">人口 (万人)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="perCapitaValue">--</div>
+                        <div class="stat-label">人均GDP (万元)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="growthValue">--</div>
+                        <div class="stat-label">同比增长 (%)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-section">
+                <h2 class="section-title">数据洞察</h2>
+                <div class="insights">
+                    <div class="insight">东部沿海地区经济总量继续领跑全国，占全国GDP比重超过50%</div>
+                    <div class="insight">中部地区增速亮眼，高技术产业投资增长达25.3%，成为新增长引擎</div>
+                    <div class="insight">西部地区绿色发展成效显著，清洁能源装机容量同比增长18.7%</div>
+                    <div class="insight">京津冀、长三角、珠三角三大城市群对全国经济增长贡献率达65.2%</div>
+                </div>
+            </div>
+            
+            <div class="signature">
+                <div class="signature-title">数据可视化课程作业</div>
+                <div class="signature-content">
+                    数据来源：国家统计局 | 2025年6月<br>
+                    技术支持：Three.js三维可视化<br>
+                    设计实现：经济数据分析小组<br>
+                    完成日期：2025年7月
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟国家统计局2025上半年区域经济数据
+        const economicData = [
+            { 
+                region: "东部地区", 
+                gdp: 294200, 
+                population: 54280,
+                perCapita: 5.42,
+                growth: 5.1,
+                color: [0.1, 0.5, 0.9]  // 蓝色
+            },
+            { 
+                region: "中部地区", 
+                gdp: 126500, 
+                population: 36420,
+                perCapita: 3.47,
+                growth: 6.3,
+                color: [0.2, 0.8, 0.4]  // 绿色
+            },
+            { 
+                region: "西部地区", 
+                gdp: 98500, 
+                population: 38260,
+                perCapita: 2.57,
+                growth: 7.2,
+                color: [0.9, 0.6, 0.2]  // 橙色
+            },
+            { 
+                region: "东北地区", 
+                gdp: 41200, 
+                population: 10750,
+                perCapita: 3.83,
+                growth: 4.5,
+                color: [0.8, 0.3, 0.3]  // 红色
+            },
+            { 
+                region: "京津冀", 
+                gdp: 48200, 
+                population: 11270,
+                perCapita: 4.28,
+                growth: 5.4,
+                color: [0.6, 0.4, 0.8]  // 紫色
+            },
+            { 
+                region: "长三角", 
+                gdp: 132800, 
+                population: 22720,
+                perCapita: 5.85,
+                growth: 5.7,
+                color: [0.3, 0.7, 0.8]  // 青色
+            },
+            { 
+                region: "珠三角", 
+                gdp: 78500, 
+                population: 14580,
+                perCapita: 5.38,
+                growth: 5.9,
+                color: [0.9, 0.5, 0.7]  // 粉色
+            }
+        ];
+
+        // 初始化Three.js场景
+        let scene, camera, renderer, controls;
+        let objects = [];
+        let selectedRegion = null;
+        let animationPlaying = false;
+        
+        function initThreeJS() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a192f);
+            scene.fog = new THREE.Fog(0x0a192f, 20, 100);
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth * 0.7 / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 20, 30);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth * 0.7, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('visualization-container').appendChild(renderer.domElement);
+            
+            // 添加轨道控制
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 15);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            scene.add(directionalLight);
+            
+            const hemisphereLight = new THREE.HemisphereLight(0x4facfe, 0x1e3a5f, 0.3);
+            scene.add(hemisphereLight);
+            
+            // 添加坐标轴
+            const axesHelper = new THREE.AxesHelper(15);
+            scene.add(axesHelper);
+            
+            // 创建网格地面
+            const gridHelper = new THREE.GridHelper(40, 20, 0x2962ff, 0x1a3a6c);
+            gridHelper.position.y = -0.01;
+            scene.add(gridHelper);
+            
+            // 创建数据柱体
+            createDataVisualization();
+            
+            // 添加窗口大小调整事件
+            window.addEventListener('resize', onWindowResize);
+            
+            // 开始动画循环
+            animate();
+        }
+        
+        function createDataVisualization() {
+            // 清除现有对象
+            objects.forEach(obj => scene.remove(obj));
+            objects = [];
+            
+            // 计算最大值用于标准化
+            const maxGDP = Math.max(...economicData.map(d => d.gdp));
+            const maxPopulation = Math.max(...economicData.map(d => d.population));
+            const maxPerCapita = Math.max(...economicData.map(d => d.perCapita));
+            
+            // 创建区域标签
+            const labelGroup = new THREE.Group();
+            
+            economicData.forEach((region, index) => {
+                // 位置计算
+                const x = (index - (economicData.length - 1) / 2) * 5;
+                const z = 0;
+                
+                // GDP圆柱体（高度代表GDP）
+                const gdpHeight = (region.gdp / maxGDP) * 15 + 1;
+                const cylinderGeometry = new THREE.CylinderGeometry(0.8, 0.8, gdpHeight, 32);
+                const cylinderMaterial = new THREE.MeshStandardMaterial({ 
+                    color: new THREE.Color(region.color[0], region.color[1], region.color[2]),
+                    metalness: 0.3,
+                    roughness: 0.4,
+                    emissive: new THREE.Color(region.color[0] * 0.2, region.color[1] * 0.2, region.color[2] * 0.2)
+                });
+                
+                const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+                cylinder.position.set(x, gdpHeight / 2, z);
+                cylinder.rotation.x = Math.PI / 2;
+                cylinder.userData = region;
+                cylinder.name = region.region;
+                scene.add(cylinder);
+                objects.push(cylinder);
+                
+                // 人口长方体（宽度代表人口）
+                const popWidth = (region.population / maxPopulation) * 4 + 0.5;
+                const boxGeometry = new THREE.BoxGeometry(popWidth, 0.5, 1.5);
+                const boxMaterial = new THREE.MeshStandardMaterial({ 
+                    color: new THREE.Color(0.4, 0.7, 1.0),
+                    metalness: 0.2,
+                    roughness: 0.5
+                });
+                
+                const box = new THREE.Mesh(boxGeometry, boxMaterial);
+                box.position.set(x, 0.25, z - 2);
+                box.userData = region;
+                scene.add(box);
+                objects.push(box);
+                
+                // 添加交互事件
+                cylinder.addEventListener('pointerover', onPointerOver);
+                cylinder.addEventListener('pointerout', onPointerOut);
+                cylinder.addEventListener('click', onRegionClick);
+                
+                box.addEventListener('pointerover', onPointerOver);
+                box.addEventListener('pointerout', onPointerOut);
+                box.addEventListener('click', onRegionClick);
+                
+                // 创建标签
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 256;
+                canvas.height = 128;
+                
+                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                
+                context.font = '24px Arial';
+                context.fillStyle = 'white';
+                context.textAlign = 'center';
+                context.fillText(region.region, canvas.width/2, 40);
+                
+                context.font = '20px Arial';
+                context.fillStyle = '#4facfe';
+                context.fillText(`${(region.gdp/10000).toFixed(1)}万亿元`, canvas.width/2, 80);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.SpriteMaterial({ map: texture });
+                const sprite = new THREE.Sprite(material);
+                sprite.position.set(x, gdpHeight + 1, z);
+                sprite.scale.set(5, 2.5, 1);
+                labelGroup.add(sprite);
+            });
+            
+            scene.add(labelGroup);
+            objects.push(labelGroup);
+            
+            // 创建地区选择按钮
+            createRegionButtons();
+        }
+        
+        function createRegionButtons() {
+            const container = document.getElementById('regionSelector');
+            container.innerHTML = '';
+            
+            economicData.forEach(region => {
+                const button = document.createElement('div');
+                button.className = 'region-btn';
+                if (selectedRegion && selectedRegion.region === region.region) {
+                    button.classList.add('active');
+                }
+                button.textContent = region.region;
+                button.addEventListener('click', () => {
+                    selectRegion(region);
+                });
+                container.appendChild(button);
+            });
+        }
+        
+        function selectRegion(region) {
+            selectedRegion = region;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.region-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === region.region);
+            });
+            
+            // 更新数据面板
+            document.getElementById('gdpValue').textContent = (region.gdp / 10000).toFixed(2) + "万亿";
+            document.getElementById('populationValue').textContent = region.population.toLocaleString() + "万";
+            document.getElementById('perCapitaValue').textContent = region.perCapita.toFixed(2);
+            document.getElementById('growthValue').textContent = region.growth + "%";
+            
+            // 高亮选中的区域
+            objects.forEach(obj => {
+                if (obj.userData && obj.userData.region === region.region) {
+                    if (obj.material) {
+                        obj.material.emissive = new THREE.Color(0.3, 0.3, 0.3);
+                    }
+                } else if (obj.userData) {
+                    if (obj.material) {
+                        obj.material.emissive = new THREE.Color(0, 0, 0);
+                    }
+                }
+            });
+            
+            // 移动相机到选中区域
+            const targetObject = objects.find(obj => obj.name === region.region);
+            if (targetObject) {
+                const targetPosition = new THREE.Vector3();
+                targetObject.getWorldPosition(targetPosition);
+                targetPosition.y += 5;
+                targetPosition.z += 5;
+                
+                // 创建动画
+                const duration = 1500;
+                const startPosition = camera.position.clone();
+                const startTime = Date.now();
+                
+                function animateCamera() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    camera.position.lerpVectors(startPosition, targetPosition, progress);
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateCamera);
+                    } else {
+                        controls.target.copy(targetObject.position);
+                    }
+                }
+                
+                animateCamera();
+            }
+        }
+        
+        function onPointerOver(event) {
+            const region = event.target.userData;
+            const infoBox = document.getElementById('infoBox');
+            const infoTitle = document.getElementById('infoTitle');
+            const infoContent = document.getElementById('infoContent');
+            
+            infoTitle.textContent = region.region;
+            infoContent.innerHTML = `
+                <strong>GDP总量:</strong> ${(region.gdp/10000).toFixed(2)}万亿元<br>
+                <strong>人口:</strong> ${region.population.toLocaleString()}万人<br>
+                <strong>人均GDP:</strong> ${region.perCapita.toFixed(2)}万元<br>
+                <strong>同比增长:</strong> ${region.growth}%
+            `;
+            
+            infoBox.style.display = 'block';
+            
+            // 高亮物体
+            event.target.material.emissive = new THREE.Color(0.2, 0.2, 0.2);
+        }
+        
+        function onPointerOut(event) {
+            document.getElementById('infoBox').style.display = 'none';
+            
+            // 如果不是选中的区域，则取消高亮
+            if (!selectedRegion || event.target.userData.region !== selectedRegion.region) {
+                event.target.material.emissive = new THREE.Color(0, 0, 0);
+            }
+        }
+        
+        function onRegionClick(event) {
+            selectRegion(event.target.userData);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = (window.innerWidth * 0.7) / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth * 0.7, window.innerHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // 旋转动画
+            if (animationPlaying) {
+                scene.rotation.y += 0.005;
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 初始化
+        initThreeJS();
+        
+        // 添加控制按钮事件
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            camera.position.set(0, 20, 30);
+            controls.target.set(0, 0, 0);
+            scene.rotation.y = 0;
+            animationPlaying = false;
+        });
+        
+        document.getElementById('animateBtn').addEventListener('click', function() {
+            animationPlaying = !animationPlaying;
+            this.textContent = animationPlaying ? "暂停动画" : "播放动画";
+        });
+        
+        // 默认选择第一个地区
+        setTimeout(() => {
+            selectRegion(economicData[0]);
+        }, 1000);
+        
+        // 添加鼠标交互
+        renderer.domElement.style.cursor = 'pointer';
+        renderer.domElement.addEventListener('pointermove', function(event) {
+            const rect = this.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(objects);
+            
+            if (intersects.length > 0) {
+                renderer.domElement.style.cursor = 'pointer';
+            } else {
+                renderer.domElement.style.cursor = 'auto';
+            }
+        });
+    </script>
+</body>
+</html>
