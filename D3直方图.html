@@ -26,7 +26,7 @@
             color: #000; /* 黑色字体 */
             font-style:italic;
             text-align: right; 
-            margin-top: 8px; 
+            margin-top: 10px; 
             font-weight: bold;
             padding-right:20px
         }
@@ -57,7 +57,7 @@
         // 2. 图表配置（可个性化修改尺寸）
         const width = 900;
         const height = 500;
-        const margin = { top: 40, right: 30, bottom: 100, left: 80 }; // 底部留足空间放行业名称
+        const margin = { top: 40, right: 30, bottom: 110, left: 80 }; // 底部留足空间放行业名称
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
 
@@ -89,7 +89,7 @@
             .attr("y", d => yScale(d.revenue))
             .attr("width", xScale.bandwidth())
             .attr("height", d => innerHeight - yScale(d.revenue))
-            .attr("fill", d => d.growth > 7 ? "#3498db" : "#95a5a6"); // 增速超7%用深蓝色
+            .attr("fill", d => d.growth > 4.5 ? "#A8E6CF" : "#1ABC9C"); // 增速超4.5%用深蓝色
 
         // 6. 添加坐标轴
         // X轴（行业名称）
