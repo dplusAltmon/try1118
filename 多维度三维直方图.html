@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>文化产业多维度三维直方图</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 1200px;
+            height: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .title {
+            text-align: center;
+            color: #1a365d;
+            margin-bottom: 20px;
+        }
+        .main-title {
+            font-size: 28px;
+            margin: 0;
+        }
+        .sub-title {
+            font-size: 16px;
+            color: #4a5568;
+            margin: 5px 0 0 0;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .axis {
+            font-size: 12px;
+        }
+        .axis-label {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #1a365d;
+        }
+        .cube {
+            stroke: #fff;
+            stroke-width: 0.5;
+            opacity: 0.9;
+            transition: all 0.3s;
+        }
+        .cube:hover {
+            opacity: 1;
+            transform: scale(1.05);
+            stroke: #3182ce;
+            stroke-width: 2;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 12px;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        .tooltip-title {
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .legend-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1a365d;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 8px;
+        }
+        .signature {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 12px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">
+        <h1 class="main-title">2024年文化产业多维度三维分布</h1>
+        <p class="sub-title">行业 × 地区 × 营收（亿元） | 数据来源：国家统计局2025年6月发布</p>
+    </div>
+    <div class="container">
+        <svg id="3d-histogram"></svg>
+        <div class="tooltip" id="tooltip"></div>
+        <div class="legend">
+            <div class="legend-title">增长率（%）</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #e6fffa;"></div>
+                <div>0 - 3</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #b2f5ea;"></div>
+                <div>3 - 5</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #81e6d9;"></div>
+                <div>5 - 7</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #4fd1c5;"></div>
+                <div>7 - 9</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #38b2ac;"></div>
+                <div>9以上</div>
+            </div>
+        </div>
+        <div class="signature">
+            <div>数据可视化作业 | 22计传张颖惠 | 基于国家统计局2024年文化产业数据</div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 数据整理（基于国家统计局数据，借助豆包验证）
+        const data = [
+            // 行业：内容创作、创意设计、新闻信息、文化传播、文化装备
+            // 地区：东部、中部、西部、东北
+            { industry: "内容创作", region: "东部", revenue: 22500, growth: 8.4 },
+            { industry: "内容创作", region: "中部", revenue: 8200, growth: 7.6 },
+            { industry: "内容创作", region: "西部", revenue: 5800, growth: 6.8 },
+            { industry: "内容创作", region: "东北", revenue: 2327, growth: 5.2 },
+            
+            { industry: "创意设计", region: "东部", revenue: 21800, growth: 7.8 },
+            { industry: "创意设计", region: "中部", revenue: 9500, growth: 6.5 },
+            { industry: "创意设计", region: "西部", revenue: 5300, growth: 5.8 },
+            { industry: "创意设计", region: "东北", revenue: 2290, growth: 4.5 },
+            
+            { industry: "新闻信息", region: "东部", revenue: 15600, growth: 8.6 },
+            { industry: "新闻信息", region: "中部", revenue: 3800, growth: 7.2 },
+            { industry: "新闻信息", region: "西部", revenue: 2100, growth: 6.5 },
+            { industry: "新闻信息", region: "东北", revenue: 776, growth: 5.0 },
+            
+            { industry: "文化传播", region: "东部", revenue: 11200, growth: 5.8 },
+            { industry: "文化传播", region: "中部", revenue: 4200, growth: 4.5 },
+            { industry: "文化传播", region: "西部", revenue: 3200, growth: 3.8 },
+            { industry: "文化传播", region: "东北", revenue: 1298, growth: 2.5 },
+            
+            { industry: "文化装备", region: "东部", revenue: 5200, growth: 11.2 },
+            { industry: "文化装备", region: "中部", revenue: 1500, growth: 9.8 },
+            { industry: "文化装备", region: "西部", revenue: 850, growth: 8.5 },
+            { industry: "文化装备", region: "东北", revenue: 270, growth: 7.2 }
+        ];
+
+        // 2. 维度定义
+        const industries = [...new Set(data.map(d => d.industry))]; // x轴：行业
+        const regions = [...new Set(data.map(d => d.region))]; // y轴：地区
+        const maxRevenue = d3.max(data, d => d.revenue); // z轴：营收（高度）
+
+        // 3. 3D投影参数（模拟透视效果）
+        const projection = {
+            angle: 30, // 视角角度
+            scale: 0.8, // 缩放因子
+            project: (x, y, z) => {
+                // 3D到2D的投影转换
+                const cos = Math.cos(projection.angle * Math.PI / 180);
+                const sin = Math.sin(projection.angle * Math.PI / 180);
+                return {
+                    x: x * cos - y * sin,
+                    y: x * sin * projection.scale + y * cos * projection.scale - z * 0.5
+                };
+            }
+        };
+
+        // 4. 比例尺设置
+        const margin = { top: 150, right: 200, bottom: 100, left: 100 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 800 - margin.top - margin.bottom;
+        
+        // x轴（行业）比例尺
+        const xScale = d3.scaleBand()
+            .domain(industries)
+            .range([0, width])
+            .padding(0.3);
+        
+        // y轴（地区）比例尺
+        const yScale = d3.scaleBand()
+            .domain(regions)
+            .range([0, height])
+            .padding(0.3);
+        
+        // z轴（高度）比例尺
+        const zScale = d3.scaleLinear()
+            .domain([0, maxRevenue])
+            .range([0, 300]); // 最大高度300px
+        
+        // 颜色比例尺（增长率）
+        const colorScale = d3.scaleThreshold()
+            .domain([3, 5, 7, 9])
+            .range(["#e6fffa", "#b2f5ea", "#81e6d9", "#4fd1c5", "#38b2ac"]);
+
+        // 5. 创建SVG容器
+        const svg = d3.select("#3d-histogram")
+            .append("g")
+            .attr("transform", `translate(${margin.left + width/2}, ${margin.top + height/2})`);
+
+        // 6. 绘制三维长方体（模拟3D效果）
+        data.forEach(d => {
+            const x = xScale(d.industry) - width/2; // 中心偏移
+            const y = yScale(d.region) - height/2;
+            const z = zScale(d.revenue);
+            const size = Math.min(xScale.bandwidth(), yScale.bandwidth()) * 0.8; // 长方体底面积
+            
+            // 计算3D投影后的位置
+            const base = projection.project(x, y, 0);
+            const top = projection.project(x, y, z);
+            
+            // 绘制长方体的5个面（前、后、左、右、顶）
+            const cubeGroup = svg.append("g")
+                .attr("class", "cube-group")
+                .on("mouseover", (event) => {
+                    d3.select("#tooltip")
+                        .html(`
+                            <div class="tooltip-title">${d.industry}（${d.region}）</div>
+                            <div>营收：${d.revenue.toLocaleString()}亿元</div>
+                            <div>增长率：${d.growth}%</div>
+                        `)
+                        .style("opacity", 1)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 20) + "px");
+                })
+                .on("mouseout", () => {
+                    d3.select("#tooltip").style("opacity", 0);
+                });
+            
+            // 前面（可见面）
+            cubeGroup.append("rect")
+                .attr("class", "cube")
+                .attr("x", base.x)
+                .attr("y", top.y)
+                .attr("width", size)
+                .attr("height", base.y - top.y)
+                .attr("fill", colorScale(d.growth));
+            
+            // 侧面（右侧）
+            cubeGroup.append("rect")
+                .attr("class", "cube")
+                .attr("x", base.x + size)
+                .attr("y", top.y)
+                .attr("width", size * 0.2)
+                .attr("height", base.y - top.y)
+                .attr("fill", d3.color(colorScale(d.growth)).darker(0.2))
+                .attr("opacity", 0.7);
+            
+            // 顶面
+            cubeGroup.append("rect")
+                .attr("class", "cube")
+                .attr("x", base.x)
+                .attr("y", top.y)
+                .attr("width", size)
+                .attr("height", size * 0.2)
+                .attr("fill", d3.color(colorScale(d.growth)).darker(0.3))
+                .attr("opacity", 0.6);
+        });
+
+        // 7. 绘制坐标轴
+        const axisGroup = svg.append("g").attr("class", "axis-group");
+        
+        // X轴（行业）
+        const xAxis = axisGroup.append("g")
+            .attr("transform", `translate(0, ${projection.project(0, height/2, 0).y})`);
+        
+        xAxis.selectAll("text")
+            .data(industries)
+            .enter()
+            .append("text")
+            .attr("x", d => projection.project(xScale(d) - width/2 + xScale.bandwidth()/2, 0, 0).x)
+            .attr("y", 0)
+            .text(d => d)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#1a365d")
+            .attr("font-size", 12);
+        
+        xAxis.append("line")
+            .attr("x1", projection.project(0, 0, 0).x)
+            .attr("y1", 0)
+            .attr("x2", projection.project(width, 0, 0).x)
+            .attr("y2", 0)
+            .attr("stroke", "#94a3b8")
+            .attr("stroke-width", 1);
+        
+        xAxis.append("text")
+            .attr("class", "axis-label")
+            .attr("x", projection.project(width/2, 0, 0).x)
+            .attr("y", 30)
+            .text("文化产业细分行业")
+            .attr("text-anchor", "middle");
+        
+        // Y轴（地区）
+        const yAxis = axisGroup.append("g")
+            .attr("transform", `translate(${projection.project(-width/2, 0, 0).x}, 0)`);
+        
+        yAxis.selectAll("text")
+            .data(regions)
+            .enter()
+            .append("text")
+            .attr("x", 0)
+            .attr("y", d => projection.project(0, yScale(d) - height/2 + yScale.bandwidth()/2, 0).y)
+            .text(d => d)
+            .attr("text-anchor", "end")
+            .attr("fill", "#1a365d")
+            .attr("font-size", 12);
+        
+        yAxis.append("line")
+            .attr("x1", 0)
+            .attr("y1", projection.project(0, 0, 0).y)
+            .attr("x2", 0)
+            .attr("y2", projection.project(0, height, 0).y)
+            .attr("stroke", "#94a3b8")
+            .attr("stroke-width", 1);
+        
+        yAxis.append("text")
+            .attr("class", "axis-label")
+            .attr("x", -30)
+            .attr("y", projection.project(0, height/2, 0).y)
+            .text("地区分布")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90, -30, " + projection.project(0, height/2, 0).y + ")");
+        
+        // Z轴（营收）
+        const zAxis = axisGroup.append("g");
+        
+        zAxis.append("line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 0)
+            .attr("y2", projection.project(0, 0, -300).y) // 负方向为高度
+            .attr("stroke", "#94a3b8")
+            .attr("stroke-width", 1);
+        
+        zAxis.append("text")
+            .attr("class", "axis-label")
+            .attr("x", 0)
+            .attr("y", projection.project(0, 0, -350).y)
+            .text("营收（亿元）")
+            .attr("text-anchor", "middle")
+            .attr("fill", "#1a365d")
+            .attr("font-size", 12);
+    </script>
+</body>
+</html>
