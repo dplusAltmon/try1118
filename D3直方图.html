@@ -89,7 +89,7 @@
             .attr("y", d => yScale(d.revenue))
             .attr("width", xScale.bandwidth())
             .attr("height", d => innerHeight - yScale(d.revenue))
-            .attr("fill", d => d.growth > 4.5 ? "#A8E6CF" : "#1ABC9C"); // 增速超4.5%用深蓝色
+            .attr("fill", d => d.growth > 4.5 ? "#1ABC9C" : "#A8E6CF"); // 增速超4.5%用深蓝色
 
         // 6. 添加坐标轴
         // X轴（行业名称）
