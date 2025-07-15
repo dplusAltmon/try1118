@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2024年全国文化及相关产业发展态势</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .title-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .title-line1 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #386641;
+            letter-spacing: 1px;
+        }
+        
+        .title-line2 {
+            font-size: 24px;
+            color: #6a994e;
+            margin-top: 5px;
+        }
+        
+        .title-line3 {
+            font-size: 20px;
+            color: #a7c957;
+            margin-top: 5px;
+        }
+        
+        .title-line4 {
+            font-size: 16px;
+            color: #4a7c59;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+        }
+        
+        .tree-container {
+            width: 45%;
+            min-width: 400px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .tree-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #386641;
+        }
+        
+        .tree-tooltip {
+            position: absolute;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 5px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+        }
+        
+        .signature {
+            text-align: right;
+            margin-top: 40px;
+            padding: 10px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            color: #386641;
+        }
+        
+        /* 树图样式 */
+        .node circle {
+            fill: #fff;
+            stroke: #6a994e;
+            stroke-width: 3px;
+        }
+        
+        .node text {
+            font: 12px sans-serif;
+        }
+        
+        .link {
+            fill: none;
+            stroke: #ddd;
+            stroke-width: 2px;
+        }
+        
+        /* 矩形树图样式 */
+        .cell {
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        
+        .cell-text {
+            font: 10px sans-serif;
+            pointer-events: none;
+        }
+        
+        /* 辐射状树图样式 */
+        .radial-node circle {
+            fill: #fff;
+            stroke: #6a994e;
+            stroke-width: 2px;
+        }
+        
+        .radial-node text {
+            font: 10px sans-serif;
+        }
+        
+        .radial-link {
+            fill: none;
+            stroke: #ddd;
+            stroke-width: 1.5px;
+        }
+        
+        /* 集群树图样式 */
+        .cluster-node circle {
+            fill: #fff;
+            stroke: #6a994e;
+            stroke-width: 2px;
+        }
+        
+        .cluster-node text {
+            font: 10px sans-serif;
+        }
+        
+        .cluster-link {
+            fill: none;
+            stroke: #ddd;
+            stroke-width: 1.5px;
+        }
+        
+        /* 色彩方案 */
+        .core { fill: #386641; }
+        .related { fill: #6a994e; }
+        .new { fill: #a7c957; }
+    </style>
+</head>
+<body>
+    <!-- 三行式标题设计 -->
+    <div class="title-container">
+        <div class="title-line1">文化产业全景图</div>
+        <div class="title-line2">2024年核心领域与新业态</div>
+        <div class="title-line3">结构解析与增长对比</div>
+        <div class="title-line4">基于国家统计局最新数据</div>
+    </div>
+    
+    <!-- 四个树图容器 -->
+    <div class="charts-container">
+        <!-- 1. 标准树图 -->
+        <div class="tree-container" id="tree-standard">
+            <div class="tree-title">1. 标准树图 - 文化产业层级结构</div>
+            <svg width="100%" height="500"></svg>
+        </div>
+        
+        <!-- 2. 矩形树图 -->
+        <div class="tree-container" id="tree-treemap">
+            <div class="tree-title">2. 矩形树图 - 产业规模对比</div>
+            <svg width="100%" height="500"></svg>
+        </div>
+        
+        <!-- 3. 辐射状树图 -->
+        <div class="tree-container" id="tree-radial">
+            <div class="tree-title">3. 辐射状树图 - 核心领域关系</div>
+            <svg width="100%" height="500"></svg>
+        </div>
+        
+        <!-- 4. 集群树图 -->
+        <div class="tree-container" id="tree-cluster">
+            <div class="tree-title">4. 集群树图 - 产业增长态势</div>
+            <svg width="100%" height="500"></svg>
+        </div>
+    </div>
+    
+    <!-- 数据小作文 -->
+    <div class="data-note">
+        <p>本可视化基于国家统计局2025年6月发布的《2024年全国文化及相关产业发展情况》数据。通过四种树图全面展示文化产业结构：核心领域占比65.6%，仍为支柱；新业态增速达9.3%，远超传统领域；创意设计与内容创作构成双引擎。数据揭示文化产业数字化转型加速，结构优化态势明显。</p>
+    </div>
+    
+    <!-- 签名档 -->
+    <div class="signature">
+        <div class="signature-name">22计传张颖惠</div>
+        <div>数据来源：国家统计局 | 2025年6月发布</div>
+    </div>
+    
+    <!-- 树图交互提示 -->
+    <div class="tree-tooltip" id="tooltip"></div>
+
+    <script>
+        // 加载数据
+        const data = {
+            "name": "2024年全国文化及相关产业",
+            "children": [
+                {
+                    "name": "文化核心领域",
+                    "value": 125000,
+                    "growth": 7.2,
+                    "children": [
+                        {
+                            "name": "内容创作生产",
+                            "value": 38827,
+                            "growth": 8.4,
+                            "children": [
+                                {"name": "新闻信息服务", "value": 22276, "growth": 8.6},
+                                {"name": "出版服务", "value": 9542, "growth": 5.2},
+                                {"name": "创作表演服务", "value": 7009, "growth": 10.1}
+                            ]
+                        },
+                        {
+                            "name": "创意设计服务",
+                            "value": 38890,
+                            "growth": 7.2,
+                            "children": [
+                                {"name": "广告服务", "value": 18245, "growth": 6.5},
+                                {"name": "设计服务", "value": 20645, "growth": 7.8}
+                            ]
+                        },
+                        {
+                            "name": "文化传播渠道",
+                            "value": 19898,
+                            "growth": 4.5,
+                            "children": [
+                                {"name": "广播影视传输", "value": 8234, "growth": 3.2},
+                                {"name": "互联网文化", "value": 11664, "growth": 5.8}
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "文化相关领域",
+                    "value": 66000,
+                    "growth": 5.1,
+                    "children": [
+                        {
+                            "name": "文化辅助生产",
+                            "value": 26598,
+                            "growth": 6.2,
+                            "children": [
+                                {"name": "印刷复制", "value": 10345, "growth": 4.1},
+                                {"name": "文化设备生产", "value": 16253, "growth": 7.8}
+                            ]
+                        },
+                        {
+                            "name": "文化消费终端生产",
+                            "value": 31382,
+                            "growth": 6.8,
+                            "children": [
+                                {"name": "文化用品", "value": 18765, "growth": 6.5},
+                                {"name": "工艺美术品", "value": 12617, "growth": 7.2}
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "新业态特征明显的文化产业",
+                    "value": 38000,
+                    "growth": 9.3,
+                    "children": [
+                        {"name": "数字出版", "value": 7500, "growth": 12.5},
+                        {"name": "智能文化设备制造", "value": 12300, "growth": 10.8},
+                        {"name": "互联网文化娱乐平台", "value": 18200, "growth": 8.1}
+                    ]
+                }
+            ]
+        };
+
+        // 1. 标准树图
+        const standardWidth = 400;
+        const standardHeight = 450;
+        
+        const standardSvg = d3.select("#tree-standard svg")
+            .attr("viewBox", `0 0 ${standardWidth} ${standardHeight}`);
+        
+        const standardRoot = d3.hierarchy(data);
+        const standardTree = d3.tree().size([standardWidth, standardHeight - 100]);
+        
+        standardRoot.descendants().forEach((d, i) => {
+            d.id = i;
+        });
+        
+        standardTree(standardRoot);
+        
+        // 连接线
+        standardSvg.selectAll(".link")
+            .data(standardRoot.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("d", d3.linkVertical()
+                .x(d => d.y)
+                .y(d => d.x));
+        
+        // 节点
+        const standardNodes = standardSvg.selectAll(".node")
+            .data(standardRoot.descendants())
+            .enter().append("g")
+            .attr("class", "node")
+            .attr("transform", d => `translate(${d.y}, ${d.x})`);
+        
+        standardNodes.append("circle")
+            .attr("r", 5)
+            .attr("fill", d => {
+                if (d.data.name === "文化核心领域") return "#386641";
+                if (d.data.name === "文化相关领域") return "#6a994e";
+                if (d.data.name === "新业态特征明显的文化产业") return "#a7c957";
+                return "#fff";
+            })
+            .attr("stroke-width", d => d.children ? 3 : 2);
+        
+        standardNodes.append("text")
+            .attr("dy", d => d.children ? -15 : 15)
+            .attr("text-anchor", "middle")
+            .text(d => d.data.name)
+            .style("font-size", d => d.depth > 1 ? "10px" : "12px");
+        
+        // 2. 矩形树图
+        const treemapWidth = 400;
+        const treemapHeight = 450;
+        
+        const treemapSvg = d3.select("#tree-treemap svg")
+            .attr("viewBox", `0 0 ${treemapWidth} ${treemapHeight}`);
+        
+        const treemapRoot = d3.hierarchy(data)
+            .sum(d => d.value);
+        
+        const treemapLayout = d3.treemap()
+            .size([treemapWidth, treemapHeight])
+            .padding(2);
+        
+        treemapLayout(treemapRoot);
+        
+        const cells = treemapSvg.selectAll(".cell")
+            .data(treemapRoot.leaves())
+            .enter().append("g")
+            .attr("class", "cell");
+        
+        cells.append("rect")
+            .attr("x", d => d.x0)
+            .attr("y", d => d.y0)
+            .attr("width", d => d.x1 - d.x0)
+            .attr("height", d => d.y1 - d.y0)
+            .attr("fill", d => {
+                if (d.parent.data.name === "文化核心领域") return "#386641";
+                if (d.parent.data.name === "文化相关领域") return "#6a994e";
+                if (d.parent.data.name === "新业态特征明显的文化产业") return "#a7c957";
+                return "#ddd";
+            })
+            .attr("opacity", 0.8)
+            .on("mouseover", (event, d) => {
+                d3.select("#tooltip")
+                    .html(`<strong>${d.data.name}</strong><br>规模: ${d.data.value}亿元<br>增速: ${d.data.growth}%`)
+                    .style("opacity", 1)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", () => {
+                d3.select("#tooltip").style("opacity", 0);
+            });
+        
+        cells.append("text")
+            .attr("class", "cell-text")
+            .attr("x", d => d.x0 + 5)
+            .attr("y", d => d.y0 + 15)
+            .text(d => d.data.name)
+            .attr("fill", "white")
+            .attr("clip-path", d => `url(#clip-${d.id})`);
+        
+        // 3. 辐射状树图
+        const radialWidth = 400;
+        const radialHeight = 450;
+        const radialRadius = Math.min(radialWidth, radialHeight) / 2 - 20;
+        
+        const radialSvg = d3.select("#tree-radial svg")
+            .attr("viewBox", `0 0 ${radialWidth} ${radialHeight}`)
+            .append("g")
+            .attr("transform", `translate(${radialWidth / 2}, ${radialHeight / 2})`);
+        
+        const radialRoot = d3.hierarchy(data);
+        const radialTree = d3.tree().size([2 * Math.PI, radialRadius]);
+        
+        radialRoot.descendants().forEach((d, i) => {
+            d.id = i;
+        });
+        
+        radialTree(radialRoot);
+        
+        // 连接线
+        radialSvg.selectAll(".radial-link")
+            .data(radialRoot.links())
+            .enter().append("path")
+            .attr("class", "radial-link")
+            .attr("d", d3.linkRadial()
+                .angle(d => d.x)
+                .radius(d => d.y));
+        
+        // 节点
+        const radialNodes = radialSvg.selectAll(".radial-node")
+            .data(radialRoot.descendants())
+            .enter().append("g")
+            .attr("class", "radial-node")
+            .attr("transform", d => `rotate(${(d.x * 180 / Math.PI - 90)}) translate(${d.y},0)`);
+        
+        radialNodes.append("circle")
+            .attr("r", 4)
+            .attr("fill", d => {
+                if (d.data.name === "文化核心领域") return "#386641";
+                if (d.data.name === "文化相关领域") return "#6a994e";
+                if (d.data.name === "新业态特征明显的文化产业") return "#a7c957";
+                return "#fff";
+            });
+        
+        radialNodes.append("text")
+            .attr("dy", ".31em")
+            .attr("x", d => d.x < Math.PI ? 8 : -8)
+            .attr("text-anchor", d => d.x < Math.PI ? "start" : "end")
+            .attr("transform", d => d.x < Math.PI ? null : "rotate(180)")
+            .text(d => d.data.name)
+            .style("font-size", d => d.depth > 1 ? "9px" : "11px");
+        
+        // 4. 集群树图
+        const clusterWidth = 400;
+        const clusterHeight = 450;
+        
+        const clusterSvg = d3.select("#tree-cluster svg")
+            .attr("viewBox", `0 0 ${clusterWidth} ${clusterHeight}`);
+        
+        const clusterRoot = d3.hierarchy(data);
+        const clusterLayout = d3.cluster().size([clusterWidth, clusterHeight - 100]);
+        
+        clusterRoot.descendants().forEach((d, i) => {
+            d.id = i;
+        });
+        
+        clusterLayout(clusterRoot);
+        
+        // 连接线
+        clusterSvg.selectAll(".cluster-link")
+            .data(clusterRoot.links())
+            .enter().append("path")
+            .attr("class", "cluster-link")
+            .attr("d", d3.linkVertical()
+                .x(d => d.y)
+                .y(d => d.x));
+        
+        // 节点
+        const clusterNodes = clusterSvg.selectAll(".cluster-node")
+            .data(clusterRoot.descendants())
+            .enter().append("g")
+            .attr("class", "cluster-node")
+            .attr("transform", d => `translate(${d.y}, ${d.x})`);
+        
+        clusterNodes.append("circle")
+            .attr("r", 4)
+            .attr("fill", d => {
+                if (d.data.name === "文化核心领域") return "#386641";
+                if (d.data.name === "文化相关领域") return "#6a994e";
+                if (d.data.name === "新业态特征明显的文化产业") return "#a7c957";
+                return "#fff";
+            });
+        
+        clusterNodes.append("text")
+            .attr("dy", ".35em")
+            .attr("x", d => d.children ? -13 : 13)
+            .attr("text-anchor", d => d.children ? "end" : "start")
+            .text(d => d.data.name)
+            .style("font-size", d => d.depth > 1 ? "9px" : "11px");
+    </script>
+</body>
+</html>
