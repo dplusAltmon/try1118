@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2025上半年区域经济数据可视化</title>
+    <title>2024年全国文化及相关产业发展情况可视化</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         * {
@@ -16,9 +16,6 @@
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
             color: #333;
         }
@@ -31,10 +28,11 @@
             box-shadow: 0 15px 50px rgba(0, 0, 100, 0.15);
             overflow: hidden;
             position: relative;
+            margin: 0 auto;
         }
         
         header {
-            background: linear-gradient(90deg, #1a3a6c 0%, #2c5282 100%);
+            background: linear-gradient(90deg, #386641 0%, #6a994e 100%); /* 文化产业主题色：绿色系 */
             color: white;
             padding: 40px;
             text-align: center;
@@ -42,7 +40,7 @@
         }
         
         h1 {
-            font-size: 42px;
+            font-size: 38px;
             font-weight: 700;
             letter-spacing: -0.5px;
             margin-bottom: 10px;
@@ -50,7 +48,7 @@
         }
         
         .subtitle {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 300;
             opacity: 0.9;
             max-width: 700px;
@@ -64,7 +62,7 @@
         }
         
         .chart-container {
-            flex: 0.618; /* 黄金比例 */
+            flex: 0.618; /* 横向黄金分割位置 */
             padding: 40px;
             display: flex;
             flex-direction: column;
@@ -85,7 +83,7 @@
         
         .info-title {
             font-size: 28px;
-            color: #1a3a6c;
+            color: #386641; /* 匹配主题色 */
             margin-bottom: 25px;
             font-weight: 600;
             position: relative;
@@ -98,7 +96,7 @@
             left: 0;
             width: 60px;
             height: 4px;
-            background: #4299e1;
+            background: #6a994e;
             border-radius: 2px;
         }
         
@@ -124,7 +122,7 @@
         .stat-value {
             font-size: 32px;
             font-weight: 700;
-            color: #2c5282;
+            color: #386641;
             margin-bottom: 5px;
         }
         
@@ -143,7 +141,7 @@
         .insight {
             margin-bottom: 15px;
             padding-left: 20px;
-            border-left: 3px solid #4299e1;
+            border-left: 3px solid #6a994e;
             line-height: 1.6;
         }
         
@@ -160,7 +158,7 @@
         .signature .title {
             font-size: 18px;
             font-weight: 600;
-            color: #2c5282;
+            color: #386641;
             margin-bottom: 5px;
         }
         
@@ -186,7 +184,7 @@
         .tooltip-title {
             font-weight: 600;
             margin-bottom: 5px;
-            color: #63b3ed;
+            color: #a7f3d0;
         }
         
         .controls {
@@ -197,7 +195,7 @@
         }
         
         .control-btn {
-            background: #4299e1;
+            background: #6a994e;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -205,13 +203,13 @@
             cursor: pointer;
             font-size: 16px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(50, 115, 220, 0.3);
+            box-shadow: 0 4px 6px rgba(56, 102, 65, 0.3);
         }
         
         .control-btn:hover {
-            background: #3182ce;
+            background: #386641;
             transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(50, 115, 220, 0.4);
+            box-shadow: 0 6px 8px rgba(56, 102, 65, 0.4);
         }
         
         .legend {
@@ -257,8 +255,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>2025上半年区域经济数据分析</h1>
-            <p class="subtitle">基于国家统计局发布的经济数据，可视化展示我国主要经济区域贡献占比</p>
+            <h1>2024年全国文化及相关产业发展情况</h1>
+            <p class="subtitle">基于国家统计局发布数据，可视化展示文化产业九大行业发展态势</p>
         </header>
         
         <div class="golden-section">
@@ -268,33 +266,33 @@
             </div>
             
             <div class="info-panel">
-                <h2 class="info-title">关键经济指标</h2>
+                <h2 class="info-title">核心发展指标</h2>
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value">4.8%</div>
-                        <div class="stat-label">全国GDP同比增长</div>
+                        <div class="stat-value">19.1万亿</div>
+                        <div class="stat-label">总营业收入</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">¥56.2万亿</div>
-                        <div class="stat-label">上半年GDP总量</div>
+                        <div class="stat-value">6.3%</div>
+                        <div class="stat-label">同比增长率</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">12.3%</div>
-                        <div class="stat-label">高技术产业投资增长</div>
+                        <div class="stat-value">1625亿</div>
+                        <div class="stat-label">研发投入</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">7.1%</div>
-                        <div class="stat-label">社会消费品零售总额增长</div>
+                        <div class="stat-value">9.3%</div>
+                        <div class="stat-label">文化新业态增速</div>
                     </div>
                 </div>
                 
                 <div class="insights">
-                    <h3 class="info-title">数据洞察</h3>
-                    <div class="insight">东部沿海地区继续保持经济领先地位，占全国GDP总量的52.3%</div>
-                    <div class="insight">中部地区增长势头强劲，GDP增速达到5.7%，高于全国平均水平</div>
-                    <div class="insight">西部地区在绿色能源和数字经济领域表现突出，投资增长达15.2%</div>
-                    <div class="insight">东北地区产业转型初见成效，制造业升级带动经济增长4.1%</div>
+                    <h3 class="info-title">产业洞察</h3>
+                    <div class="insight">内容创作生产与创意设计服务合计占比超40%，成为核心支柱</div>
+                    <div class="insight">文化装备生产增速达11.2%，技术升级驱动明显</div>
+                    <div class="insight">东部地区贡献65.8%的营业收入，区域集中度高</div>
+                    <div class="insight">文化核心领域营收12.5万亿元，占比65.6%，主导产业发展</div>
                 </div>
             </div>
         </div>
@@ -307,48 +305,48 @@
         
         <div class="signature">
             <div class="title">数据可视化课程作业</div>
-            <div>数据来源：国家统计局 | 2025年6月</div>
-            <div>可视化设计：经济数据分析小组</div>
-            <div class="credit">基于D3.js的数据可视化实现 | 2023级数字媒体技术</div>
+            <div>数据来源：国家统计局 | 2025年6月发布</div>
+            <div>可视化设计：22计传张颖惠</div> <!-- 签名修正为指定姓名 -->
+            <div class="credit">基于D3.js的实现 | 2024年全国文化产业数据</div>
         </div>
     </div>
 
     <script>
-        // 模拟国家统计局2025上半年区域经济数据
-        const economicData = [
-            { region: "东部地区", gdp: 294200, color: "#1f77b4" },
-            { region: "中部地区", gdp: 126500, color: "#ff7f0e" },
-            { region: "西部地区", gdp: 98500, color: "#2ca02c" },
-            { region: "东北地区", gdp: 41200, color: "#d62728" },
-            { region: "京津冀", gdp: 48200, color: "#9467bd" },
-            { region: "长三角", gdp: 132800, color: "#8c564b" },
-            { region: "珠三角", gdp: 78500, color: "#e377c2" }
+        // 从国家统计局2024年文化产业数据中提取的九大行业数据
+        const culturalIndustryData = [
+            { industry: "新闻信息服务", revenue: 22276, growth: 8.6, color: "#1f77b4" },
+            { industry: "内容创作生产", revenue: 38827, growth: 8.4, color: "#ff7f0e" },
+            { industry: "创意设计服务", revenue: 38890, growth: 7.2, color: "#2ca02c" },
+            { industry: "文化传播渠道", revenue: 19898, growth: 4.5, color: "#d62728" },
+            { industry: "文化投资运营", revenue: 1439, growth: 0.3, color: "#9467bd" },
+            { industry: "文化娱乐休闲服务", revenue: 4292, growth: 1.2, color: "#8c564b" },
+            { industry: "文化辅助生产", revenue: 26598, growth: 6.2, color: "#e377c2" },
+            { industry: "文化装备生产", revenue: 7820, growth: 11.2, color: "#7f7f7f" },
+            { industry: "文化消费终端生产", revenue: 31382, growth: 6.8, color: "#bcbd22" }
         ];
         
-        // 计算GDP总和
-        const totalGDP = d3.sum(economicData, d => d.gdp);
-        
-        // 计算每个区域的百分比
-        economicData.forEach(d => {
-            d.percentage = (d.gdp / totalGDP * 100).toFixed(1);
-            d.formattedGDP = (d.gdp / 10000).toFixed(2) + "万亿元";
+        // 计算总营收和各行业占比
+        const totalRevenue = d3.sum(culturalIndustryData, d => d.revenue);
+        culturalIndustryData.forEach(d => {
+            d.percentage = (d.revenue / totalRevenue * 100).toFixed(1);
+            d.formattedRevenue = (d.revenue / 10000).toFixed(2) + "万亿元";
         });
         
         // 设置尺寸和半径
         const width = 500;
         const height = 500;
         const radius = Math.min(width, height) / 2.5;
-        const innerRadius = radius * 0.5; // 环形图
+        const innerRadius = radius * 0.5; // 环形图设计
         
-        // 创建SVG容器
+        // 创建SVG容器并平移到中心
         const svg = d3.select("#chart svg")
             .attr("viewBox", `0 0 ${width} ${height}`)
             .append("g")
-            .attr("transform", `translate(${width/2}, ${height/2})`);
+            .attr("transform", `translate(${width/2}, ${height/2})`); // 平移到屏幕中心
         
         // 创建饼图布局
         const pie = d3.pie()
-            .value(d => d.gdp)
+            .value(d => d.revenue)
             .sort(null);
         
         // 创建弧形生成器
@@ -361,9 +359,9 @@
             .innerRadius(radius * 0.75)
             .outerRadius(radius * 0.75);
         
-        // 创建弧形路径
+        // 创建弧形路径组
         const arcs = svg.selectAll(".arc")
-            .data(pie(economicData))
+            .data(pie(culturalIndustryData))
             .enter()
             .append("g")
             .attr("class", "arc");
@@ -386,10 +384,10 @@
                 // 显示工具提示
                 const tooltip = d3.select(".tooltip");
                 tooltip.html(`
-                    <div class="tooltip-title">${d.data.region}</div>
-                    <div>GDP: ${d.data.formattedGDP}</div>
+                    <div class="tooltip-title">${d.data.industry}</div>
+                    <div>营收: ${d.data.formattedRevenue}</div>
                     <div>占比: ${d.data.percentage}%</div>
-                    <div>全国排名: ${economicData.indexOf(d.data) + 1}</div>
+                    <div>增速: ${d.data.growth}%</div>
                 `)
                 .style("opacity", 1)
                 .style("left", (event.pageX + 10) + "px")
@@ -418,18 +416,17 @@
             .attr("fill", "white")
             .text(d => `${d.data.percentage}%`);
         
-        // 添加区域名称标签
-        const regionLabels = arcs.append("text")
+        // 添加行业名称标签（仅显示主要行业，避免拥挤）
+        const industryLabels = arcs.filter(d => d.data.revenue > 20000).append("text")
             .attr("transform", d => {
                 const pos = labelArc.centroid(d);
-                // 根据位置微调
-                pos[1] += 20; // 下移
+                pos[1] += 20; // 下移显示
                 return `translate(${pos})`;
             })
             .attr("text-anchor", "middle")
             .attr("font-size", "12px")
             .attr("fill", "#333")
-            .text(d => d.data.region);
+            .text(d => d.data.industry);
         
         // 添加中心标题
         svg.append("text")
@@ -437,22 +434,22 @@
             .attr("dy", "-0.5em")
             .attr("font-size", "20px")
             .attr("font-weight", "bold")
-            .attr("fill", "#1a3a6c")
-            .text("GDP占比");
+            .attr("fill", "#386641")
+            .text("营收占比");
         
         svg.append("text")
             .attr("text-anchor", "middle")
             .attr("dy", "1.5em")
             .attr("font-size", "16px")
             .attr("fill", "#4a5568")
-            .text("2025上半年");
+            .text("2024年文化产业");
         
         // 创建图例
         const legend = d3.select(".chart-container").append("div")
             .attr("class", "legend");
         
         const legendItems = legend.selectAll(".legend-item")
-            .data(economicData)
+            .data(culturalIndustryData)
             .enter()
             .append("div")
             .attr("class", "legend-item");
@@ -462,7 +459,7 @@
             .style("background-color", d => d.color);
         
         legendItems.append("div")
-            .text(d => d.region);
+            .text(d => d.industry);
         
         // 添加交互控制
         document.getElementById("percentageBtn").addEventListener("click", function() {
@@ -470,7 +467,7 @@
         });
         
         document.getElementById("valueBtn").addEventListener("click", function() {
-            labels.text(d => d.data.formattedGDP);
+            labels.text(d => (d.data.revenue / 10000).toFixed(1) + "万亿");
         });
         
         document.getElementById("animateBtn").addEventListener("click", function() {
