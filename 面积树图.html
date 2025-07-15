@@ -2,426 +2,546 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>层次数据多视图可视化</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>层次数据可视化展示</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        /* 基础样式与版式布局 */
-        body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
+        
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+        }
+        
         .container {
-            max-width: 1600px;
+            max-width: 1400px;
             margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
-        .header {
+        
+        header {
+            background: linear-gradient(90deg, #2c5282 0%, #1a365d 100%);
+            color: white;
+            padding: 40px;
             text-align: center;
-            margin-bottom: 40px;
         }
-        .charts {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        .chart-container {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            position: relative;
-        }
-        .sunburst-container {
-            grid-column: 1 / 3; /* 太阳图占满整行 */
-            height: 600px;
-        }
-
-        /* 标题设计 */
-        .main-title {
-            font-size: 32px;
+        
+        h1 {
+            font-size: 42px;
             font-weight: 700;
-            color: #2c3e50;
-            margin: 0 0 10px 0;
+            letter-spacing: -0.5px;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
-        .sub-title {
-            font-size: 18px;
-            color: #7f8c8d;
-            margin: 0 0 20px 0;
-            font-weight: 400;
-        }
-        .chart-title {
-            font-size: 18px;
-            margin: 0 0 15px 0;
-            color: #34495e;
-            border-left: 3px solid #3498db;
-            padding-left: 10px;
-        }
-
-        /* 树图样式 */
-        .treemap-cell {
-            stroke: #fff;
-            stroke-width: 2px;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-        .treemap-label {
-            font-size: 12px;
-            fill: #fff;
-            pointer-events: none;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        }
-
-        /* 泡泡树样式 */
-        .pack-circle {
-            stroke: #fff;
-            stroke-width: 2px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .pack-circle:hover {
-            stroke: #3498db;
-            stroke-width: 3px;
-        }
-        .pack-label {
-            font-size: 10px;
-            fill: #333;
-            pointer-events: none;
-            text-anchor: middle;
-        }
-
-        /* 太阳图样式 */
-        .sunburst-arc {
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-        .sunburst-arc:hover {
+        
+        .subtitle {
+            font-size: 20px;
+            font-weight: 300;
             opacity: 0.9;
-        }
-        .sunburst-label {
-            font-size: 12px;
-            fill: #fff;
-            pointer-events: none;
-            text-anchor: middle;
-        }
-
-        /* 交互提示 */
-        .tooltip {
-            position: absolute;
-            padding: 10px 15px;
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            border-radius: 6px;
-            font-size: 14px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 100;
-            max-width: 250px;
-        }
-
-        /* 数据小作文与签名档 */
-        .data-essay {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            max-width: 800px;
+            margin: 0 auto;
             line-height: 1.6;
         }
-        .signature {
-            text-align: right;
-            color: #7f8c8d;
-            padding: 10px 0;
-            border-top: 1px solid #eee;
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            padding: 30px;
         }
-        .signature-name {
+        
+        .visualization {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+        
+        .visualization:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .viz-header {
+            padding: 20px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .viz-title {
+            font-size: 22px;
             font-weight: 600;
-            color: #34495e;
+            color: #2d3748;
+            text-align: center;
+        }
+        
+        .viz-description {
+            font-size: 14px;
+            color: #718096;
+            text-align: center;
+            margin-top: 8px;
+        }
+        
+        .viz-content {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .insights {
+            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .insights-title {
+            font-size: 28px;
+            color: #2c5282;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        
+        .insight-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            font-size: 18px;
+            line-height: 1.8;
+            color: #4a5568;
+            text-align: justify;
+        }
+        
+        .signature {
+            padding: 25px;
+            background: #1a365d;
+            color: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .signature-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #a0aec0;
+        }
+        
+        .signature-content {
+            display: flex;
+            gap: 40px;
             font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .signature-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .signature-label {
+            font-size: 14px;
+            color: #a0aec0;
+            margin-bottom: 5px;
+        }
+        
+        .signature-credit {
+            font-size: 14px;
+            color: #a0aec0;
+            font-style: italic;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 5px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            border-radius: 8px;
+            pointer-events: none;
+            font-size: 14px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tooltip-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #63b3ed;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                padding: 25px 20px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 标题设计：突出概览原则 -->
-        <div class="header">
-            <h1 class="main-title">flare项目层次结构可视化</h1>
-            <p class="sub-title">Overview first, zoom and filter, details on demand | 多层次数据全景展示</p>
-        </div>
-
-        <!-- 图表容器 -->
-        <div class="charts">
-            <!-- 1. 面积树图 -->
-            <div class="chart-container">
-                <h2 class="chart-title">面积树图 (Treemap)：模块规模分布</h2>
-                <svg id="treemap" width="100%" height="500"></svg>
+        <header>
+            <h1>层次数据可视化展示</h1>
+            <p class="subtitle">使用矩形树图、泡泡树与旭日图展示层次数据结构 - 基于D3.js实现</p>
+        </header>
+        
+        <div class="dashboard">
+            <!-- 矩形树图 -->
+            <div class="visualization">
+                <div class="viz-header">
+                    <div class="viz-title">矩形树图 (Treemap)</div>
+                    <div class="viz-description">按区域大小展示层次结构数据</div>
+                </div>
+                <div class="viz-content" id="treemap"></div>
+                <div class="legend" id="treemap-legend"></div>
             </div>
-
-            <!-- 2. 泡泡树 -->
-            <div class="chart-container">
-                <h2 class="chart-title">泡泡树 (Circle Packing)：层级关系</h2>
-                <svg id="pack" width="100%" height="500"></svg>
+            
+            <!-- 泡泡树 -->
+            <div class="visualization">
+                <div class="viz-header">
+                    <div class="viz-title">泡泡树 (Circle Packing)</div>
+                    <div class="viz-description">层级关系嵌套式展示</div>
+                </div>
+                <div class="viz-content" id="circle-packing"></div>
+                <div class="legend" id="pack-legend"></div>
             </div>
-
-            <!-- 3. 太阳图 -->
-            <div class="chart-container sunburst-container">
-                <h2 class="chart-title">太阳图 (Sunburst)：深度层级占比</h2>
-                <svg id="sunburst" width="100%" height="600"></svg>
+            
+            <!-- 旭日图 -->
+            <div class="visualization">
+                <div class="viz-header">
+                    <div class="viz-title">旭日图 (Sunburst)</div>
+                    <div class="viz-description">径向层次结构展示</div>
+                </div>
+                <div class="viz-content" id="sunburst"></div>
+                <div class="legend" id="sunburst-legend"></div>
             </div>
         </div>
-
-        <!-- 数据小作文 -->
-        <div class="data-essay">
-            <p>本可视化基于flare.json数据集（包含软件项目模块层级结构），通过三种视图展示层次数据：面积树图直观呈现各模块规模占比，泡泡树突出层级嵌套关系，太阳图揭示深度结构。发现：可视化模块占比最大（38%），数据处理与算法模块构成核心支撑。设计遵循"先概览，再缩放筛选，按需查看细节"原则，色彩采用蓝紫渐变（主色#3498db、#9b59b6）区分层级，交互支持鼠标悬停查看详情。</p>
+        
+        <div class="insights">
+            <h2 class="insights-title">数据洞察与分析</h2>
+            <div class="insight-content">
+                <p>通过三种不同的层次数据可视化方式，我们可以清晰地观察到flare.json数据集中的层次结构关系。矩形树图以面积大小直观展示了各节点的相对权重；泡泡树通过嵌套关系展示了层次深度；旭日图则以径向方式呈现了层次结构。</p>
+                
+                <p>数据显示，"flare"命名空间包含多个重要子模块，其中"vis"可视化模块占据最大比例。在"analytics"分析模块中，"cluster"聚类算法和"graph"图算法是两个核心组件。值得注意的是"scale"比例模块在多个层次中均有重要分布。</p>
+                
+                <p>这些可视化遵循"Overview first, zoom and filter, details on demand"的数据展示原则。用户首先获得整体概览，然后可以通过交互深入查看细节信息。每种可视化方式都提供了独特的数据视角，共同构成了完整的数据分析体验。</p>
+            </div>
         </div>
-
-        <!-- 签名档 -->
+        
         <div class="signature">
-            <div class="signature-name">22计传张颖惠</div>
-            <div>数据来源：flare.json（经典层次数据示例）</div>
-            <div>技术实现：D3.js v7 层次可视化 | 遵循信息可视化原则</div>
+            <div class="signature-title">数据可视化课程作业</div>
+            <div class="signature-content">
+                <div class="signature-item">
+                    <div class="signature-label">数据来源</div>
+                    <div>flare.json层次数据集</div>
+                </div>
+                <div class="signature-item">
+                    <div class="signature-label">技术实现</div>
+                    <div>D3.js v7</div>
+                </div>
+                <div class="signature-item">
+                    <div class="signature-label">设计</div>
+                    <div>数据可视化设计小组</div>
+                </div>
+                <div class="signature-item">
+                    <div class="signature-label">日期</div>
+                    <div>2025年7月</div>
+                </div>
+            </div>
+            <div class="signature-credit">基于层次数据可视化的多维分析 | 数据可视化课程</div>
         </div>
     </div>
 
-    <!-- 交互提示框 -->
-    <div class="tooltip" id="tooltip"></div>
+    <div class="tooltip"></div>
 
     <script>
-        // 加载flare.json数据（实际使用时需确保该文件存在）
-        d3.json("flare.json").then(data => {
-            // 数据预处理：确保每个节点有value值（flare.json自带value）
-            function addValue(node) {
-                if (!node.children) return node.value;
-                node.value = node.children.reduce((sum, child) => sum + addValue(child), 0);
-                return node.value;
-            }
-            addValue(data);
-
-            // 1. 面积树图 (d3.treemap)
-            const treemapWidth = document.getElementById("treemap").parentElement.clientWidth;
-            const treemapHeight = 500;
-
-            const treemapSvg = d3.select("#treemap")
-                .attr("width", treemapWidth)
-                .attr("height", treemapHeight);
-
-            // 定义色彩比例尺（蓝紫渐变，2-3种主色）
-            const color = d3.scaleOrdinal()
-                .domain(["flare", "vis", "data", "algorithm", "util"])
-                .range(["#3498db", "#2980b9", "#9b59b6", "#8e44ad", "#34495e"]);
-
-            // 树图布局
-            const treemap = d3.treemap()
-                .size([treemapWidth, treemapHeight])
-                .padding(3);
-
-            // 层次数据处理
-            const treemapRoot = d3.hierarchy(data)
-                .sum(d => d.value)
+        // 使用D3加载flare.json数据
+        d3.json("https://gist.githubusercontent.com/mbostock/1093025/raw/9f78b0d08aceb4e4ced6c7e9b64a5e457bcd10b7/flare.json").then(function(data) {
+            // 处理层次数据
+            const root = d3.hierarchy(data)
+                .sum(d => d.value ? d.value : 1) // 如果节点没有value，则使用1
                 .sort((a, b) => b.value - a.value);
-
-            // 计算布局
-            treemap(treemapRoot);
-
-            // 绘制矩形
-            const treemapCells = treemapSvg.selectAll(".treemap-cell")
-                .data(treemapRoot.leaves())
+            
+            // 颜色比例尺
+            const color = d3.scaleOrdinal()
+                .domain(root.descendants().map(d => d.data.name))
+                .range(d3.quantize(d3.interpolateRainbow, root.descendants().length));
+            
+            // 1. 绘制矩形树图
+            drawTreemap(root, color);
+            
+            // 2. 绘制泡泡树
+            drawCirclePacking(root, color);
+            
+            // 3. 绘制旭日图
+            drawSunburst(root, color);
+            
+            // 创建图例
+            createLegends(root, color);
+        }).catch(function(error) {
+            console.error("数据加载错误:", error);
+        });
+        
+        // 矩形树图绘制函数
+        function drawTreemap(root, color) {
+            const width = 400;
+            const height = 350;
+            
+            // 创建SVG容器
+            const svg = d3.select("#treemap")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            // 创建树图布局
+            const treemap = d3.treemap()
+                .size([width, height])
+                .padding(1)
+                .round(true);
+            
+            // 计算树图布局
+            treemap(root);
+            
+            // 绘制单元格
+            const cell = svg.selectAll("g")
+                .data(root.descendants())
                 .enter()
-                .append("rect")
-                .attr("class", "treemap-cell")
-                .attr("x", d => d.x0)
-                .attr("y", d => d.y0)
+                .append("g")
+                .attr("transform", d => `translate(${d.x0},${d.y0})`);
+            
+            // 绘制矩形
+            cell.append("rect")
                 .attr("width", d => d.x1 - d.x0)
                 .attr("height", d => d.y1 - d.y0)
-                .attr("fill", d => {
-                    // 按祖先节点分配颜色，突出主要类别
-                    let ancestor = d;
-                    while (ancestor.depth > 1) ancestor = ancestor.parent;
-                    return color(ancestor.data.name);
-                })
-                .on("mouseover", (event, d) => {
-                    // 显示详情（按需查看细节）
-                    const path = [];
-                    let node = d;
-                    while (node.data.name !== "flare") {
-                        path.unshift(node.data.name);
-                        node = node.parent;
-                    }
-                    d3.select("#tooltip")
-                        .html(`<strong>${path.join(" > ")}</strong><br>规模: ${d.value}<br>占比: ${(d.value / data.value * 100).toFixed(1)}%`)
-                        .style("opacity", 1)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 20) + "px");
-                })
-                .on("mouseout", () => {
-                    d3.select("#tooltip").style("opacity", 0);
-                });
-
-            // 添加标签（仅显示较大节点，避免拥挤）
-            treemapSvg.selectAll(".treemap-label")
-                .data(treemapRoot.leaves().filter(d => (d.x1 - d.x0) * (d.y1 - d.y0) > 500))
-                .enter()
+                .attr("fill", d => color(d.data.name))
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1)
+                .on("mouseover", showTooltip)
+                .on("mouseout", hideTooltip);
+            
+            // 添加文本标签（只显示较大的节点）
+            cell.filter(d => (d.x1 - d.x0) > 40 && (d.y1 - d.y0) > 20)
                 .append("text")
-                .attr("class", "treemap-label")
-                .attr("x", d => d.x0 + (d.x1 - d.x0) / 2)
-                .attr("y", d => d.y0 + (d.y1 - d.y0) / 2)
-                .attr("dy", "0.3em")
-                .attr("text-anchor", "middle")
-                .text(d => d.data.name);
-
-            // 2. 泡泡树 (d3.pack)
-            const packWidth = document.getElementById("pack").parentElement.clientWidth;
-            const packHeight = 500;
-            const packRadius = Math.min(packWidth, packHeight) / 2;
-
-            const packSvg = d3.select("#pack")
-                .attr("width", packWidth)
-                .attr("height", packHeight)
-                .append("g")
-                .attr("transform", `translate(${packWidth / 2}, ${packHeight / 2})`);
-
-            // 泡泡树布局
+                .attr("x", 5)
+                .attr("y", 15)
+                .attr("font-size", 10)
+                .text(d => d.data.name)
+                .attr("fill", "#fff")
+                .attr("text-shadow", "0 1px 1px rgba(0,0,0,0.5)");
+        }
+        
+        // 泡泡树绘制函数
+        function drawCirclePacking(root, color) {
+            const width = 400;
+            const height = 350;
+            const margin = 5;
+            
+            // 创建SVG容器
+            const svg = d3.select("#circle-packing")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            // 创建泡泡布局
             const pack = d3.pack()
-                .size([packRadius * 2, packRadius * 2])
-                .padding(5);
-
-            // 层次数据处理
-            const packRoot = d3.hierarchy(data)
-                .sum(d => d.value)
-                .sort((a, b) => b.value - a.value);
-
-            // 计算布局
-            pack(packRoot);
-
-            // 绘制圆圈
-            const packCircles = packSvg.selectAll(".pack-circle")
-                .data(packRoot.descendants())
+                .size([width - margin * 2, height - margin * 2])
+                .padding(3);
+            
+            // 计算泡泡布局
+            pack(root);
+            
+            // 绘制节点
+            const node = svg.selectAll("g")
+                .data(root.descendants())
                 .enter()
-                .append("circle")
-                .attr("class", "pack-circle")
-                .attr("r", d => d.r)
-                .attr("cx", d => d.x)
-                .attr("cy", d => d.y)
-                .attr("fill", d => {
-                    let ancestor = d;
-                    while (ancestor.depth > 1) ancestor = ancestor.parent;
-                    return color(ancestor.data.name);
-                })
-                .attr("opacity", d => d.children ? 0.8 : 0.9)
-                .on("mouseover", (event, d) => {
-                    const path = [];
-                    let node = d;
-                    while (node.data.name !== "flare") {
-                        path.unshift(node.data.name);
-                        node = node.parent;
-                    }
-                    d3.select("#tooltip")
-                        .html(`<strong>${path.join(" > ")}</strong><br>规模: ${d.data.value || "N/A"}`)
-                        .style("opacity", 1)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 20) + "px");
-                })
-                .on("mouseout", () => {
-                    d3.select("#tooltip").style("opacity", 0);
-                });
-
-            // 添加标签
-            packSvg.selectAll(".pack-label")
-                .data(packRoot.descendants().filter(d => d.r > 15))
-                .enter()
-                .append("text")
-                .attr("class", "pack-label")
-                .attr("x", d => d.x)
-                .attr("y", d => d.y)
-                .attr("dy", "0.3em")
-                .text(d => d.data.name);
-
-            // 3. 太阳图 (d3.partition)
-            const sunburstWidth = document.getElementById("sunburst").parentElement.clientWidth;
-            const sunburstHeight = 600;
-            const sunburstRadius = Math.min(sunburstWidth, sunburstHeight) / 2 - 50;
-
-            const sunburstSvg = d3.select("#sunburst")
-                .attr("width", sunburstWidth)
-                .attr("height", sunburstHeight)
                 .append("g")
-                .attr("transform", `translate(${sunburstWidth / 2}, ${sunburstHeight / 2})`);
-
-            // 太阳图布局
+                .attr("transform", d => `translate(${d.x + margin},${d.y + margin})`);
+            
+            // 绘制圆形
+            node.append("circle")
+                .attr("r", d => d.r)
+                .attr("fill", d => color(d.data.name))
+                .attr("opacity", d => d.depth === 0 ? 0.8 : 0.7)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1)
+                .on("mouseover", showTooltip)
+                .on("mouseout", hideTooltip);
+            
+            // 添加文本标签（只显示叶子节点）
+            node.filter(d => !d.children)
+                .append("text")
+                .attr("dy", "0.3em")
+                .attr("font-size", d => Math.min(2 * d.r, (2 * d.r - 8) / this.getComputedTextLength() * 12))
+                .text(d => d.data.name)
+                .attr("fill", "#fff")
+                .attr("text-anchor", "middle")
+                .attr("pointer-events", "none")
+                .attr("text-shadow", "0 1px 1px rgba(0,0,0,0.5)");
+        }
+        
+        // 旭日图绘制函数
+        function drawSunburst(root, color) {
+            const width = 350;
+            const height = 350;
+            const radius = Math.min(width, height) / 2;
+            
+            // 创建SVG容器
+            const svg = d3.select("#sunburst")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width/2},${height/2})`);
+            
+            // 创建分区布局
             const partition = d3.partition()
-                .size([2 * Math.PI, sunburstRadius]);
-
-            // 层次数据处理
-            const sunburstRoot = d3.hierarchy(data)
-                .sum(d => d.value)
-                .sort((a, b) => b.value - a.value);
-
-            // 计算布局
-            partition(sunburstRoot);
-
+                .size([2 * Math.PI, radius]);
+            
+            // 计算分区布局
+            partition(root);
+            
+            // 创建弧形生成器
+            const arc = d3.arc()
+                .startAngle(d => d.x0)
+                .endAngle(d => d.x1)
+                .innerRadius(d => d.y0)
+                .outerRadius(d => d.y1);
+            
             // 绘制弧形
-            const sunburstArcs = sunburstSvg.selectAll(".sunburst-arc")
-                .data(sunburstRoot.descendants())
+            const path = svg.selectAll("path")
+                .data(root.descendants().filter(d => d.depth))
                 .enter()
                 .append("path")
-                .attr("class", "sunburst-arc")
-                .attr("d", d3.arc()
-                    .startAngle(d => d.x0)
-                    .endAngle(d => d.x1)
-                    .innerRadius(d => d.y0)
-                    .outerRadius(d => d.y1)
-                )
-                .attr("fill", d => {
-                    while (d.depth > 1) d = d.parent;
-                    return color(d.data.name);
-                })
-                .on("mouseover", (event, d) => {
-                    const path = [];
-                    let node = d;
-                    while (node.data.name !== "flare") {
-                        path.unshift(node.data.name);
-                        node = node.parent;
-                    }
-                    d3.select("#tooltip")
-                        .html(`<strong>${path.join(" > ")}</strong><br>规模: ${d.data.value || "N/A"}<br>深度: ${d.depth}`)
-                        .style("opacity", 1)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 20) + "px");
-                })
-                .on("mouseout", () => {
-                    d3.select("#tooltip").style("opacity", 0);
-                });
-
-            // 添加标签
-            sunburstSvg.selectAll(".sunburst-label")
-                .data(sunburstRoot.descendants().filter(d => (d.x1 - d.x0) * d.y1 > 0.01))
+                .attr("d", arc)
+                .attr("fill", d => color(d.data.name))
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 0.5)
+                .attr("opacity", 0.85)
+                .on("mouseover", showTooltip)
+                .on("mouseout", hideTooltip);
+            
+            // 添加文本标签
+            svg.selectAll("text")
+                .data(root.descendants().filter(d => d.depth && (d.x1 - d.x0) > 0.05))
                 .enter()
                 .append("text")
-                .attr("class", "sunburst-label")
-                .attr("transform", d => {
+                .attr("transform", function(d) {
                     const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
-                    const rotate = x < 90 || x > 270 ? x : x + 180;
-                    return `rotate(${rotate}) translate(${d.y0 + (d.y1 - d.y0) / 2}, 0) rotate(${x < 90 || x > 270 ? 0 : 180})`;
+                    const y = (d.y0 + d.y1) / 2;
+                    return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
                 })
-                .attr("dy", "0.3em")
-                .text(d => d.data.name);
-
-        }).catch(error => {
-            console.error("加载数据失败，请确保flare.json文件存在：", error);
-            // 若没有flare.json，使用模拟数据
-            const mockData = {
-                "name": "flare",
-                "children": [
-                    {"name": "vis", "value": 380, "children": [{"name": "chart", "value": 250}, {"name": "legend", "value": 130}]},
-                    {"name": "data", "value": 320, "children": [{"name": "array", "value": 180}, {"name": "tree", "value": 140}]},
-                    {"name": "algorithm", "value": 300}
-                ]
-            };
-            // 重新调用可视化函数（代码同上，略）
-        });
+                .attr("dy", "0.35em")
+                .attr("text-anchor", "middle")
+                .attr("font-size", 10)
+                .text(d => d.data.name)
+                .attr("fill", "#fff")
+                .attr("pointer-events", "none")
+                .attr("text-shadow", "0 1px 1px rgba(0,0,0,0.5)");
+        }
+        
+        // 创建图例
+        function createLegends(root, color) {
+            // 获取前10个主要节点
+            const mainNodes = root.descendants()
+                .filter(d => d.depth === 1)
+                .slice(0, 10);
+            
+            // 为每个可视化创建图例
+            [1, 2, 3].forEach(vizId => {
+                const legend = d3.select(vizId === 1 ? "#treemap-legend" : 
+                                      vizId === 2 ? "#pack-legend" : "#sunburst-legend");
+                
+                mainNodes.forEach(node => {
+                    const item = legend.append("div")
+                        .attr("class", "legend-item");
+                    
+                    item.append("div")
+                        .attr("class", "legend-color")
+                        .style("background-color", color(node.data.name));
+                    
+                    item.append("div")
+                        .text(node.data.name)
+                        .style("font-size", "11px");
+                });
+            });
+        }
+        
+        // 工具提示函数
+        function showTooltip(event, d) {
+            const tooltip = d3.select(".tooltip");
+            
+            let content = `<div class="tooltip-title">${d.data.name}</div>`;
+            content += `<div>深度: ${d.depth}</div>`;
+            content += `<div>值: ${d.value || 'N/A'}</div>`;
+            content += `<div>子节点: ${d.children ? d.children.length : 0}</div>`;
+            
+            tooltip.html(content)
+                .style("opacity", 1)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        }
+        
+        function hideTooltip() {
+            d3.select(".tooltip")
+                .style("opacity", 0);
+        }
     </script>
 </body>
 </html>
