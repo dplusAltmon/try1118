@@ -1,0 +1,33 @@
+{
+  "nodes": [
+    {"id": 1, "name": "哈利·波特", "house": "格兰芬多", "role": "主角"},
+    {"id": 2, "name": "罗恩·韦斯莱", "house": "格兰芬多", "role": "主角"},
+    {"id": 3, "name": "赫敏·格兰杰", "house": "格兰芬多", "role": "主角"},
+    {"id": 4, "name": "阿不思·邓布利多", "house": "格兰芬多", "role": "校长"},
+    {"id": 5, "name": "伏地魔", "house": "斯莱特林", "role": "反派大boss"},
+    {"id": 6, "name": "西弗勒斯·斯内普", "house": "斯莱特林", "role": "教师"},
+    {"id": 7, "name": "米勒娃·麦格", "house": "格兰芬多", "role": "教师"},
+    {"id": 8, "name": "鲁伯·海格", "house": "格兰芬多", "role": "钥匙保管员"},
+    {"id": 9, "name": "德拉科·马尔福", "house": "斯莱特林", "role": "同学"},
+    {"id": 10, "name": "小天狼星·布莱克", "house": "格兰芬多", "role": "哈利教父"},
+    {"id": 11, "name": "莱姆斯·卢平", "house": "格兰芬多", "role": "教师"},
+    {"id": 12, "name": "纳威·隆巴顿", "house": "格兰芬多", "role": "同学"}
+  ],
+  "links": [
+    {"source": 1, "target": 2, "relation": "挚友", "value": 10},
+    {"source": 1, "target": 3, "relation": "挚友", "value": 10},
+    {"source": 1, "target": 4, "relation": "师生/精神指导", "value": 8},
+    {"source": 1, "target": 5, "relation": "宿敌", "value": 9},
+    {"source": 1, "target": 6, "relation": "复杂（敌对外壳实则保护）", "value": 7},
+    {"source": 1, "target": 8, "relation": "保护者", "value": 6},
+    {"source": 1, "target": 10, "relation": "亲属/保护", "value": 8},
+    {"source": 1, "target": 9, "relation": "敌对", "value": 7},
+    {"source": 2, "target": 3, "relation": "挚友", "value": 9},
+    {"source": 4, "target": 6, "relation": "信任/合作", "value": 8},
+    {"source": 4, "target": 5, "relation": "宿敌", "value": 10},
+    {"source": 6, "target": 5, "relation": "表面服从/暗中对抗", "value": 6},
+    {"source": 1, "target": 11, "relation": "师生", "value": 5},
+    {"source": 1, "target": 12, "relation": "同学", "value": 4},
+    {"source": 7, "target": 1, "relation": "师生/保护", "value": 6}
+  ]
+}
