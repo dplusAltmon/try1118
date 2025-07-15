@@ -1,0 +1,75 @@
+{
+  "name": "2024年全国文化及相关产业",
+  "children": [
+    {
+      "name": "文化核心领域",
+      "value": 125000,
+      "growth": 7.2,
+      "children": [
+        {
+          "name": "内容创作生产",
+          "value": 38827,
+          "growth": 8.4,
+          "children": [
+            {"name": "新闻信息服务", "value": 22276, "growth": 8.6},
+            {"name": "出版服务", "value": 9542, "growth": 5.2},
+            {"name": "创作表演服务", "value": 7009, "growth": 10.1}
+          ]
+        },
+        {
+          "name": "创意设计服务",
+          "value": 38890,
+          "growth": 7.2,
+          "children": [
+            {"name": "广告服务", "value": 18245, "growth": 6.5},
+            {"name": "设计服务", "value": 20645, "growth": 7.8}
+          ]
+        },
+        {
+          "name": "文化传播渠道",
+          "value": 19898,
+          "growth": 4.5,
+          "children": [
+            {"name": "广播影视传输", "value": 8234, "growth": 3.2},
+            {"name": "互联网文化", "value": 11664, "growth": 5.8}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "文化相关领域",
+      "value": 66000,
+      "growth": 5.1,
+      "children": [
+        {
+          "name": "文化辅助生产",
+          "value": 26598,
+          "growth": 6.2,
+          "children": [
+            {"name": "印刷复制", "value": 10345, "growth": 4.1},
+            {"name": "文化设备生产", "value": 16253, "growth": 7.8}
+          ]
+        },
+        {
+          "name": "文化消费终端生产",
+          "value": 31382,
+          "growth": 6.8,
+          "children": [
+            {"name": "文化用品", "value": 18765, "growth": 6.5},
+            {"name": "工艺美术品", "value": 12617, "growth": 7.2}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "新业态特征明显的文化产业",
+      "value": 38000,
+      "growth": 9.3,
+      "children": [
+        {"name": "数字出版", "value": 7500, "growth": 12.5},
+        {"name": "智能文化设备制造", "value": 12300, "growth": 10.8},
+        {"name": "互联网文化娱乐平台", "value": 18200, "growth": 8.1}
+      ]
+    }
+  ]
+}
