@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+	<meta charset='utf-8'>
+    <style>canvas { width: 100%; height: 100% }</style>
+    <script src="r154/threeR154.js"></script>
+
+	<script src="r154/OrbitControls.js"></script>
+</head>
+<body>
+	<div id="canvas-frame"></div>
+    <script>
+	    var threeDiv = document.getElementById( 'canvas-frame' );
+        var scene = new THREE.Scene();
+        
+        var camera = new THREE.PerspectiveCamera(90, window.innerWidth/window.innerHeight, 0.1, 1000);
+        
+        var renderer = new THREE.WebGLRenderer( {antialias: true, alpha: true} );
+        renderer.shadowMap.enabled=true;
+		renderer.setClearColor( 0x000000, 1 );
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+		threeDiv.appendChild(renderer.domElement);
+
+		//1-立方体
+        var geometry = new THREE.BoxGeometry(50,50,50);
+        var material = new THREE.MeshLambertMaterial({
+			color: 0xff0000,
+			wireframe:false
+			});
+        var cube = new THREE.Mesh(geometry, material); 
+        cube.position.set(0,25,0);
+        cube.castShadow = true;
+		scene.add(cube);
+
+		// 2-长方体
+		var geometry1 = new THREE.BoxGeometry(30, 40, 50);
+		var material1 = new THREE.MeshLambertMaterial({
+		  color: 0x00ff00,
+		  wireframe:false
+		}); //材质对象Material
+		var box = new THREE.Mesh(geometry1, material1); //网格模型对象Mesh
+		box.translateX(100);
+        box.translateY(20); 
+        box.castShadow=true;        
+		scene.add(box); //网格模型添加到场景中
+
+		// 球体网格模型
+		var geometry2 = new THREE.SphereGeometry(40, 10, 10);
+		var material2 = new THREE.MeshLambertMaterial({
+			color: 0x0000ff,
+			wireframe:false,
+		    opacity:0.7,
+			transparent:true
+		});
+		var sphere = new THREE.Mesh(geometry2, material2); //网格模型对象Mesh
+		sphere.translateX(-100); //球体网格模型沿Y轴正方向平移120
+        sphere.translateY(40);
+        sphere.castShadow=true;
+		scene.add(sphere);
+
+
+		// 圆柱网格模型
+		var geometry3 = new THREE.CylinderGeometry(30, 30, 100, 25);
+		var material3 = new THREE.MeshPhongMaterial({
+		  wireframe:true,
+		  color: 0xff0000,
+		  specular:0x4488ee,
+		  shininess:12
+		});
+		var cylinder = new THREE.Mesh(geometry3, material3); //网格模型对象Mesh
+		cylinder.position.set(200,50,0);//设置mesh3模型对象的xyz坐标为120,0,0
+        cylinder.castShadow=true;
+		scene.add(cylinder); //
+
+
+
+        camera.position.z =200;
+		camera.position.x =200;
+		camera.position.y =200;
+           
+		var light = new THREE.SpotLight(0xffffff,1000,400,Math.PI/6,0.5);
+        light.position.set(150,150,150);
+        light.castShadow = true;
+        light.shadow.camera.near = 0.5;
+        light.shadow.camera.far = 500;
+        light.shadow.camera.fov = 75;
+
+        var lightHelper=new THREE.SpotLightHelper(light);
+        scene.add(lightHelper);
+		scene.add(light);
+        
+        var ambientLight = new THREE.AmbientLight(0x808080); // soft white light
+        scene.add(ambientLight);
+
+
+        var orbitControls = new THREE.OrbitControls(camera, threeDiv);
+        orbitControls.target = cube.position;//控制焦点
+        orbitControls.autoRotate = true;//自动旋转
+        scene.controls = orbitControls;
+        
+        
+        var geometry = new THREE.PlaneGeometry(600, 600);
+        var material = new THREE.MeshLambertMaterial({color: 0x999999});
+        var plane = new THREE.Mesh(geometry, material);
+        plane.rotation.x = -Math.PI / 2;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        //initGrid();
+        
+		render();
+		function render()
+        {
+            scene.controls.update();
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+        }
+        /*
+      	function initGrid(){
+            //平面
+            var gridXZ = new THREE.GridHelper(600, 10, 0xa23131, 0xa23131);
+            //4个参数分别是：网格宽度、等分数、中心线颜色，网格线颜色
+            gridXZ.position.set( 0,0,0 );
+            gridXZ.material.linewidth = 10;
+            scene.add(gridXZ);
+        }
+*/        
+    </script>
+<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d912c94599ab449bbf0813bd77f413e8"}'></script><!-- Cloudflare Pages Analytics --></body>
+</html>
