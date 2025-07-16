@@ -1,134 +1,191 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
-	<meta charset='utf-8'>
-    <style>canvas { width: 100%; height: 100% }</style>
-    <script src="r154/threeR154.js"></script>
-
-	<script src="r154/OrbitControls.js"></script>
+    <title>3D几何体展示</title>
+    <meta charset='utf-8'>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #1a1a1a;
+        }
+        #canvas-frame {
+            width: 100%;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            max-width: 300px;
+            z-index: 10;
+        }
+    </style>
+    <!-- 使用CDN引入Three.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-	<div id="canvas-frame"></div>
+    <div id="canvas-frame"></div>
+    <div class="info-panel">
+        <h3>3D几何体展示</h3>
+        <p>• 红色立方体：基础BoxGeometry</p>
+        <p>• 绿色长方体：尺寸可变的BoxGeometry</p>
+        <p>• 蓝色球体：半透明SphereGeometry</p>
+        <p>• 线框圆柱体：CylinderGeometry</p>
+        <p>使用鼠标拖动旋转视角，滚轮缩放</p>
+    </div>
+
     <script>
-	    var threeDiv = document.getElementById( 'canvas-frame' );
-        var scene = new THREE.Scene();
-        
-        var camera = new THREE.PerspectiveCamera(90, window.innerWidth/window.innerHeight, 0.1, 1000);
-        
-        var renderer = new THREE.WebGLRenderer( {antialias: true, alpha: true} );
-        renderer.shadowMap.enabled=true;
-		renderer.setClearColor( 0x000000, 1 );
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        // 确保DOM完全加载后再执行
+        document.addEventListener('DOMContentLoaded', function() {
+            var threeDiv = document.getElementById('canvas-frame');
+            var scene = new THREE.Scene();
+            
+            // 创建相机 - 使用窗口实际尺寸
+            var aspectRatio = window.innerWidth / window.innerHeight;
+            var camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
+            
+            // 创建渲染器 - 使用物理像素尺寸
+            var renderer = new THREE.WebGLRenderer({ 
+                antialias: true, 
+                alpha: true 
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            
+            threeDiv.appendChild(renderer.domElement);
 
-		threeDiv.appendChild(renderer.domElement);
+            // 1-立方体
+            var geometry = new THREE.BoxGeometry(1, 1, 1);
+            var material = new THREE.MeshLambertMaterial({
+                color: 0xff0000,
+                wireframe: false
+            });
+            var cube = new THREE.Mesh(geometry, material); 
+            cube.position.set(0, 0.5, 0);
+            cube.castShadow = true;
+            scene.add(cube);
 
-		//1-立方体
-        var geometry = new THREE.BoxGeometry(50,50,50);
-        var material = new THREE.MeshLambertMaterial({
-			color: 0xff0000,
-			wireframe:false
-			});
-        var cube = new THREE.Mesh(geometry, material); 
-        cube.position.set(0,25,0);
-        cube.castShadow = true;
-		scene.add(cube);
+            // 2-长方体
+            var geometry1 = new THREE.BoxGeometry(0.6, 0.8, 1);
+            var material1 = new THREE.MeshLambertMaterial({
+                color: 0x00ff00,
+                wireframe: false
+            });
+            var box = new THREE.Mesh(geometry1, material1);
+            box.position.set(2, 0.4, 0);
+            box.castShadow = true;
+            scene.add(box);
 
-		// 2-长方体
-		var geometry1 = new THREE.BoxGeometry(30, 40, 50);
-		var material1 = new THREE.MeshLambertMaterial({
-		  color: 0x00ff00,
-		  wireframe:false
-		}); //材质对象Material
-		var box = new THREE.Mesh(geometry1, material1); //网格模型对象Mesh
-		box.translateX(100);
-        box.translateY(20); 
-        box.castShadow=true;        
-		scene.add(box); //网格模型添加到场景中
+            // 3-球体
+            var geometry2 = new THREE.SphereGeometry(0.5, 32, 32);
+            var material2 = new THREE.MeshLambertMaterial({
+                color: 0x0000ff,
+                wireframe: false,
+                opacity: 0.7,
+                transparent: true
+            });
+            var sphere = new THREE.Mesh(geometry2, material2);
+            sphere.position.set(-2, 0.5, 0);
+            sphere.castShadow = true;
+            scene.add(sphere);
 
-		// 球体网格模型
-		var geometry2 = new THREE.SphereGeometry(40, 10, 10);
-		var material2 = new THREE.MeshLambertMaterial({
-			color: 0x0000ff,
-			wireframe:false,
-		    opacity:0.7,
-			transparent:true
-		});
-		var sphere = new THREE.Mesh(geometry2, material2); //网格模型对象Mesh
-		sphere.translateX(-100); //球体网格模型沿Y轴正方向平移120
-        sphere.translateY(40);
-        sphere.castShadow=true;
-		scene.add(sphere);
+            // 4-圆柱体
+            var geometry3 = new THREE.CylinderGeometry(0.4, 0.4, 1, 32);
+            var material3 = new THREE.MeshPhongMaterial({
+                wireframe: true,
+                color: 0xffff00,
+                specular: 0x4488ee,
+                shininess: 12
+            });
+            var cylinder = new THREE.Mesh(geometry3, material3);
+            cylinder.position.set(0, 0.5, -2);
+            cylinder.castShadow = true;
+            scene.add(cylinder);
 
+            // 设置相机位置
+            camera.position.set(3, 2, 3);
+            camera.lookAt(0, 0, 0);
+            
+            // 添加光源
+            var spotLight = new THREE.SpotLight(0xffffff, 1);
+            spotLight.position.set(3, 5, 3);
+            spotLight.castShadow = true;
+            spotLight.shadow.mapSize.width = 1024;
+            spotLight.shadow.mapSize.height = 1024;
+            scene.add(spotLight);
+            
+            var ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            // 添加轨道控制器
+            var orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+            orbitControls.enableDamping = true;
+            orbitControls.dampingFactor = 0.05;
+            orbitControls.autoRotate = true;
+            orbitControls.autoRotateSpeed = 0.5;
 
-		// 圆柱网格模型
-		var geometry3 = new THREE.CylinderGeometry(30, 30, 100, 25);
-		var material3 = new THREE.MeshPhongMaterial({
-		  wireframe:true,
-		  color: 0xff0000,
-		  specular:0x4488ee,
-		  shininess:12
-		});
-		var cylinder = new THREE.Mesh(geometry3, material3); //网格模型对象Mesh
-		cylinder.position.set(200,50,0);//设置mesh3模型对象的xyz坐标为120,0,0
-        cylinder.castShadow=true;
-		scene.add(cylinder); //
+            // 添加地面
+            var planeGeometry = new THREE.PlaneGeometry(10, 10);
+            var planeMaterial = new THREE.MeshStandardMaterial({
+                color: 0x333333,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = -0.01;
+            plane.receiveShadow = true;
+            scene.add(plane);
 
+            // 添加坐标轴辅助
+            var axesHelper = new THREE.AxesHelper(2);
+            scene.add(axesHelper);
 
+            // 窗口大小调整处理
+            window.addEventListener('resize', onWindowResize);
+            
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
 
-        camera.position.z =200;
-		camera.position.x =200;
-		camera.position.y =200;
-           
-		var light = new THREE.SpotLight(0xffffff,1000,400,Math.PI/6,0.5);
-        light.position.set(150,150,150);
-        light.castShadow = true;
-        light.shadow.camera.near = 0.5;
-        light.shadow.camera.far = 500;
-        light.shadow.camera.fov = 75;
-
-        var lightHelper=new THREE.SpotLightHelper(light);
-        scene.add(lightHelper);
-		scene.add(light);
-        
-        var ambientLight = new THREE.AmbientLight(0x808080); // soft white light
-        scene.add(ambientLight);
-
-
-        var orbitControls = new THREE.OrbitControls(camera, threeDiv);
-        orbitControls.target = cube.position;//控制焦点
-        orbitControls.autoRotate = true;//自动旋转
-        scene.controls = orbitControls;
-        
-        
-        var geometry = new THREE.PlaneGeometry(600, 600);
-        var material = new THREE.MeshLambertMaterial({color: 0x999999});
-        var plane = new THREE.Mesh(geometry, material);
-        plane.rotation.x = -Math.PI / 2;
-        plane.receiveShadow = true;
-        scene.add(plane);
-
-        //initGrid();
-        
-		render();
-		function render()
-        {
-            scene.controls.update();
-            renderer.render(scene, camera);
-            requestAnimationFrame(render);
-        }
-        /*
-      	function initGrid(){
-            //平面
-            var gridXZ = new THREE.GridHelper(600, 10, 0xa23131, 0xa23131);
-            //4个参数分别是：网格宽度、等分数、中心线颜色，网格线颜色
-            gridXZ.position.set( 0,0,0 );
-            gridXZ.material.linewidth = 10;
-            scene.add(gridXZ);
-        }
-*/        
+            // 动画循环
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // 更新控制器
+                orbitControls.update();
+                
+                // 简单动画效果
+                var time = Date.now() * 0.001;
+                cube.rotation.x = time * 0.5;
+                cube.rotation.y = time * 0.3;
+                
+                box.rotation.y = time * 0.7;
+                
+                sphere.position.y = 0.5 + Math.sin(time) * 0.2;
+                
+                cylinder.rotation.x = time * 0.4;
+                
+                // 渲染场景
+                renderer.render(scene, camera);
+            }
+            
+            // 启动动画
+            animate();
+        });
     </script>
-<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d912c94599ab449bbf0813bd77f413e8"}'></script><!-- Cloudflare Pages Analytics --></body>
+</body>
 </html>
