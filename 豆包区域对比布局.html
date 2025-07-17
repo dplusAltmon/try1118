@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>区域文化产业数据对比</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/renderers/CSS3DRenderer.js"></script>
+    <!-- 使用兼容版本引入Three.js -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <!-- 引入CSS3DRenderer -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/renderers/CSS3DRenderer.js"></script>
     <style>
         :root {
             --primary: #1a365d;
@@ -396,11 +398,8 @@
             const loadingElement = container.querySelector('.loading');
             
             // 移除之前的渲染器
-            while (container.firstChild) {
-                if (container.firstChild.classList && container.firstChild.classList.contains('loading')) {
-                    break;
-                }
-                container.removeChild(container.firstChild);
+            while (container.children.length > 1) {
+                container.removeChild(container.lastChild);
             }
 
             try {
@@ -412,18 +411,19 @@
                 const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
                 camera.position.set(40, 30, 60);
 
+                // 使用WebGL渲染器
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(width, height);
+                renderer.setClearColor(0x000000, 0);
+                container.appendChild(renderer.domElement);
+
                 // 使用CSS3DRenderer进行标签渲染
                 const css3dRenderer = new THREE.CSS3DRenderer();
                 css3dRenderer.setSize(width, height);
                 css3dRenderer.domElement.style.position = 'absolute';
                 css3dRenderer.domElement.style.top = '0';
+                css3dRenderer.domElement.style.pointerEvents = 'none';
                 container.appendChild(css3dRenderer.domElement);
-
-                // WebGL渲染器
-                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(width, height);
-                renderer.setClearColor(0x000000, 0);
-                container.appendChild(renderer.domElement);
 
                 // 控制器（允许旋转、缩放）
                 const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -465,8 +465,9 @@
                 ground.position.y = -0.1;
                 scene.add(ground);
 
-                // 绘制三维柱状体（X=行业，Z=区域，Y=营收高度）
+                // 绘制三维柱状体
                 const cubes = [];
+                const labels = [];
                 
                 regionData.forEach((region, zIndex) => {
                     region.industries.forEach((industry, xIndex) => {
@@ -511,11 +512,13 @@
                         labelDiv.style.padding = '2px 5px';
                         labelDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
                         labelDiv.style.borderRadius = '3px';
+                        labelDiv.style.pointerEvents = 'none';
                         
                         const label = new THREE.CSS3DSprite(labelDiv);
                         label.position.set(xPos, -3, zPos);
                         label.scale.set(0.02, 0.02, 0.02);
                         scene.add(label);
+                        labels.push(label);
                     });
                 });
 
@@ -527,6 +530,7 @@
                     labelDiv.style.color = '#2d3748';
                     labelDiv.style.fontSize = '16px';
                     labelDiv.style.fontWeight = 'bold';
+                    labelDiv.style.pointerEvents = 'none';
                     
                     const label = new THREE.CSS3DSprite(labelDiv);
                     label.position.set(position.x, position.y, position.z);
@@ -535,6 +539,7 @@
                     }
                     label.scale.set(0.03, 0.03, 0.03);
                     scene.add(label);
+                    return label;
                 }
                 
                 // X轴（行业）标签
@@ -573,9 +578,10 @@
                 const mouse = new THREE.Vector2();
                 
                 function onMouseMove(event) {
-                    // 鼠标位置归一化
-                    mouse.x = (event.clientX / width) * 2 - 1;
-                    mouse.y = - (event.clientY / height) * 2 + 1;
+                    // 计算鼠标在归一化设备坐标中的位置
+                    const rect = container.getBoundingClientRect();
+                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
                 }
                 
                 container.addEventListener("mousemove", onMouseMove);
@@ -588,7 +594,7 @@
                     raycaster.setFromCamera(mouse, camera);
                     const intersects = raycaster.intersectObjects(cubes);
                     
-                    if (intersects.length > 0 && intersects[0].object.userData.region) {
+                    if (intersects.length > 0 && intersects[0].object.userData) {
                         const data = intersects[0].object.userData;
                         const tooltip = document.getElementById("tooltip");
                         tooltip.innerHTML = `
@@ -597,8 +603,8 @@
                             <p>行业占比：${((data.revenue / regionData.find(r => r.name === data.region).revenue) * 100).toFixed(1)}%</p>
                         `;
                         tooltip.style.opacity = 1;
-                        tooltip.style.left = (event.pageX + 15) + "px";
-                        tooltip.style.top = (event.pageY - 80) + "px";
+                        tooltip.style.left = (event.clientX + 15) + "px";
+                        tooltip.style.top = (event.clientY - 80) + "px";
                     } else {
                         document.getElementById("tooltip").style.opacity = 0;
                     }
