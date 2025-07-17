@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>区域文化产业数据对比 请成功</title>
+    <title>区域文化产业数据三维可视化</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- 使用稳定的Three.js版本 -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.124.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.124.0/examples/js/controls/OrbitControls.js"></script>
     <style>
@@ -127,16 +126,11 @@
         
         .chart-container {
             width: 100%;
-            height: 400px;
-            position: relative;
-        }
-        
-        .chart-container-3d {
             height: 500px;
-        }
-        
-        .chart-container-2d {
-            height: 350px;
+            position: relative;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
         }
         
         .tooltip {
@@ -183,6 +177,10 @@
             display: flex;
             align-items: center;
             font-size: 14px;
+            background: rgba(255,255,255,0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         .legend-color {
@@ -207,13 +205,6 @@
             color: var(--primary);
         }
         
-        .error {
-            color: var(--danger);
-            text-align: center;
-            padding: 20px;
-            font-weight: 500;
-        }
-        
         .controls {
             display: flex;
             justify-content: center;
@@ -229,10 +220,12 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background 0.3s;
+            font-weight: 600;
         }
         
         .control-btn:hover {
             background: #2c5282;
+            transform: translateY(-2px);
         }
         
         .footer {
@@ -240,6 +233,8 @@
             margin-top: 40px;
             color: #718096;
             font-size: 14px;
+            padding: 20px 0;
+            border-top: 1px solid #e2e8f0;
         }
         
         @media (max-width: 768px) {
@@ -247,53 +242,70 @@
                 grid-template-columns: 1fr;
             }
             
-            .chart-container-3d {
-                height: 400px;
-            }
-            
             .header h1 {
                 font-size: 2rem;
             }
+            
+            .chart-container {
+                height: 400px;
+            }
         }
         
-        /* 数据标签样式 */
-        .data-label {
+        .info-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 15px;
             position: absolute;
-            color: #1a365d;
-            font-size: 12px;
-            font-weight: 600;
-            text-align: center;
-            padding: 2px 5px;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 3px;
-            pointer-events: none;
-            z-index: 10;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            max-width: 300px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .info-panel h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .info-panel p {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>区域文化产业数据对比</h1>
-        <p>基于国家统计局2024年文化产业区域数据可视化分析</p>
+        <h1>区域文化产业数据三维可视化</h1>
+        <p>基于国家统计局2024年文化产业区域数据深度分析</p>
     </div>
     
     <div class="container">
         <div class="controls">
-            <button class="control-btn" onclick="resetCharts()">重置视图</button>
-            <button class="control-btn" onclick="toggleTheme()">切换主题</button>
+            <button class="control-btn" onclick="resetView()">重置视图</button>
+            <button class="control-btn" onclick="toggleGrid()">切换网格</button>
+            <button class="control-btn" onclick="toggleRotation()">旋转控制</button>
         </div>
         
         <div class="section-title">
-            <i class="icon">📊</i> 三维行业×区域营收分布
+            <i class="icon">🌐</i> 三维行业区域营收分布（亿元）
         </div>
         
         <div class="viz-card full-width">
-            <div class="viz-title">
-                <i class="icon">🌐</i> 三维行业×区域营收分布（亿元）
+            <div class="info-panel">
+                <h3>数据解读指南</h3>
+                <p><span style="display:inline-block; width:12px; height:12px; background:#3182ce; border-radius:2px; margin-right:5px;"></span> X轴：区域分布</p>
+                <p><span style="display:inline-block; width:12px; height:12px; background:#48bb78; border-radius:2px; margin-right:5px;"></span> Y轴：行业类别</p>
+                <p><span style="display:inline-block; width:12px; height:12px; background:#f6ad55; border-radius:2px; margin-right:5px;"></span> Z轴：营收金额</p>
+                <p>柱状高度代表营收金额，可旋转视图多角度观察</p>
             </div>
-            <div id="three-d-region" class="chart-container chart-container-3d">
+            
+            <div id="three-d-chart" class="chart-container">
                 <div class="loading">加载三维可视化图表中...</div>
             </div>
+            
             <div class="legend">
                 <div class="legend-item"><div class="legend-color" style="background: #3182ce;"></div>东部地区</div>
                 <div class="legend-item"><div class="legend-color" style="background: #48bb78;"></div>中部地区</div>
@@ -303,34 +315,23 @@
         </div>
         
         <div class="section-title">
-            <i class="icon">📈</i> 区域文化产业指标对比
+            <i class="icon">📊</i> 区域文化产业数据概览
         </div>
         
         <div class="viz-grid">
             <div class="viz-card">
                 <div class="viz-title">
-                    <i class="icon">🏢</i> 四大区域总营收对比（亿元）
+                    <i class="icon">🏢</i> 区域总营收对比（亿元）
                 </div>
-                <div id="region-revenue" class="chart-container chart-container-2d"></div>
+                <div id="revenue-chart" class="chart-container" style="height: 350px;"></div>
             </div>
             
             <div class="viz-card">
                 <div class="viz-title">
-                    <i class="icon">👤</i> 区域人均文化消费（元）
+                    <i class="icon">📈</i> 区域人均文化消费（元）
                 </div>
-                <div id="per-capita" class="chart-container chart-container-2d"></div>
+                <div id="per-capita-chart" class="chart-container" style="height: 350px;"></div>
             </div>
-        </div>
-        
-        <div class="section-title">
-            <i class="icon">📋</i> 区域数据概览
-        </div>
-        
-        <div class="viz-card full-width">
-            <div class="viz-title">
-                <i class="icon">📌</i> 区域文化产业详细数据
-            </div>
-            <div id="data-table" style="overflow-x: auto;"></div>
         </div>
     </div>
     
@@ -402,43 +403,53 @@
             .domain(regionData.map(d => d.name))
             .range(["#3182ce", "#48bb78", "#f6ad55", "#fc8181"]);
 
+        // 行业列表
+        const industries = regionData[0].industries.map(d => d.name);
+        
+        // 三维图表变量
+        let scene, camera, renderer, controls;
+        let rotationEnabled = true;
+        let gridVisible = true;
+        
         // 1. Three.js三维行业×区域营收对比图
-        function draw3DRegionChart() {
-            const container = document.getElementById("three-d-region");
+        function init3DChart() {
+            const container = document.getElementById("three-d-chart");
             const width = container.clientWidth;
             const height = container.clientHeight;
             const loadingElement = container.querySelector('.loading');
             
-            // 清除容器内容（保留加载元素）
-            const children = Array.from(container.children);
-            for (const child of children) {
-                if (!child.classList.contains('loading')) {
-                    container.removeChild(child);
-                }
+            // 清除容器内容
+            while (container.children.length > 1) {
+                container.removeChild(container.lastChild);
             }
 
             try {
                 // 创建场景
-                const scene = new THREE.Scene();
+                scene = new THREE.Scene();
                 scene.background = new THREE.Color(0xf0f4f8);
+                scene.fog = new THREE.Fog(0xf0f4f8, 20, 100);
 
                 // 相机
-                const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-                camera.position.set(40, 30, 60);
+                camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+                camera.position.set(25, 20, 30);
 
                 // 使用WebGL渲染器
-                const renderer = new THREE.WebGLRenderer({ 
+                renderer = new THREE.WebGLRenderer({ 
                     antialias: true,
                     alpha: true
                 });
                 renderer.setSize(width, height);
                 renderer.setClearColor(0x000000, 0);
+                renderer.shadowMap.enabled = true;
                 container.appendChild(renderer.domElement);
 
                 // 控制器（允许旋转、缩放）
-                const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
                 controls.enableDamping = true;
-                controls.dampingFactor = 0.1;
+                controls.dampingFactor = 0.05;
+                controls.rotateSpeed = 0.5;
+                controls.autoRotate = rotationEnabled;
+                controls.autoRotateSpeed = 1.0;
 
                 // 光源
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -446,47 +457,40 @@
                 
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
                 directionalLight.position.set(20, 40, 30);
+                directionalLight.castShadow = true;
                 scene.add(directionalLight);
                 
                 const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
                 backLight.position.set(-20, -30, -20);
                 scene.add(backLight);
 
+                // 坐标轴辅助
+                const axesHelper = new THREE.AxesHelper(15);
+                scene.add(axesHelper);
+
+                // 网格辅助
+                const gridHelper = new THREE.GridHelper(30, 10, 0xcccccc, 0xcccccc);
+                gridHelper.visible = gridVisible;
+                scene.add(gridHelper);
+
                 // 数据参数
                 const regions = regionData.map(d => d.name);
-                const industries = regionData[0].industries.map(d => d.name);
-                const xCount = industries.length; // X轴：行业
-                const zCount = regions.length;   // Z轴：区域
-                const gap = 4; // 间隔
-                const baseSize = 3; // 基础尺寸
-
-                // 地面网格
-                const groundGeometry = new THREE.PlaneGeometry(
-                    xCount * (baseSize + gap) + gap, 
-                    zCount * (baseSize + gap) + gap
-                );
-                const groundMaterial = new THREE.MeshPhongMaterial({ 
-                    color: 0xffffff, 
-                    shininess: 80,
-                    side: THREE.DoubleSide 
-                });
-                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-                ground.rotation.x = -Math.PI / 2;
-                ground.position.y = -0.1;
-                scene.add(ground);
+                const xCount = regions.length; // X轴：区域
+                const zCount = industries.length; // Z轴：行业
+                const gap = 2; // 间隔
+                const baseSize = 1.5; // 基础尺寸
 
                 // 绘制三维柱状体
-                const cubes = [];
-                const labels = [];
-                
-                regionData.forEach((region, zIndex) => {
-                    region.industries.forEach((industry, xIndex) => {
+                regionData.forEach((region, regionIndex) => {
+                    region.industries.forEach((industry, industryIndex) => {
                         // 营收映射为高度（缩小1000倍便于显示）
-                        const height = industry.revenue / 1000;
+                        const height = industry.revenue / 3000;
                         if (height <= 0) return;
 
                         // 几何体
-                        const geometry = new THREE.BoxGeometry(baseSize, height, baseSize);
+                        const geometry = new THREE.CylinderGeometry(0.7, 0.7, height, 16);
+                        geometry.translate(0, height/2, 0);
+                        
                         // 材质（区域颜色）
                         const color = new THREE.Color(regionColor(region.name));
                         const material = new THREE.MeshPhongMaterial({ 
@@ -496,166 +500,31 @@
                         });
 
                         // 位置计算
-                        const xPos = -((xCount - 1) * (baseSize + gap)) / 2 + xIndex * (baseSize + gap);
-                        const zPos = -((zCount - 1) * (baseSize + gap)) / 2 + zIndex * (baseSize + gap);
+                        const xPos = regionIndex * (baseSize + gap) - ((xCount-1) * (baseSize + gap))/2;
+                        const zPos = industryIndex * (baseSize + gap) - ((zCount-1) * (baseSize + gap))/2;
                         const yPos = height / 2; // 底部对齐到地面
 
-                        const cube = new THREE.Mesh(geometry, material);
-                        cube.position.set(xPos, yPos, zPos);
-                        cube.userData = {
+                        const cylinder = new THREE.Mesh(geometry, material);
+                        cylinder.position.set(xPos, yPos, zPos);
+                        cylinder.castShadow = true;
+                        cylinder.receiveShadow = true;
+                        cylinder.userData = {
                             region: region.name,
                             industry: industry.name,
                             revenue: industry.revenue
                         };
-                        scene.add(cube);
-                        cubes.push(cube);
-                        
-                        // 创建HTML标签
-                        const label = document.createElement('div');
-                        label.className = 'data-label';
-                        label.textContent = industry.name;
-                        label.style.position = 'absolute';
-                        label.style.left = '0';
-                        label.style.top = '0';
-                        label.style.transform = 'translate(-50%, -100%)';
-                        container.appendChild(label);
-                        labels.push({
-                            element: label,
-                            position: { x: xPos, y: -2, z: zPos }
-                        });
+                        scene.add(cylinder);
                     });
                 });
 
-                // 创建坐标轴标签
-                function createAxisLabel(text, position, rotation) {
-                    const label = document.createElement('div');
-                    label.className = 'data-label';
-                    label.textContent = text;
-                    label.style.fontSize = '16px';
-                    label.style.fontWeight = 'bold';
-                    container.appendChild(label);
-                    return {
-                        element: label,
-                        position: position,
-                        rotation: rotation
-                    };
-                }
-                
-                // X轴（行业）标签
-                const xLabels = industries.map((industry, i) => {
-                    return createAxisLabel(
-                        industry,
-                        {
-                            x: -((xCount - 1) * (baseSize + gap)) / 2 + i * (baseSize + gap),
-                            y: -1,
-                            z: -((zCount * (baseSize + gap)) / 2 + gap) - 2
-                        },
-                        { x: Math.PI / 2, y: 0, z: 0 }
-                    );
-                });
-
-                // Z轴（区域）标签
-                const zLabels = regions.map((region, i) => {
-                    return createAxisLabel(
-                        region,
-                        {
-                            x: -((xCount * (baseSize + gap)) / 2 + gap) - 2,
-                            y: -1,
-                            z: -((zCount - 1) * (baseSize + gap)) / 2 + i * (baseSize + gap)
-                        }
-                    );
-                });
-
-                // Y轴（营收）标签
-                const yLabel = createAxisLabel(
-                    "营收（千亿元）", 
-                    { x: 0, y: 30, z: 0 }
-                );
-
-                // 鼠标交互（射线检测）
-                const raycaster = new THREE.Raycaster();
-                const mouse = new THREE.Vector2();
-                
-                function onMouseMove(event) {
-                    // 计算鼠标在归一化设备坐标中的位置
-                    const rect = container.getBoundingClientRect();
-                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-                }
-                
-                container.addEventListener("mousemove", onMouseMove);
-
-                // 更新标签位置
-                function updateLabels() {
-                    // 更新数据标签
-                    labels.forEach(label => {
-                        const vector = new THREE.Vector3(
-                            label.position.x,
-                            label.position.y,
-                            label.position.z
-                        );
-                        vector.project(camera);
-                        
-                        const x = (vector.x * 0.5 + 0.5) * container.clientWidth;
-                        const y = (-vector.y * 0.5 + 0.5) * container.clientHeight;
-                        
-                        if (vector.z > 1) {
-                            label.element.style.display = 'none';
-                        } else {
-                            label.element.style.display = 'block';
-                            label.element.style.left = `${x}px`;
-                            label.element.style.top = `${y}px`;
-                        }
-                    });
-                    
-                    // 更新坐标轴标签
-                    [yLabel, ...xLabels, ...zLabels].forEach(label => {
-                        const vector = new THREE.Vector3(
-                            label.position.x,
-                            label.position.y,
-                            label.position.z
-                        );
-                        vector.project(camera);
-                        
-                        const x = (vector.x * 0.5 + 0.5) * container.clientWidth;
-                        const y = (-vector.y * 0.5 + 0.5) * container.clientHeight;
-                        
-                        if (vector.z > 1) {
-                            label.element.style.display = 'none';
-                        } else {
-                            label.element.style.display = 'block';
-                            label.element.style.left = `${x}px`;
-                            label.element.style.top = `${y}px`;
-                        }
-                    });
-                }
+                // 添加坐标轴标签
+                addAxisLabels(regions, industries, baseSize, gap);
 
                 // 动画循环
                 function animate() {
                     requestAnimationFrame(animate);
-                    
-                    // 更新射线检测
-                    raycaster.setFromCamera(mouse, camera);
-                    const intersects = raycaster.intersectObjects(cubes);
-                    
-                    if (intersects.length > 0 && intersects[0].object.userData) {
-                        const data = intersects[0].object.userData;
-                        const tooltip = document.getElementById("tooltip");
-                        tooltip.innerHTML = `
-                            <h3>${data.region} - ${data.industry}</h3>
-                            <p class="revenue">营收：${data.revenue.toLocaleString()}亿元</p>
-                            <p>行业占比：${((data.revenue / regionData.find(r => r.name === data.region).revenue) * 100).toFixed(1)}%</p>
-                        `;
-                        tooltip.style.opacity = 1;
-                        tooltip.style.left = (event.clientX + 15) + "px";
-                        tooltip.style.top = (event.clientY - 80) + "px";
-                    } else {
-                        document.getElementById("tooltip").style.opacity = 0;
-                    }
-                    
                     controls.update();
                     renderer.render(scene, camera);
-                    updateLabels();
                 }
                 
                 animate();
@@ -668,6 +537,38 @@
                 }
                 
                 window.addEventListener("resize", onWindowResize);
+                
+                // 鼠标交互（射线检测）
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+                
+                function onMouseMove(event) {
+                    // 计算鼠标在归一化设备坐标中的位置
+                    const rect = container.getBoundingClientRect();
+                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                    
+                    // 更新射线检测
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObjects(scene.children);
+                    
+                    if (intersects.length > 0 && intersects[0].object.userData) {
+                        const data = intersects[0].object.userData;
+                        const tooltip = document.getElementById("tooltip");
+                        tooltip.innerHTML = `
+                            <h3>${data.region} - ${data.industry}</h3>
+                            <p class="revenue">营收：${data.revenue.toLocaleString()}亿元</p>
+                            <p>占比：${((data.revenue / regionData.find(r => r.name === data.region).revenue) * 100).toFixed(1)}%</p>
+                        `;
+                        tooltip.style.opacity = 1;
+                        tooltip.style.left = (event.clientX + 15) + "px";
+                        tooltip.style.top = (event.clientY - 80) + "px";
+                    } else {
+                        document.getElementById("tooltip").style.opacity = 0;
+                    }
+                }
+                
+                container.addEventListener("mousemove", onMouseMove);
                 
                 // 隐藏加载提示
                 if (loadingElement) {
@@ -682,9 +583,67 @@
             }
         }
 
+        // 添加坐标轴标签
+        function addAxisLabels(regions, industries, baseSize, gap) {
+            // X轴标签（区域）
+            regions.forEach((region, i) => {
+                const xPos = i * (baseSize + gap) - ((regions.length-1) * (baseSize + gap))/2;
+                const textGeometry = createTextGeometry(region, 1.5);
+                const textMaterial = new THREE.MeshBasicMaterial({ color: 0x1a365d });
+                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.set(xPos, -1, -((industries.length) * (baseSize + gap))/2 - 1);
+                textMesh.rotation.x = -Math.PI / 2;
+                scene.add(textMesh);
+            });
+            
+            // Z轴标签（行业）
+            industries.forEach((industry, i) => {
+                const zPos = i * (baseSize + gap) - ((industries.length-1) * (baseSize + gap))/2;
+                const textGeometry = createTextGeometry(industry, 1.5);
+                const textMaterial = new THREE.MeshBasicMaterial({ color: 0x1a365d });
+                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.set(-((regions.length) * (baseSize + gap))/2 - 1, -1, zPos);
+                textMesh.rotation.x = -Math.PI / 2;
+                scene.add(textMesh);
+            });
+            
+            // Y轴标签（营收）
+            const textGeometry = createTextGeometry("营收 (亿元)", 2);
+            const textMaterial = new THREE.MeshBasicMaterial({ color: 0x1a365d });
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.set(0, 15, -((industries.length) * (baseSize + gap))/2 - 3);
+            textMesh.rotation.x = -Math.PI / 2;
+            scene.add(textMesh);
+        }
+        
+        // 创建文本几何体
+        function createTextGeometry(text, size) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 256;
+            context.fillStyle = '#1a365d';
+            context.font = 'Bold 80px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(text, canvas.width/2, canvas.height/2);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            
+            // 根据文本长度调整几何体尺寸
+            const textWidth = context.measureText(text).width;
+            const geometry = new THREE.PlaneGeometry(textWidth * size / 100, size * 1.5);
+            return geometry;
+        }
+
         // 2. 区域营收柱状图
-        function drawRegionRevenue() {
-            const container = document.getElementById("region-revenue");
+        function drawRevenueChart() {
+            const container = document.getElementById("revenue-chart");
             container.innerHTML = '';
             const width = container.clientWidth;
             const height = container.clientHeight;
@@ -692,7 +651,7 @@
             const innerWidth = width - margin.left - margin.right;
             const innerHeight = height - margin.top - margin.bottom;
 
-            const svg = d3.select("#region-revenue")
+            const svg = d3.select("#revenue-chart")
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height)
@@ -769,8 +728,8 @@
         }
 
         // 3. 区域人均文化消费对比
-        function drawPerCapita() {
-            const container = document.getElementById("per-capita");
+        function drawPerCapitaChart() {
+            const container = document.getElementById("per-capita-chart");
             container.innerHTML = '';
             const width = container.clientWidth;
             const height = container.clientHeight;
@@ -778,7 +737,7 @@
             const innerWidth = width - margin.left - margin.right;
             const innerHeight = height - margin.top - margin.bottom;
 
-            const svg = d3.select("#per-capita")
+            const svg = d3.select("#per-capita-chart")
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height)
@@ -856,96 +815,34 @@
                 .text(d => d.perCapita + "元");
         }
         
-        // 4. 创建数据表格
-        function createDataTable() {
-            const container = document.getElementById("data-table");
-            const table = document.createElement('table');
-            table.style.width = '100%';
-            table.style.borderCollapse = 'collapse';
-            table.style.marginTop = '15px';
-            
-            // 表头
-            const thead = table.createTHead();
-            const headerRow = thead.insertRow();
-            const headers = ['区域', '总营收(亿元)', '增长率(%)', '人均消费(元)', '内容创作', '创意设计', '文化传播', '文化投资', '其他'];
-            
-            headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                th.style.padding = '12px 15px';
-                th.style.textAlign = 'left';
-                th.style.backgroundColor = '#f0f4f8';
-                th.style.borderBottom = '1px solid #cbd5e0';
-                headerRow.appendChild(th);
-            });
-            
-            // 表格内容
-            const tbody = document.createElement('tbody');
-            table.appendChild(tbody);
-            
-            regionData.forEach(region => {
-                const row = tbody.insertRow();
-                row.style.borderBottom = '1px solid #e2e8f0';
-                
-                // 区域名称
-                const regionCell = row.insertCell();
-                regionCell.textContent = region.name;
-                regionCell.style.padding = '12px 15px';
-                regionCell.style.fontWeight = '600';
-                regionCell.style.color = regionColor(region.name);
-                
-                // 总营收
-                const revenueCell = row.insertCell();
-                revenueCell.textContent = region.revenue.toLocaleString();
-                revenueCell.style.padding = '12px 15px';
-                
-                // 增长率
-                const growthCell = row.insertCell();
-                growthCell.textContent = region.growth;
-                growthCell.style.padding = '12px 15px';
-                growthCell.style.color = region.growth > 7.5 ? '#48bb78' : '#fc8181';
-                growthCell.style.fontWeight = '600';
-                
-                // 人均消费
-                const perCapitaCell = row.insertCell();
-                perCapitaCell.textContent = region.perCapita;
-                perCapitaCell.style.padding = '12px 15px';
-                
-                // 各行业数据
-                region.industries.forEach(industry => {
-                    const industryCell = row.insertCell();
-                    industryCell.textContent = industry.revenue.toLocaleString();
-                    industryCell.style.padding = '12px 15px';
-                });
-            });
-            
-            container.appendChild(table);
+        // 控制函数
+        function resetView() {
+            if (camera && controls) {
+                camera.position.set(25, 20, 30);
+                controls.reset();
+            }
         }
         
-        // 重置所有图表视图
-        function resetCharts() {
-            // 先清除3D容器中的标签
-            const container = document.getElementById("three-d-region");
-            const labels = container.querySelectorAll('.data-label');
-            labels.forEach(label => label.remove());
-            
-            // 重新绘制图表
-            draw3DRegionChart();
-            drawRegionRevenue();
-            drawPerCapita();
+        function toggleGrid() {
+            gridVisible = !gridVisible;
+            const gridHelper = scene.children.find(obj => obj instanceof THREE.GridHelper);
+            if (gridHelper) {
+                gridHelper.visible = gridVisible;
+            }
         }
         
-        // 切换主题
-        function toggleTheme() {
-            document.body.classList.toggle('dark-theme');
+        function toggleRotation() {
+            rotationEnabled = !rotationEnabled;
+            if (controls) {
+                controls.autoRotate = rotationEnabled;
+            }
         }
 
         // 初始化图表
         window.onload = function() {
-            draw3DRegionChart();
-            drawRegionRevenue();
-            drawPerCapita();
-            createDataTable();
+            init3DChart();
+            drawRevenueChart();
+            drawPerCapitaChart();
         }
     </script>
 </body>
