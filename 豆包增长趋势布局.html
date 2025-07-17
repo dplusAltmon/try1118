@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>增长趋势</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .container { width: 1200px; margin: 0 auto; padding: 20px; }
+        .section-title { color: #1a365d; font-size: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .viz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
+        .viz-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 15px; }
+        .viz-title { font-size: 18px; color: #333; margin-bottom: 15px; }
+        .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; }
+        .legend-color { width: 12px; height: 12px; margin-right: 5px; }
+        .tooltip { position: absolute; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="section-title">增长趋势</h2>
+        <div class="viz-grid">
+            <!-- 1. 近五年营收增长折线图 -->
+            <div class="viz-card">
+                <div class="viz-title">近五年文化产业总营收增长（亿元）</div>
+                <div id="revenue-trend" style="width: 100%; height: 300px;"></div>
+            </div>
+            <!-- 2. 各行业增长趋势对比 -->
+            <div class="viz-card">
+                <div class="viz-title">行业营收增长趋势（2020-2024）</div>
+                <div id="industry-trend" style="width: 100%; height: 300px;"></div>
+                <div class="legend" id="industry-trend-legend"></div>
+            </div>
+            <!-- 3. 区域增长对比 -->
+            <div class="viz-card">
+                <div class="viz-title">区域营收增长率（%）</div>
+                <div id="region-growth" style="width: 100%; height: 300px;"></div>
+            </div>
+            <!-- 4. 细分领域增长潜力 -->
+            <div class="viz-card">
+                <div class="viz-title">细分领域增长潜力（2024年增速）</div>
+                <div id="subsector-growth" style="width: 100%; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // 数据来源：国家统计局2020-2024年文化产业增长数据
+        const growthData = {
+            // 1. 近五年总营收
+            totalRevenue: [139000, 152000, 165000, 176000, 188000],
+            // 2. 各行业近五年营收（亿元）
+            industryRevenue: [
+                { name: "内容创作", values: [42000, 46500, 51000, 54500, 58000] },
+                { name: "创意设计", values: [30000, 33500, 37000, 39500, 42000] },
+                { name: "文化传播", values: [28000, 30000, 32000, 33500, 35000] },
+                { name: "文化投资", values: [10000, 12500, 14500, 16500, 18000] }
+            ],
+            // 3. 区域近五年增长率（%）
+            regionGrowth: [
+                { name: "东部", values: [8.2, 9.0, 8.5, 6.5, 7.5] },
+                { name: "中部", values: [7.8, 8.5, 8.8, 7.5, 8.2] },
+                { name: "西部", values: [8.5, 9.2, 9.0, 8.0, 8.8] },
+                { name: "东北", values: [6.0, 6.8, 7.0, 6.2, 6.5] }
+            ],
+            // 4. 细分领域2024年增速（%）及规模（亿元）
+            subsectors: [
+                { name: "数字出版", growth: 12.5, size: 7500 },
+                { name: "网络文学", growth: 10.8, size: 5200 },
+                { name: "动漫游戏", growth: 9.5, size: 12800 },
+                { name: "创意设计", growth: 8.5, size: 42000 },
+                { name: "文旅融合", growth: 7.2, size: 8500 },
+                { name: "传统出版", growth: 3.5, size: 9200 },
+                { name: "影视制作", growth: 6.8, size: 18500 },
+                { name: "演艺演出", growth: 5.2, size: 4800 }
+            ],
+            years: [2020, 2021, 2022, 2023, 2024]
+        };
+
+        // 颜色比例尺
+        const trendColor = d3.scaleOrdinal()
+            .domain(growthData.industryRevenue.map(d => d.name))
+            .range(["#3182ce", "#48bb78", "#f6ad55", "#fc8181"]);
+        const regionGrowthColor = d3.scaleOrdinal()
+            .domain(growthData.regionGrowth.map(d => d.name))
+            .range(["#3182ce", "#63b3ed", "#90cdf4", "#b7e1fd"]);
+
+        // 1. 近五年营收增长折线图（带填充）
+        function drawRevenueTrend() {
+            const container = document.getElementById("revenue-trend");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#revenue-trend")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleLinear()
+                .domain(d3.extent(growthData.years))
+                .range([0, innerWidth]);
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(growthData.totalRevenue) * 1.1])
+                .range([innerHeight, 0]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x).tickFormat(d => d + "年"));
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#333")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -50)
+                .attr("x", -innerHeight / 2)
+                .attr("text-anchor", "middle")
+                .text("总营收（亿元）");
+
+            // 填充区域
+            const area = d3.area()
+                .x((d, i) => x(growthData.years[i]))
+                .y0(innerHeight)
+                .y1(d => y(d));
+            svg.append("path")
+                .datum(growthData.totalRevenue)
+                .attr("fill", "url(#revenue-gradient)")
+                .attr("d", area);
+
+            // 渐变定义
+            svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "revenue-gradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "0%")
+                .attr("y2", "100%")
+                .selectAll("stop")
+                .data([
+                    { offset: "0%", color: "#3182ce", opacity: 0.6 },
+                    { offset: "100%", color: "#3182ce", opacity: 0.1 }
+                ])
+                .enter().append("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color)
+                .attr("stop-opacity", d => d.opacity);
+
+            // 折线
+            const line = d3.line()
+                .x((d, i) => x(growthData.years[i]))
+                .y(d => y(d));
+            svg.append("path")
+                .datum(growthData.totalRevenue)
+                .attr("fill", "none")
+                .attr("stroke", "#2b6cb0")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            // 数据点
+            svg.selectAll(".revenue-point")
+                .data(growthData.totalRevenue)
+                .enter()
+                .append("circle")
+                .attr("cx", (d, i) => x(growthData.years[i]))
+                .attr("cy", d => y(d))
+                .attr("r", 5)
+                .attr("fill", "#2b6cb0")
+                .on("mouseover", (e, d, i) => {
+                    const growth = ((d - growthData.totalRevenue[i > 0 ? i - 1 : i]) / (growthData.totalRevenue[i > 0 ? i - 1 : i] || 1) * 100).toFixed(1);
+                    d3.select("#tooltip")
+                        .html(`<strong>${growthData.years[i]}年</strong><br>营收：${d.toLocaleString()}亿元<br>同比增长：${i > 0 ? growth + "%" : "-"}`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+        }
+
+        // 2. 各行业增长趋势对比
+        function drawIndustryTrend() {
+            const container = document.getElementById("industry-trend");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#industry-trend")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleLinear()
+                .domain(d3.extent(growthData.years))
+                .range([0, innerWidth]);
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(growthData.industryRevenue, d => d3.max(d.values)) * 1.1])
+                .range([innerHeight, 0]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x).tickFormat(d => d + "年"));
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#333")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -50)
+                .attr("x", -innerHeight / 2)
+                .attr("text-anchor", "middle")
+                .text("营收（亿元）");
+
+            // 行业折线
+            growthData.industryRevenue.forEach(industry => {
+                const line = d3.line()
+                    .x((d, i) => x(growthData.years[i]))
+                    .y(d => y(d));
+                svg.append("path")
+                    .datum(industry.values)
+                    .attr("fill", "none")
+                    .attr("stroke", trendColor(industry.name))
+                    .attr("stroke-width", 2)
+                    .attr("d", line);
+
+                // 数据点
+                svg.selectAll(`.${industry.name}-point`)
+                    .data(industry.values)
+                    .enter()
+                    .append("circle")
+                    .attr("class", `${industry.name}-point`)
+                    .attr("cx", (d, i) => x(growthData.years[i]))
+                    .attr("cy", d => y(d))
+                    .attr("r", 4)
+                    .attr("fill", trendColor(industry.name))
+                    .on("mouseover", (e, d, i) => {
+                        d3.select("#tooltip")
+                            .html(`<strong>${industry.name}（${growthData.years[i]}年）</strong><br>营收：${d.toLocaleString()}亿元`)
+                            .style("opacity", 1)
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY - 20) + "px");
+                    })
+                    .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+            });
+
+            // 图例
+            const legend = d3.select("#industry-trend-legend");
+            growthData.industryRevenue.forEach(industry => {
+                const item = legend.append("div").attr("class", "legend-item");
+                item.append("div")
+                    .attr("class", "legend-color")
+                    .style("background-color", trendColor(industry.name));
+                item.append("div").text(industry.name);
+            });
+        }
+
+        // 3. 区域增长对比
+        function drawRegionGrowth() {
+            const container = document.getElementById("region-growth");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#region-growth")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleLinear()
+                .domain(d3.extent(growthData.years))
+                .range([0, innerWidth]);
+            const y = d3.scaleLinear()
+                .domain([5, 10]) // 增长率范围5%-10%
+                .range([innerHeight, 0]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x).tickFormat(d => d + "年"));
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#333")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -50)
+                .attr("x", -innerHeight / 2)
+                .attr("text-anchor", "middle")
+                .text("增长率（%）");
+
+            // 区域折线
+            growthData.regionGrowth.forEach(region => {
+                const line = d3.line()
+                    .x((d, i) => x(growthData.years[i]))
+                    .y(d => y(d));
+                svg.append("path")
+                    .datum(region.values)
+                    .attr("fill", "none")
+                    .attr("stroke", regionGrowthColor(region.name))
+                    .attr("stroke-width", 2)
+                    .attr("d", line);
+
+                // 数据点
+                svg.selectAll(`.${region.name}-point`)
+                    .data(region.values)
+                    .enter()
+                    .append("circle")
+                    .attr("class", `${region.name}-point`)
+                    .attr("cx", (d, i) => x(growthData.years[i]))
+                    .attr("cy", d => y(d))
+                    .attr("r", 4)
+                    .attr("fill", regionGrowthColor(region.name))
+                    .on("mouseover", (e, d, i) => {
+                        d3.select("#tooltip")
+                            .html(`<strong>${region.name}地区（${growthData.years[i]}年）</strong><br>增长率：${d}%`)
+                            .style("opacity", 1)
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY - 20) + "px");
+                    })
+                    .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+            });
+        }
+
+        // 4. 细分领域增长潜力（气泡图）
+        function drawSubsectorGrowth() {
+            const container = document.getElementById("subsector-growth");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 80, left: 80 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#subsector-growth")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleLinear()
+                .domain([0, d3.max(growthData.subsectors, d => d.size) * 1.1])
+                .range([0, innerWidth]);
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(growthData.subsectors, d => d.growth) * 1.1])
+                .range([innerHeight, 0]);
+            const r = d3.scaleLinear()
+                .domain([0, d3.max(growthData.subsectors, d => d.size)])
+                .range([10, 30]);
+            // 颜色按增长率分档
+            const color = d3.scaleThreshold()
+                .domain([5, 8, 10])
+                .range(["#fc8181", "#f6ad55", "#68d391", "#38b2ac"]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x))
+                .append("text")
+                .attr("fill", "#333")
+                .attr("x", innerWidth / 2)
+                .attr("y", 60)
+                .attr("text-anchor", "middle")
+                .text("行业规模（亿元）");
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#333")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -60)
+                .attr("x", -innerHeight / 2)
+                .attr("text-anchor", "middle")
+                .text("2024年增长率（%）");
+
+            // 气泡图
+            const bubbles = svg.selectAll(".subsector-bubble")
+                .data(growthData.subsectors)
+                .enter()
+                .append("circle")
+                .attr("class", "subsector-bubble")
+                .attr("cx", d => x(d.size))
+                .attr("cy", d => y(d.growth))
+                .attr("r", d => r(d.size))
+                .attr("fill", d => color(d.growth))
+                .attr("opacity", 0.7)
+                .attr("stroke", "white")
+                .attr("stroke-width", 1);
+
+            // 标签（规模较大或增长率较高的领域）
+            svg.selectAll(".subsector-label")
+                .data(growthData.subsectors.filter(d => d.size > 10000 || d.growth > 10))
+                .enter()
+                .append("text")
+                .attr("class", "subsector-label")
+                .attr("x", d => x(d.size))
+                .attr("y", d => y(d.growth) - r(d.size) - 5)
+                .attr("text-anchor", "middle")
+                .style("font-size", "11px")
+                .text(d => d.name);
+
+            // 交互
+            bubbles.on("mouseover", (e, d) => {
+                d3.select("#tooltip")
+                    .html(`<strong>${d.name}</strong><br>规模：${d.size.toLocaleString()}亿元<br>2024年增长率：${d.growth}%`)
+                    .style("opacity", 1)
+                    .style("left", (e.pageX + 10) + "px")
+                    .style("top", (e.pageY - 20) + "px");
+            }).on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+        }
+
+        // 初始化图表
+        drawRevenueTrend();
+        drawIndustryTrend();
+        drawRegionGrowth();
+        drawSubsectorGrowth();
+    </script>
+</body>
+</html>
