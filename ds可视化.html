@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2024年全国文化及相关产业发展可视化报告</title>
+    <title>2024年全国文化及相关产业发展可视化报告ver2</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #8a4fff;
-            --secondary: #ff6bca;
-            --accent: #4fc3f7;
-            --background: #1a1a2e;
-            --card-bg: rgba(255, 255, 255, 0.08);
-            --text: #e6e6ff;
+            --primary: #9a8c98; /* 莫兰迪紫灰 */
+            --secondary: #c9ada7; /* 莫兰迪粉棕 */
+            --accent: #b8bedd; /* 莫兰迪淡紫 */
+            --background: #f2e9e4; /* 莫兰迪米白 */
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text: #4a4e69; /* 深蓝紫 */
+            --header: #22223b; /* 深蓝 */
         }
         
         * {
@@ -24,8 +26,8 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--background);
             color: var(--text);
             line-height: 1.6;
             padding: 20px;
@@ -39,35 +41,50 @@
         
         header {
             text-align: center;
-            padding: 30px 0;
+            padding: 40px 0;
             margin-bottom: 30px;
-            background: rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, var(--header), #4a4e69);
             border-radius: 15px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="50" cy="50" r="8" fill="rgba(255,255,255,0.1)"/><circle cx="150" cy="100" r="12" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="180" r="10" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.3;
         }
         
         h1 {
             font-size: 2.8rem;
             margin-bottom: 15px;
-            background: linear-gradient(45deg, var(--secondary), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 2px 10px rgba(138, 79, 255, 0.3);
+            color: #f2e9e4;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
         
         .subtitle {
             font-size: 1.2rem;
-            opacity: 0.8;
             max-width: 800px;
             margin: 0 auto;
+            color: #c9ada7;
+            position: relative;
+            z-index: 2;
         }
         
         .data-source {
             margin-top: 15px;
             font-size: 0.9rem;
-            color: #aaa;
+            color: #9a8c98;
+            position: relative;
+            z-index: 2;
         }
         
         .grid {
@@ -80,16 +97,15 @@
         .card {
             background: var(--card-bg);
             border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(154, 140, 152, 0.15);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(154, 140, 152, 0.1);
         }
         
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(138, 79, 255, 0.25);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(154, 140, 152, 0.2);
         }
         
         .card-header {
@@ -98,13 +114,13 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(154, 140, 152, 0.2);
         }
         
         .card-title {
             font-size: 1.4rem;
             font-weight: 600;
-            color: var(--accent);
+            color: var(--header);
         }
         
         .chart-container {
@@ -118,24 +134,37 @@
         }
         
         .insights {
-            background: rgba(138, 79, 255, 0.15);
-            padding: 25px;
+            background: rgba(201, 173, 167, 0.15);
+            padding: 30px;
             border-radius: 15px;
             margin-top: 20px;
         }
         
         .insights h2 {
-            margin-bottom: 15px;
-            color: var(--secondary);
+            margin-bottom: 20px;
+            color: var(--header);
+            font-size: 1.8rem;
+            text-align: center;
         }
         
         .insights ul {
-            padding-left: 25px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding-left: 20px;
         }
         
         .insights li {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             line-height: 1.8;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .insights li strong {
+            color: var(--header);
         }
         
         .footer {
@@ -143,21 +172,21 @@
             padding: 30px 0;
             margin-top: 40px;
             font-size: 0.9rem;
-            color: #aaa;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--primary);
+            border-top: 1px solid rgba(154, 140, 152, 0.2);
         }
         
         .tooltip {
             position: absolute;
             padding: 12px;
-            background: rgba(30, 30, 50, 0.9);
-            border: 1px solid var(--primary);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--accent);
             border-radius: 8px;
             pointer-events: none;
             font-size: 14px;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             z-index: 100;
+            color: var(--header);
         }
         
         .legend {
@@ -172,12 +201,15 @@
             display: flex;
             align-items: center;
             font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px 12px;
+            border-radius: 20px;
         }
         
         .legend-color {
             width: 20px;
             height: 20px;
-            border-radius: 4px;
+            border-radius: 50%;
             margin-right: 8px;
         }
         
@@ -189,13 +221,46 @@
             .full-width {
                 grid-column: 1;
             }
+            
+            .insights ul {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-header {
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--header);
+            font-weight: 500;
+        }
+        
+        .decorative-element {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        
+        .decor-1 {
+            top: 20px;
+            right: 20px;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+        }
+        
+        .decor-2 {
+            bottom: 20px;
+            left: 20px;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>2024年全国文化及相关产业发展情况可视化报告</h1>
+            <div class="decorative-element decor-1"></div>
+            <div class="decorative-element decor-2"></div>
+            <h1>2024年全国文化及相关产业发展可视化报告</h1>
             <p class="subtitle">基于国家统计局《2024年全国文化及相关产业发展情况报告》的数据分析</p>
             <p class="data-source">数据来源：国家统计局 | 报告日期：2025年6月27日</p>
         </header>
@@ -206,6 +271,7 @@
                 <div class="card-header">
                     <h2 class="card-title">文化产业结构旭日图</h2>
                 </div>
+                <div class="chart-header">文化及相关产业层级结构分析</div>
                 <div class="chart-container" id="sunburst-chart"></div>
                 <div class="legend" id="sunburst-legend"></div>
             </div>
@@ -215,6 +281,7 @@
                 <div class="card-header">
                     <h2 class="card-title">区域文化产业发展热力图</h2>
                 </div>
+                <div class="chart-header">各省份文化产业增加值分布</div>
                 <div class="chart-container" id="heatmap-chart"></div>
                 <div class="legend" id="heatmap-legend"></div>
             </div>
@@ -224,6 +291,7 @@
                 <div class="card-header">
                     <h2 class="card-title">文化行业指标雷达分析</h2>
                 </div>
+                <div class="chart-header">核心领域与相关领域对比</div>
                 <div class="chart-container" id="radar-chart"></div>
                 <div class="legend" id="radar-legend"></div>
             </div>
@@ -233,6 +301,7 @@
                 <div class="card-header">
                     <h2 class="card-title">核心文化领域气泡分析</h2>
                 </div>
+                <div class="chart-header">行业规模与增长率关系</div>
                 <div class="chart-container" id="bubble-chart"></div>
                 <div class="legend" id="bubble-legend"></div>
             </div>
@@ -242,6 +311,7 @@
                 <div class="card-header">
                     <h2 class="card-title">文化产业层级树状图</h2>
                 </div>
+                <div class="chart-header">产业分类层级关系</div>
                 <div class="chart-container" id="tree-chart"></div>
             </div>
             
@@ -250,6 +320,7 @@
                 <div class="card-header">
                     <h2 class="card-title">区域文化发展3D分布图</h2>
                 </div>
+                <div class="chart-header">四大区域文化产业增加值</div>
                 <div class="chart-container" id="threejs-chart"></div>
             </div>
             
@@ -258,6 +329,7 @@
                 <div class="card-header">
                     <h2 class="card-title">文化产业发展趋势分析</h2>
                 </div>
+                <div class="chart-header">2019-2024年核心与相关领域发展对比</div>
                 <div class="chart-container" id="trend-chart"></div>
                 <div class="legend" id="trend-legend"></div>
             </div>
@@ -285,10 +357,11 @@
     <div id="tooltip" class="tooltip"></div>
     
     <script>
-        // 梦幻粉紫配色方案
+        // 莫兰迪配色方案
         const colorScheme = [
-            "#8a4fff", "#ff6bca", "#4fc3f7", "#ff9e80", "#9575cd", 
-            "#64ffda", "#ff80ab", "#82b1ff", "#ea80fc", "#b388ff"
+            "#9a8c98", "#c9ada7", "#b8bedd", "#e5c1cd", 
+            "#a5a5a5", "#8d9db6", "#d5c3e8", "#87bdd8", 
+            "#c5d5ea", "#e0d6e9"
         ];
         
         // 模拟数据（实际数据应从国家统计局报告中提取）
@@ -322,7 +395,7 @@
         // 初始化工具提示
         const tooltip = d3.select("#tooltip");
         
-        // 1. 旭日图实现
+        // 1. 旭日图实现（修复版）
         function renderSunburst() {
             const width = 500;
             const height = 400;
@@ -364,15 +437,18 @@
                 .innerRadius(d => d.y0)
                 .outerRadius(d => d.y1);
             
+            // 应用布局
+            const nodes = partition(root).descendants();
+            
             // 绘制
             svg.selectAll("path")
-                .data(root.descendants())
+                .data(nodes)
                 .enter()
                 .append("path")
                 .attr("d", arc)
                 .style("fill", d => {
-                    if (d.depth === 0) return "#4a148c";
-                    if (d.depth === 1) return d.data.name === "核心领域" ? "#6a1b9a" : "#ab47bc";
+                    if (d.depth === 0) return "#4a4e69";
+                    if (d.depth === 1) return d.data.name === "核心领域" ? "#9a8c98" : "#c9ada7";
                     return colorScheme[(d.parent.children.indexOf(d) + (d.depth-1)*5) % colorScheme.length];
                 })
                 .style("stroke", "#fff")
@@ -393,7 +469,7 @@
                 
             // 添加标签
             svg.selectAll("text")
-                .data(root.descendants().filter(d => (d.x1 - d.x0) > 0.1 && d.depth > 0))
+                .data(nodes.filter(d => (d.x1 - d.x0) > 0.1 && d.depth > 0))
                 .enter()
                 .append("text")
                 .attr("transform", function(d) {
@@ -408,6 +484,21 @@
                 .text(d => d.data.name)
                 .style("fill", "#fff")
                 .style("pointer-events", "none");
+                
+            // 添加图例
+            const legend = d3.select("#sunburst-legend");
+            
+            legend.append("div")
+                .attr("class", "legend-item")
+                .html('<div class="legend-color" style="background: #4a4e69;"></div>文化产业');
+                
+            legend.append("div")
+                .attr("class", "legend-item")
+                .html('<div class="legend-color" style="background: #9a8c98;"></div>核心领域');
+                
+            legend.append("div")
+                .attr("class", "legend-item")
+                .html('<div class="legend-color" style="background: #c9ada7;"></div>相关领域');
         }
         
         // 2. 热力图实现
@@ -442,8 +533,9 @@
                 .range([margin.left, width - margin.right])
                 .padding(0.05);
                 
+            // 使用莫兰迪色系渐变
             const colorScale = d3.scaleSequential()
-                .interpolator(d3.interpolatePlasma)
+                .interpolator(d3.interpolate("#e0d6e9", "#9a8c98"))
                 .domain([d3.min(data, d => d.value), d3.max(data, d => d.value)]);
             
             // 绘制热力块
@@ -456,7 +548,7 @@
                 .attr("width", xScale.bandwidth())
                 .attr("height", height - margin.top - margin.bottom)
                 .attr("fill", d => colorScale(d.value))
-                .attr("stroke", "#444")
+                .attr("stroke", "#f2e9e4")
                 .attr("stroke-width", 0.5)
                 .on("mouseover", function(event, d) {
                     tooltip.style("opacity", 0.9)
@@ -476,7 +568,8 @@
                 .attr("transform", "rotate(-45)")
                 .attr("text-anchor", "end")
                 .attr("dx", "-0.8em")
-                .attr("dy", "0.15em");
+                .attr("dy", "0.15em")
+                .style("fill", "#4a4e69");
                 
             // 添加图例
             const legendWidth = 300;
@@ -494,8 +587,8 @@
                 
             linearGradient.selectAll("stop")
                 .data([
-                    {offset: "0%", color: d3.interpolatePlasma(0)},
-                    {offset: "100%", color: d3.interpolatePlasma(1)}
+                    {offset: "0%", color: "#e0d6e9"},
+                    {offset: "100%", color: "#9a8c98"}
                 ])
                 .enter()
                 .append("stop")
@@ -511,14 +604,16 @@
                 .attr("x", 0)
                 .attr("y", -5)
                 .text("低")
-                .style("font-size", "12px");
+                .style("font-size", "12px")
+                .style("fill", "#4a4e69");
                 
             legend.append("text")
                 .attr("x", legendWidth)
                 .attr("y", -5)
                 .attr("text-anchor", "end")
                 .text("高")
-                .style("font-size", "12px");
+                .style("font-size", "12px")
+                .style("fill", "#4a4e69");
         }
         
         // 3. 雷达图实现
@@ -555,7 +650,7 @@
                 svg.append("circle")
                     .attr("r", levelFactor)
                     .attr("fill", "none")
-                    .attr("stroke", "rgba(255, 255, 255, 0.2)")
+                    .attr("stroke", "rgba(154, 140, 152, 0.2)")
                     .attr("stroke-width", "0.5");
             }
             
@@ -570,7 +665,7 @@
                     .attr("y1", 0)
                     .attr("x2", line[1][0])
                     .attr("y2", line[1][1])
-                    .attr("stroke", "rgba(255, 255, 255, 0.3)")
+                    .attr("stroke", "rgba(154, 140, 152, 0.3)")
                     .attr("stroke-width", "1");
                 
                 // 坐标轴标签
@@ -579,7 +674,7 @@
                     .attr("y", (radius + 20) * Math.sin(angle))
                     .text(indicator)
                     .attr("text-anchor", "middle")
-                    .attr("fill", "#aaa")
+                    .attr("fill", "#4a4e69")
                     .attr("font-size", "10px");
             });
             
@@ -594,8 +689,8 @@
             svg.append("path")
                 .datum(coreData)
                 .attr("d", radarLine)
-                .attr("fill", "rgba(138, 79, 255, 0.4)")
-                .attr("stroke", "#8a4fff")
+                .attr("fill", "rgba(154, 140, 152, 0.3)")
+                .attr("stroke", "#9a8c98")
                 .attr("stroke-width", 2);
             
             // 相关领域
@@ -603,8 +698,8 @@
             svg.append("path")
                 .datum(relatedData)
                 .attr("d", radarLine)
-                .attr("fill", "rgba(255, 107, 202, 0.4)")
-                .attr("stroke", "#ff6bca")
+                .attr("fill", "rgba(201, 173, 167, 0.3)")
+                .attr("stroke", "#c9ada7")
                 .attr("stroke-width", 2);
             
             // 添加图例
@@ -613,11 +708,11 @@
             
             legend.append("div")
                 .attr("class", "legend-item")
-                .html('<div class="legend-color" style="background: #8a4fff;"></div>核心文化领域');
+                .html('<div class="legend-color" style="background: #9a8c98;"></div>核心文化领域');
                 
             legend.append("div")
                 .attr("class", "legend-item")
-                .html('<div class="legend-color" style="background: #ff6bca;"></div>相关文化领域');
+                .html('<div class="legend-color" style="background: #c9ada7;"></div>相关文化领域');
         }
         
         // 4. 气泡图实现
@@ -651,7 +746,7 @@
                 .append("text")
                 .attr("x", width/2)
                 .attr("y", 35)
-                .attr("fill", "currentColor")
+                .attr("fill", "#4a4e69")
                 .attr("text-anchor", "middle")
                 .text("产业增加值（亿元）");
                 
@@ -663,7 +758,7 @@
                 .attr("y", -40)
                 .attr("x", -height/2)
                 .attr("dy", "0.71em")
-                .attr("fill", "currentColor")
+                .attr("fill", "#4a4e69")
                 .attr("text-anchor", "middle")
                 .text("增长率（%）");
                 
@@ -675,9 +770,9 @@
                 .attr("cx", d => xScale(d.value))
                 .attr("cy", d => yScale(d.growth))
                 .attr("r", d => sizeScale(d.value))
-                .attr("fill", d => d.category === "核心" ? "#8a4fff" : "#ff6bca")
+                .attr("fill", d => d.category === "核心" ? "#9a8c98" : "#c9ada7")
                 .attr("opacity", 0.8)
-                .attr("stroke", d => d.category === "核心" ? "#6a1b9a" : "#c2185b")
+                .attr("stroke", d => d.category === "核心" ? "#4a4e69" : "#22223b")
                 .attr("stroke-width", 1)
                 .on("mouseover", function(event, d) {
                     tooltip.style("opacity", 0.9)
@@ -700,18 +795,18 @@
                 .text(d => d.name)
                 .attr("text-anchor", "middle")
                 .attr("font-size", "10px")
-                .attr("fill", "#fff");
+                .attr("fill", "#4a4e69");
                 
             // 添加图例
             const legend = d3.select("#bubble-legend");
             
             legend.append("div")
                 .attr("class", "legend-item")
-                .html('<div class="legend-color" style="background: #8a4fff;"></div>核心文化领域');
+                .html('<div class="legend-color" style="background: #9a8c98;"></div>核心文化领域');
                 
             legend.append("div")
                 .attr("class", "legend-item")
-                .html('<div class="legend-color" style="background: #ff6bca;"></div>相关文化领域');
+                .html('<div class="legend-color" style="background: #c9ada7;"></div>相关文化领域');
         }
         
         // 5. 树状图实现
@@ -763,7 +858,7 @@
                     .x(d => d.x)
                     .y(d => d.y))
                 .attr("fill", "none")
-                .attr("stroke", "rgba(255, 255, 255, 0.3)")
+                .attr("stroke", "rgba(154, 140, 152, 0.3)")
                 .attr("stroke-width", 1);
             
             // 绘制节点
@@ -776,7 +871,7 @@
             
             nodes.append("circle")
                 .attr("r", d => 5 + Math.sqrt(d.value || 0) / 200)
-                .attr("fill", d => d.depth === 0 ? "#4a148c" : d.depth === 1 ? "#6a1b9a" : "#ab47bc")
+                .attr("fill", d => d.depth === 0 ? "#4a4e69" : d.depth === 1 ? "#9a8c98" : "#c9ada7")
                 .attr("stroke", "#fff")
                 .attr("stroke-width", 1);
             
@@ -787,7 +882,7 @@
                 .attr("text-anchor", d => d.children ? "end" : "start")
                 .text(d => d.data.name)
                 .attr("font-size", "10px")
-                .attr("fill", "#fff");
+                .attr("fill", "#4a4e69");
         }
         
         // 6. Three.js 3D柱状图
@@ -796,7 +891,7 @@
             
             // 创建场景
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a2e);
+            scene.background = new THREE.Color(0xf2e9e4);
             
             // 创建相机
             const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -818,7 +913,7 @@
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             
-            const directionalLight = new THREE.DirectionalLight(0x8a4fff, 1);
+            const directionalLight = new THREE.DirectionalLight(0x9a8c98, 1);
             directionalLight.position.set(5, 10, 7);
             scene.add(directionalLight);
             
@@ -828,11 +923,12 @@
             const barWidth = 3;
             const barSpacing = 1.5;
             
+            // 莫兰迪配色
             const colors = [
-                new THREE.Color(0x8a4fff),
-                new THREE.Color(0xff6bca),
-                new THREE.Color(0x4fc3f7),
-                new THREE.Color(0x64ffda)
+                new THREE.Color(0x9a8c98),
+                new THREE.Color(0xc9ada7),
+                new THREE.Color(0xb8bedd),
+                new THREE.Color(0x8d9db6)
             ];
             
             regionData.forEach((region, i) => {
@@ -840,8 +936,8 @@
                 const geometry = new THREE.BoxGeometry(barWidth, height, barWidth);
                 const material = new THREE.MeshPhongMaterial({ 
                     color: colors[i % colors.length],
-                    shininess: 80,
-                    emissive: new THREE.Color(colors[i % colors.length]).multiplyScalar(0.2)
+                    shininess: 50,
+                    emissive: new THREE.Color(colors[i % colors.length]).multiplyScalar(0.1)
                 });
                 
                 const bar = new THREE.Mesh(geometry, material);
@@ -854,20 +950,20 @@
                 const context = canvas.getContext('2d');
                 canvas.width = 256;
                 canvas.height = 128;
-                context.fillStyle = '#ffffff';
-                context.font = '24px Arial';
+                context.fillStyle = '#4a4e69';
+                context.font = 'bold 24px "Noto Sans SC"';
                 context.fillText(region.region, 10, 30);
                 
                 const texture = new THREE.CanvasTexture(canvas);
-                const labelMaterial = new THREE.SpriteMaterial({ map: texture });
+                const labelMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
                 const label = new THREE.Sprite(labelMaterial);
                 label.position.set(bar.position.x, height + 2, 0);
-                label.scale.set(8, 4, 1);
+                label.scale.set(10, 5, 1);
                 scene.add(label);
             });
             
             // 添加地面网格
-            const gridHelper = new THREE.GridHelper(30, 10, 0x444444, 0x222222);
+            const gridHelper = new THREE.GridHelper(30, 10, 0x9a8c98, 0xd9d2d9);
             scene.add(gridHelper);
             
             // 动画循环
@@ -921,14 +1017,14 @@
                 .datum(trendData)
                 .attr("d", coreLine)
                 .attr("fill", "none")
-                .attr("stroke", "#8a4fff")
+                .attr("stroke", "#9a8c98")
                 .attr("stroke-width", 3);
                 
             svg.append("path")
                 .datum(trendData)
                 .attr("d", relatedLine)
                 .attr("fill", "none")
-                .attr("stroke", "#ff6bca")
+                .attr("stroke", "#c9ada7")
                 .attr("stroke-width", 3);
                 
             // 添加数据点
@@ -939,7 +1035,7 @@
                 .attr("cx", d => xScale(d.year))
                 .attr("cy", d => yScale(d.core))
                 .attr("r", 5)
-                .attr("fill", "#8a4fff")
+                .attr("fill", "#9a8c98")
                 .attr("stroke", "#fff")
                 .attr("stroke-width", 1);
                 
@@ -950,7 +1046,7 @@
                 .attr("cx", d => xScale(d.year))
                 .attr("cy", d => yScale(d.related))
                 .attr("r", 5)
-                .attr("fill", "#ff6bca")
+                .attr("fill", "#c9ada7")
                 .attr("stroke", "#fff")
                 .attr("stroke-width", 1);
                 
@@ -961,7 +1057,7 @@
                 .append("text")
                 .attr("x", width/2)
                 .attr("y", 35)
-                .attr("fill", "currentColor")
+                .attr("fill", "#4a4e69")
                 .attr("text-anchor", "middle")
                 .text("年份");
                 
@@ -973,7 +1069,7 @@
                 .attr("y", -50)
                 .attr("x", -height/2)
                 .attr("dy", "0.71em")
-                .attr("fill", "currentColor")
+                .attr("fill", "#4a4e69")
                 .attr("text-anchor", "middle")
                 .text("产业增加值（亿元）");
                 
@@ -982,11 +1078,11 @@
             
             legend.append("div")
                 .attr("class", "legend-item")
-                .html('<div class="legend-color" style="background: #8a4fff;"></div>核心文化领域');
+                .html('<div class="legend-color" style="background: #9a8c98;"></div>核心文化领域');
                 
             legend.append("div")
                 .attr("class", "legend-item")
-                .html('<div class="legend-color" style="background: #ff6bca;"></div>相关文化领域');
+                .html('<div class="legend-color" style="background: #c9ada7;"></div>相关文化领域");
         }
         
         // 初始化所有图表
