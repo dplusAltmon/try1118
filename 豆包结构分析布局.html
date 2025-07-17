@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>结构分析</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .container { width: 1200px; margin: 0 auto; padding: 20px; }
+        .section-title { color: #1a365d; font-size: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .viz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
+        .viz-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 15px; }
+        .viz-title { font-size: 18px; color: #333; margin-bottom: 15px; }
+        .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; }
+        .legend-color { width: 12px; height: 12px; margin-right: 5px; }
+        .tooltip { position: absolute; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="section-title">结构分析</h2>
+        <div class="viz-grid">
+            <!-- 1. 核心领域与相关领域占比 -->
+            <div class="viz-card">
+                <div class="viz-title">文化核心领域与相关领域占比（2024年）</div>
+                <div id="core-related" style="width: 100%; height: 300px;"></div>
+                <div class="legend" id="core-related-legend"></div>
+            </div>
+            <!-- 2. 不同所有制企业占比 -->
+            <div class="viz-card">
+                <div class="viz-title">不同所有制企业营收占比（2024年）</div>
+                <div id="ownership" style="width: 100%; height: 300px;"></div>
+            </div>
+            <!-- 3. 文化产品进出口结构 -->
+            <div class="viz-card">
+                <div class="viz-title">2024年文化产品进出口结构（亿元）</div>
+                <div id="import-export" style="width: 100%; height: 300px;"></div>
+            </div>
+            <!-- 4. 数字文化产业占比趋势 -->
+            <div class="viz-card">
+                <div class="viz-title">数字文化产业占比变化（2020-2024）</div>
+                <div id="digital-share" style="width: 100%; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // 数据来源：国家统计局2024年文化产业结构数据
+        const structureData = {
+            // 1. 核心领域与相关领域（2024年，亿元）
+            coreRelated: {
+                核心领域: [
+                    { name: "内容创作", value: 58000 },
+                    { name: "创意设计", value: 42000 },
+                    { name: "文化传播", value: 35000 }
+                ],
+                相关领域: [
+                    { name: "文化辅助生产", value: 14000 },
+                    { name: "文化装备制造", value: 6000 },
+                    { name: "其他相关", value: 43000 }
+                ]
+            },
+            // 2. 不同所有制企业占比（2024年，亿元）
+            ownership: [
+                { name: "国有及控股", value: 42000, color: "#3182ce" },
+                { name: "民营企业", value: 115000, color: "#48bb78" },
+                { name: "外资及港澳台", value: 31000, color: "#f6ad55" }
+            ],
+            // 3. 进出口结构（2024年，亿元）
+            importExport: {
+                出口: [
+                    { name: "数字内容", value: 2100 },
+                    { name: "出版物", value: 1200 },
+                    { name: "艺术品", value: 800 },
+                    { name: "文化装备", value: 700 }
+                ],
+                进口: [
+                    { name: "数字内容", value: 1500 },
+                    { name: "出版物", value: 1100 },
+                    { name: "艺术品", value: 900 },
+                    { name: "文化装备", value: 600 }
+                ]
+            },
+            // 4. 数字文化产业占比（2020-2024，亿元及占比%）
+            digital: [
+                { year: 2020, size: 28000, share: 20.1 },
+                { year: 2021, size: 34500, share: 22.7 },
+                { year: 2022, size: 41000, share: 24.8 },
+                { year: 2023, size: 48500, share: 27.6 },
+                { year: 2024, size: 57000, share: 30.3 }
+            ],
+            totalRevenue2024: 188000 // 2024年总营收（亿元）
+        };
+
+        // 1. 核心领域与相关领域占比（双层环形图）
+        function drawCoreRelated() {
+            const container = document.getElementById("core-related");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const radius = Math.min(width, height) / 4;
+            const outerRadius = radius;
+            const innerRadius = radius * 0.6;
+            const centerRadius = radius * 0.3;
+
+            const svg = d3.select("#core-related")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+            // 颜色比例尺
+            const outerColor = d3.scaleOrdinal()
+                .domain(Object.keys(structureData.coreRelated))
+                .range(["#3182ce", "#48bb78"]);
+            const innerColor = d3.scaleOrdinal()
+                .domain([...structureData.coreRelated.核心领域, ...structureData.coreRelated.相关领域].map(d => d.name))
+                .range(["#63b3ed", "#90cdf4", "#b7e1fd", "#68d391", "#a0f3d6", "#d5f8e6"]);
+
+            // 外层环形（核心/相关领域合计）
+            const outerData = Object.entries(structureData.coreRelated).map(([key, items]) => ({
+                name: key,
+                value: d3.sum(items, d => d.value)
+            }));
+            const outerPie = d3.pie().value(d => d.value);
+            const outerArcs = outerPie(outerData);
+            const outerArc = d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius);
+
+            svg.selectAll(".outer-arc")
+                .data(outerArcs)
+                .enter()
+                .append("path")
+                .attr("class", "outer-arc")
+                .attr("d", outerArc)
+                .attr("fill", d => outerColor(d.data.name))
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .on("mouseover", (e, d) => {
+                    const percent = ((d.data.value / structureData.totalRevenue2024) * 100).toFixed(1);
+                    d3.select("#tooltip")
+                        .html(`<strong>${d.data.name}</strong><br>规模：${d.data.value.toLocaleString()}亿元<br>占比：${percent}%`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+
+            // 内层环形（各细分领域）
+            const innerData = [
+                ...structureData.coreRelated.核心领域.map(d => ({ ...d, group: "核心领域" })),
+                ...structureData.coreRelated.相关领域.map(d => ({ ...d, group: "相关领域" }))
+            ];
+            const innerPie = d3.pie()
+                .value(d => d.value)
+                .sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
+            const innerArcs = innerPie(innerData);
+            const innerArc = d3.arc()
+                .innerRadius(centerRadius)
+                .outerRadius(innerRadius);
+
+            svg.selectAll(".inner-arc")
+                .data(innerArcs)
+                .enter()
+                .append("path")
+                .attr("class", "inner-arc")
+                .attr("d", innerArc)
+                .attr("fill", d => innerColor(d.data.name))
+                .attr("stroke", "white")
+                .attr("stroke-width", 1)
+                .on("mouseover", (e, d) => {
+                    const percent = ((d.data.value / structureData.totalRevenue2024) * 100).toFixed(1);
+                    d3.select("#tooltip")
+                        .html(`<strong>${d.data.name}</strong><br>规模：${d.data.value.toLocaleString()}亿元<br>占比：${percent}%`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+
+            // 中心文本
+            svg.append("circle")
+                .attr("r", centerRadius)
+                .attr("fill", "#f7fafc");
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", "-0.3em")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .text("总营收");
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", "1em")
+                .style("font-size", "12px")
+                .text(`${structureData.totalRevenue2024.toLocaleString()}亿元`);
+
+            // 图例
+            const legend = d3.select("#core-related-legend");
+            // 外层图例
+            Object.entries(structureData.coreRelated).forEach(([key, items]) => {
+                const total = d3.sum(items, d => d.value);
+                const percent = ((total / structureData.totalRevenue2024) * 100).toFixed(1);
+                const item = legend.append("div").attr("class", "legend-item");
+                item.append("div")
+                    .attr("class", "legend-color")
+                    .style("background-color", outerColor(key));
+                item.append("div").text(`${key}（${percent}%）`);
+            });
+        }
+
+        // 2. 不同所有制企业占比（环形图）
+        function drawOwnership() {
+            const container = document.getElementById("ownership");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const radius = Math.min(width, height) / 4;
+            const innerRadius = radius * 0.5;
+
+            const svg = d3.select("#ownership")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+            // 饼图布局
+            const pie = d3.pie()
+                .value(d => d.value)
+                .sort(null);
+            const arcs = pie(structureData.ownership);
+
+            // 弧形生成器
+            const arc = d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(radius);
+            const labelArc = d3.arc()
+                .innerRadius(radius * 1.1)
+                .outerRadius(radius * 1.1);
+
+            // 绘制环形
+            svg.selectAll(".ownership-arc")
+                .data(arcs)
+                .enter()
+                .append("path")
+                .attr("class", "ownership-arc")
+                .attr("d", arc)
+                .attr("fill", d => d.data.color)
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .on("mouseover", (e, d) => {
+                    const percent = ((d.data.value / structureData.totalRevenue2024) * 100).toFixed(1);
+                    d3.select("#tooltip")
+                        .html(`<strong>${d.data.name}</strong><br>营收：${d.data.value.toLocaleString()}亿元<br>占比：${percent}%`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+
+            // 标签
+            svg.selectAll(".ownership-label")
+                .data(arcs)
+                .enter()
+                .append("text")
+                .attr("class", "ownership-label")
+                .attr("transform", d => {
+                    const pos = labelArc.centroid(d);
+                    const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
+                    pos[0] = radius * 1.2 * (midAngle < Math.PI ? 1 : -1);
+                    return `translate(${pos})`;
+                })
+                .attr("text-anchor", d => {
+                    const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
+                    return midAngle < Math.PI ? "start" : "end";
+                })
+                .style("font-size", "12px")
+                .text(d => `${d.data.name}（${((d.data.value / structureData.totalRevenue2024) * 100).toFixed(1)}%）`);
+
+            // 中心文本
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", "-0.3em")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .text("企业所有制结构");
+        }
+
+        // 3. 文化产品进出口结构（分组条形图）
+        function drawImportExport() {
+            const container = document.getElementById("import-export");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 80, left: 80 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#import-export")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 数据处理
+            const categories = [...new Set([
+                ...structureData.importExport.出口.map(d => d.name),
+                ...structureData.importExport.进口.map(d => d.name)
+            ])];
+            const exportMap = new Map(structureData.importExport.出口.map(d => [d.name, d.value]));
+            const importMap = new Map(structureData.importExport.进口.map(d => [d.name, d.value]));
+            const data = categories.map(name => ({
+                name,
+                出口: exportMap.get(name) || 0,
+                进口: importMap.get(name) || 0
+            }));
+
+            // 比例尺
+            const x0 = d3.scaleBand()
+                .domain(categories)
+                .range([0, innerWidth])
+                .padding(0.2);
+            const x1 = d3.scaleBand()
+                .domain(["出口", "进口"])
+                .range([0, x0.bandwidth()])
+                .padding(0.1);
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => Math.max(d.出口, d.进口)) * 1.1])
+                .range([innerHeight, 0]);
+            const color = d3.scaleOrdinal()
+                .domain(["出口", "进口"])
+                .range(["#3182ce", "#fc8181"]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x0))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .attr("text-anchor", "end")
+                .attr("dy", "0.5em")
+                .attr("dx", "-0.5em");
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#333")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -60)
+                .attr("x", -innerHeight / 2)
+                .attr("text-anchor", "middle")
+                .text("金额（亿元）");
+
+            // 绘制分组条形图
+            const groups = svg.selectAll(".category-group")
+                .data(data)
+                .enter()
+                .append("g")
+                .attr("class", "category-group")
+                .attr("transform", d => `translate(${x0(d.name)}, 0)`);
+
+            groups.selectAll(".trade-bar")
+                .data(d => Object.entries(d).filter(([k]) => k !== "name").map(([k, v]) => ({ type: k, value: v })))
+                .enter()
+                .append("rect")
+                .attr("class", "trade-bar")
+                .attr("x", d => x1(d.type))
+                .attr("y", d => y(d.value))
+                .attr("width", x1.bandwidth())
+                .attr("height", d => innerHeight - y(d.value))
+                .attr("fill", d => color(d.type))
+                .on("mouseover", (e, d, i, nodes) => {
+                    const group = d3.select(nodes[i].parentNode).datum();
+                    d3.select("#tooltip")
+                        .html(`<strong>${group.name} - ${d.type}</strong><br>金额：${d.value.toLocaleString()}亿元`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+
+            // 图例
+            const legend = svg.append("g")
+                .attr("transform", `translate(${innerWidth - 150}, 0)`);
+            ["出口", "进口"].forEach((type, i) => {
+                legend.append("rect")
+                    .attr("x", 0)
+                    .attr("y", i * 20)
+                    .attr("width", 12)
+                    .attr("height", 12)
+                    .attr("fill", color(type));
+                legend.append("text")
+                    .attr("x", 20)
+                    .attr("y", i * 20 + 10)
+                    .text(type);
+            });
+        }
+
+        // 4. 数字文化产业占比趋势
+        function drawDigitalShare() {
+            const container = document.getElementById("digital-share");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 80, bottom: 50, left: 60 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#digital-share")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleLinear()
+                .domain(d3.extent(structureData.digital, d => d.year))
+                .range([0, innerWidth]);
+            const y1 = d3.scaleLinear() // 左侧Y轴：规模
+                .domain([0, d3.max(structureData.digital, d => d.size) * 1.1])
+                .range([innerHeight, 0]);
+            const y2 = d3.scaleLinear() // 右侧Y轴：占比
+                .domain([0, d3.max(structureData.digital, d => d.share) * 1.1])
+                .range([innerHeight, 0]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x).tickFormat(d => d + "年"));
+            // 左侧Y轴（规模）
+            svg.append("g")
+                .call(d3.axisLeft(y1))
+                .append("text")
+                .attr("fill", "#3182ce")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -50)
+                .attr("x", -innerHeight / 2)
+                .attr("text-anchor", "middle")
+                .text("规模（亿元）");
+            // 右侧Y轴（占比）
+            svg.append("g")
+                .attr("transform", `translate(${innerWidth}, 0)`)
+                .call(d3.axisRight(y2))
+                .append("text")
+                .attr("fill", "#e53e3e")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 50)
+                .attr("x", innerHeight / 2)
+                .attr("text-anchor", "middle")
+                .text("占比（%）");
+
+            // 规模面积图
+            const area = d3.area()
+                .x(d => x(d.year))
+                .y0(innerHeight)
+                .y1(d => y1(d.size));
+            svg.append("path")
+                .datum(structureData.digital)
+                .attr("fill", "url(#digital-gradient)")
+                .attr("d", area);
+
+            // 渐变定义
+            svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "digital-gradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "0%")
+                .attr("y2", "100%")
+                .selectAll("stop")
+                .data([
+                    { offset: "0%", color: "#3182ce", opacity: 0.6 },
+                    { offset: "100%", color: "#3182ce", opacity: 0.1 }
+                ])
+                .enter().append("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color)
+                .attr("stop-opacity", d => d.opacity);
+
+            // 占比折线
+            const line = d3.line()
+                .x(d => x(d.year))
+                .y(d => y2(d.share));
+            svg.append("path")
+                .datum(structureData.digital)
+                .attr("fill", "none")
+                .attr("stroke", "#e53e3e")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            // 数据点（规模）
+            svg.selectAll(".digital-size-point")
+                .data(structureData.digital)
+                .enter()
+                .append("circle")
+                .attr("class", "digital-size-point")
+                .attr("cx", d => x(d.year))
+                .attr("cy", d => y1(d.size))
+                .attr("r", 4)
+                .attr("fill", "#2b6cb0");
+
+            // 数据点（占比）
+            svg.selectAll(".digital-share-point")
+                .data(structureData.digital)
+                .enter()
+                .append("circle")
+                .attr("class", "digital-share-point")
+                .attr("cx", d => x(d.year))
+                .attr("cy", d => y2(d.share))
+                .attr("r", 4)
+                .attr("fill", "#c53030")
+                .on("mouseover", (e, d) => {
+                    d3.select("#tooltip")
+                        .html(`<strong>${d.year}年</strong><br>数字文化产业规模：${d.size.toLocaleString()}亿元<br>占比：${d.share}%`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+        }
+
+        // 初始化图表
+        drawCoreRelated();
+        drawOwnership();
+        drawImportExport();
+        drawDigitalShare();
+    </script>
+</body>
+</html>
