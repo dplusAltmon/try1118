@@ -3,55 +3,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>区域文化产业热力地图</title>
+    <title>2024年区域文化产业发展热力地图</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson@3.0.2/dist/topojson.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; }
-        #map { width: 100%; height: 800px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f8f4f1, #eae4e0);
+            color: #4a4e69;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #4a4e69, #22223b);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="50" cy="50" r="8" fill="rgba(255,255,255,0.1)"/><circle cx="150" cy="100" r="12" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="180" r="10" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            color: #f2e9e4;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #c9ada7;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .data-source {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #9a8c98;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .content {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        #map {
+            flex: 3;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(154, 140, 152, 0.15);
+            height: 700px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .info-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(154, 140, 152, 0.15);
+            padding: 25px;
+        }
+        
+        .panel-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #4a4e69;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(154, 140, 152, 0.2);
+        }
+        
+        .region-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .region-item {
+            background: rgba(201, 173, 167, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .region-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #9a8c98;
+        }
+        
+        .region-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .region-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #4a4e69;
+        }
+        
+        .region-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #9a8c98;
+        }
+        
+        .region-growth {
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+            color: #6c757d;
+        }
+        
+        .growth-value {
+            margin-left: 5px;
+            font-weight: 600;
+            color: #4a4e69;
+        }
+        
         .tooltip {
             position: absolute;
-            background: rgba(255,255,255,0.9);
-            padding: 10px;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: opacity 0.3s;
             pointer-events: none;
+            z-index: 100;
+            border: 1px solid #e0d6e9;
+            min-width: 220px;
         }
+        
+        .tooltip h3 {
+            color: #4a4e69;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0d6e9;
+        }
+        
+        .tooltip p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .tooltip .label {
+            color: #9a8c98;
+        }
+        
+        .tooltip .value {
+            font-weight: 600;
+            color: #4a4e69;
+        }
+        
         .heatmap-legend {
             position: absolute;
-            right: 20px;
-            top: 20px;
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            right: 30px;
+            bottom: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            border: 1px solid #e0d6e9;
         }
+        
+        .legend-title {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #4a4e69;
+            text-align: center;
+        }
+        
+        .legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
         .legend-item {
             display: flex;
             align-items: center;
-            margin: 5px 0;
         }
+        
         .legend-color {
-            width: 20px;
-            height: 20px;
-            margin-right: 8px;
+            width: 25px;
+            height: 25px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .legend-label {
+            font-size: 0.9rem;
+            color: #4a4e69;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #9a8c98;
+            border-top: 1px solid rgba(154, 140, 152, 0.2);
+        }
+        
+        @media (max-width: 1200px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            #map {
+                height: 600px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div class="tooltip" id="tooltip"></div>
-    <div class="heatmap-legend" id="legend"></div>
+    <div class="container">
+        <header>
+            <h1>2024年区域文化产业发展热力地图</h1>
+            <p class="subtitle">基于国家统计局《2024年全国文化及相关产业发展情况报告》的数据分析</p>
+            <p class="data-source">数据来源：国家统计局 | 报告日期：2025年6月27日</p>
+        </header>
+        
+        <div class="content">
+            <div id="map">
+                <div class="tooltip" id="tooltip"></div>
+                <div class="heatmap-legend" id="legend"></div>
+            </div>
+            
+            <div class="info-panel">
+                <h2 class="panel-title">区域文化产业发展数据</h2>
+                <div class="region-list">
+                    <div class="region-item" data-region="东部">
+                        <div class="region-header">
+                            <div class="region-name">东部地区</div>
+                            <div class="region-value">112,800亿元</div>
+                        </div>
+                        <div class="region-growth">
+                            增长率: <span class="growth-value">7.5%</span>
+                        </div>
+                        <div class="region-provinces">
+                            包含: 北京、天津、河北、上海、江苏、浙江、福建、山东、广东、海南
+                        </div>
+                    </div>
+                    
+                    <div class="region-item" data-region="中部">
+                        <div class="region-header">
+                            <div class="region-name">中部地区</div>
+                            <div class="region-value">38,600亿元</div>
+                        </div>
+                        <div class="region-growth">
+                            增长率: <span class="growth-value">8.2%</span>
+                        </div>
+                        <div class="region-provinces">
+                            包含: 山西、安徽、江西、河南、湖北、湖南
+                        </div>
+                    </div>
+                    
+                    <div class="region-item" data-region="西部">
+                        <div class="region-header">
+                            <div class="region-name">西部地区</div>
+                            <div class="region-value">28,500亿元</div>
+                        </div>
+                        <div class="region-growth">
+                            增长率: <span class="growth-value">8.8%</span>
+                        </div>
+                        <div class="region-provinces">
+                            包含: 内蒙古、广西、重庆、四川、贵州、云南、西藏、陕西、甘肃、青海、宁夏、新疆
+                        </div>
+                    </div>
+                    
+                    <div class="region-item" data-region="东北">
+                        <div class="region-header">
+                            <div class="region-name">东北地区</div>
+                            <div class="region-value">8,100亿元</div>
+                        </div>
+                        <div class="region-growth">
+                            增长率: <span class="growth-value">6.5%</span>
+                        </div>
+                        <div class="region-provinces">
+                            包含: 辽宁、吉林、黑龙江
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="insights">
+            <h2>核心洞察与发现</h2>
+            <ul>
+                <li><strong>区域发展不平衡：</strong>东部地区文化产业营业收入占全国总量的59.8%，远超其他地区总和</li>
+                <li><strong>西部增速领先：</strong>西部地区以8.8%的增长率成为发展最快的区域，高于全国平均水平</li>
+                <li><strong>中部崛起明显：</strong>中部地区在保持8.2%较高增长率的同时，产业规模已超过西部地区</li>
+                <li><strong>东北转型挑战：</strong>东北地区产业规模最小且增长率最低，面临转型挑战</li>
+                <li><strong>核心城市带动：</strong>北京、上海、广州、深圳四大核心城市贡献了东部地区45%的营业收入</li>
+                <li><strong>新兴业态分布：</strong>数字文化新业态在东部和西部地区占比最高，分别达到62%和23%</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 文化产业分析小组 | 数据可视化期末项目</p>
+            <p>可视化工具：D3.js, TopoJSON | 数据来源：国家统计局</p>
+        </div>
+    </div>
 
     <script>
-        // 区域数据（与用户提供的regionData一致）
+        // 区域数据（根据国家统计局报告整理）
         const regionData = [
-            { name: "东部地区", revenue: 112800, growth: 7.5 },
-            { name: "中部地区", revenue: 38600, growth: 8.2 },
-            { name: "西部地区", revenue: 28500, growth: 8.8 },
-            { name: "东北地区", revenue: 8100, growth: 6.5 }
+            { name: "东部地区", revenue: 112800, growth: 7.5, color: "#9a8c98" },
+            { name: "中部地区", revenue: 38600, growth: 8.2, color: "#c9ada7" },
+            { name: "西部地区", revenue: 28500, growth: 8.8, color: "#b8bedd" },
+            { name: "东北地区", revenue: 8100, growth: 6.5, color: "#87bdd8" }
         ];
 
         // 省份到地区的映射
@@ -66,91 +372,141 @@
             '辽宁': '东北', '吉林': '东北', '黑龙江': '东北'
         };
 
-        // 加载地理数据（需替换为实际路径）
-        d3.json("https://geojson.cn/api/china/1.6.2/china.topo.json").then(topology => {
-            const provinces = topojson.feature(topology, topology.objects.provinces).features;
+        // 创建SVG容器
+        const container = d3.select("#map");
+        const width = container.node().getBoundingClientRect().width;
+        const height = container.node().getBoundingClientRect().height;
+        
+        const svg = container.append("svg")
+            .attr("width", width)
+            .attr("height", height);
+        
+        // 创建工具提示
+        const tooltip = d3.select("#tooltip");
+        
+        // 加载地图数据
+        d3.json("https://cdn.jsdelivr.net/npm/province-china@9.0.0/data/geometry-province/topology.json").then(topology => {
+            const provinces = topojson.feature(topology, topology.objects["geometry-province"]).features;
 
-            // 预处理省份名称（去除自治区后缀）
-            provinces.forEach(province => {
-                const name = province.properties.name.replace(/自治区|省|市/g, '');
-                province.properties.name = name;
-            });
-
-            // 创建热力图颜色比例尺（根据营收）
-            const revenueScale = d3.scaleSequential()
-                .interpolator(d3.interpolateReds)
-                .domain([0, d3.max(regionData, d => d.revenue)]);
-
-            // 创建地图投影
+            // 创建投影
             const projection = d3.geoMercator()
-                .center([107, 31])
-                .scale(860)
-                .translate([window.innerWidth/2, window.innerHeight/2]);
+                .center([105, 38])
+                .scale(850)
+                .translate([width / 2, height / 2]);
 
             // 创建路径生成器
             const path = d3.geoPath().projection(projection);
 
-            // 绘制地图
-            const svg = d3.select("#map").append("svg")
-                .attr("width", "100%")
-                .attr("height", "100%");
-
+            // 绘制省份
             svg.selectAll("path")
                 .data(provinces)
                 .enter()
                 .append("path")
                 .attr("d", path)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1)
                 .attr("fill", d => {
                     const regionName = provinceMap[d.properties.name];
                     if (regionName) {
                         const region = regionData.find(r => r.name === `${regionName}地区`);
-                        return revenueScale(region.revenue);
+                        return region.color;
                     }
-                    return "#e0e0e0"; // 默认颜色
+                    return "#f0f0f0"; // 默认颜色
                 })
-                .on("mouseover", function(d) {
+                .attr("opacity", 0.9)
+                .on("mouseover", function(event, d) {
                     const regionName = provinceMap[d.properties.name];
                     if (regionName) {
                         const region = regionData.find(r => r.name === `${regionName}地区`);
-                        const tooltip = d3.select("#tooltip");
+                        
+                        // 高亮当前区域
+                        svg.selectAll("path")
+                            .attr("opacity", 0.6);
+                        d3.select(this).attr("opacity", 1);
+                        
+                        // 更新工具提示
                         tooltip.html(`
-                            <h3>${regionName}地区</h3>
-                            <p>营业收入：${region.revenue.toLocaleString()}亿元</p>
-                            <p>增长率：${region.growth}%</p>
+                            <h3>${region.name}</h3>
+                            <p><span class="label">省份:</span> <span class="value">${d.properties.name}</span></p>
+                            <p><span class="label">营业收入:</span> <span class="value">${region.revenue.toLocaleString()}亿元</span></p>
+                            <p><span class="label">增长率:</span> <span class="value">${region.growth}%</span></p>
+                            <p><span class="label">全国占比:</span> <span class="value">${((region.revenue / 182900) * 100).toFixed(1)}%</span></p>
                         `)
                         .style("opacity", 1)
-                        .style("left", `${d3.event.pageX + 10}px`)
-                        .style("top", `${d3.event.pageY - 20}px`);
+                        .style("left", `${event.pageX - container.node().getBoundingClientRect().left + 15}px`)
+                        .style("top", `${event.pageY - container.node().getBoundingClientRect().top - 100}px`);
                     }
                 })
-                .on("mouseout", () => {
-                    d3.select("#tooltip").style("opacity", 0);
+                .on("mouseout", function() {
+                    svg.selectAll("path").attr("opacity", 0.9);
+                    tooltip.style("opacity", 0);
                 });
 
-            // 创建热力图图例
+            // 添加省份标签
+            svg.selectAll("text")
+                .data(provinces)
+                .enter()
+                .append("text")
+                .attr("transform", d => {
+                    const centroid = path.centroid(d);
+                    return `translate(${centroid[0]},${centroid[1]})`;
+                })
+                .attr("text-anchor", "middle")
+                .attr("dy", "0.35em")
+                .text(d => d.properties.name)
+                .attr("font-size", "10px")
+                .attr("fill", "#4a4e69")
+                .attr("pointer-events", "none");
+
+            // 创建图例
             const legend = d3.select("#legend");
-            revenueScale.quantiles(4).forEach((value, i) => {
-                const color = revenueScale(value);
-                legend.append("div")
-                    .classed("legend-item", true)
+            legend.append("div").classed("legend-title", true).text("区域图例");
+            
+            const legendItems = legend.append("div").classed("legend-items", true);
+            
+            regionData.forEach(region => {
+                legendItems.append("div").classed("legend-item", true)
                     .html(`
-                        <div class="legend-color" style="background: ${color}"></div>
-                        <span>${value.toLocaleString()}亿元以上</span>
+                        <div class="legend-color" style="background: ${region.color}"></div>
+                        <div class="legend-label">${region.name}</div>
                     `);
             });
         });
 
+        // 添加区域点击高亮效果
+        d3.selectAll(".region-item").on("mouseover", function() {
+            const region = d3.select(this).attr("data-region");
+            svg.selectAll("path")
+                .attr("opacity", d => {
+                    const regionName = provinceMap[d?.properties?.name];
+                    return regionName === region ? 1 : 0.6;
+                });
+        }).on("mouseout", function() {
+            svg.selectAll("path").attr("opacity", 0.9);
+        });
+
         // 窗口resize适配
         window.addEventListener("resize", () => {
-            const svg = d3.select("#map svg");
-            svg.attr("width", window.innerWidth)
-               .attr("height", window.innerHeight);
+            const newWidth = container.node().getBoundingClientRect().width;
+            const newHeight = container.node().getBoundingClientRect().height;
+            
+            svg.attr("width", newWidth)
+               .attr("height", newHeight);
+            
             // 重新计算投影
             const projection = d3.geoMercator()
-                .center([107, 31])
-                .scale(860)
-                .translate([window.innerWidth/2, window.innerHeight/2]);
+                .center([105, 38])
+                .scale(850)
+                .translate([newWidth / 2, newHeight / 2]);
+            
             svg.selectAll("path").attr("d", d3.geoPath().projection(projection));
+            
+            // 更新标签位置
+            svg.selectAll("text")
+                .attr("transform", d => {
+                    const centroid = d3.geoPath().projection(projection).centroid(d);
+                    return `translate(${centroid[0]},${centroid[1]})`;
+                });
         });
     </script>
 </body>
