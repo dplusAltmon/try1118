@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>文化产业行业树图</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .tree-container { width: 1000px; height: 600px; margin: 20px auto; }
+        .tree-node { stroke: #fff; stroke-width: 1px; }
+        .tree-label { font-size: 12px; fill: #333; pointer-events: none; }
+        .tooltip { position: absolute; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; opacity: 0; }
+    </style>
+</head>
+<body>
+    <h3 style="text-align: center;">文化产业细分行业层级树图（2024年营收，亿元）</h3>
+    <div class="tree-container" id="tree-container"></div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // 数据：文化产业层级结构（基于国家统计局行业分类）
+        const treeData = {
+            name: "文化产业",
+            children: [
+                {
+                    name: "内容创作生产",
+                    value: 58000,
+                    children: [
+                        { name: "新闻信息服务", value: 18000 },
+                        { name: "文艺创作表演", value: 22000 },
+                        { name: "数字内容创作", value: 18000 }
+                    ]
+                },
+                {
+                    name: "创意设计服务",
+                    value: 42000,
+                    children: [
+                        { name: "广告服务", value: 20000 },
+                        { name: "建筑设计", value: 12000 },
+                        { name: "其他设计", value: 10000 }
+                    ]
+                },
+                {
+                    name: "文化传播渠道",
+                    value: 35000,
+                    children: [
+                        { name: "出版物发行", value: 15000 },
+                        { name: "文化会展", value: 8000 },
+                        { name: "数字传播", value: 12000 }
+                    ]
+                },
+                {
+                    name: "文化投资运营",
+                    value: 18000,
+                    children: [
+                        { name: "文化产业投资", value: 10000 },
+                        { name: "文化园区运营", value: 8000 }
+                    ]
+                },
+                {
+                    name: "其他领域",
+                    value: 45000,
+                    children: [
+                        { name: "文化娱乐", value: 15000 },
+                        { name: "文化装备", value: 6000 },
+                        { name: "辅助服务", value: 24000 }
+                    ]
+                }
+            ]
+        };
+
+        // 绘制树图（矩形树图，面积表示规模）
+        const width = 1000;
+        const height = 600;
+        const svg = d3.select("#tree-container")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // 树图布局
+        const treemap = d3.treemap()
+            .size([width, height])
+            .padding(2)
+            .round(true);
+
+        // 层级数据处理
+        const root = d3.hierarchy(treeData)
+            .sum(d => d.value) // 以value为权重
+            .sort((a, b) => b.value - a.value);
+
+        // 计算树图布局
+        treemap(root);
+
+        // 颜色比例尺（与前文行业配色一致）
+        const color = d3.scaleOrdinal()
+            .domain(["内容创作生产", "创意设计服务", "文化传播渠道", "文化投资运营", "其他领域"])
+            .range(["#3182ce", "#48bb78", "#f6ad55", "#fc8181", "#9f7aea"]);
+
+        // 绘制矩形
+        const cells = svg.selectAll("g")
+            .data(root.leaves())
+            .enter()
+            .append("g")
+            .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
+
+        cells.append("rect")
+            .attr("class", "tree-node")
+            .attr("width", d => d.x1 - d.x0)
+            .attr("height", d => d.y1 - d.y0)
+            .attr("fill", d => {
+                // 颜色继承父节点分类
+                while (d.depth > 1) d = d.parent;
+                return color(d.data.name);
+            })
+            .on("mouseover", (e, d) => {
+                // 拼接完整层级路径
+                const path = [];
+                let node = d;
+                while (node.depth > 0) {
+                    path.unshift(node.data.name);
+                    node = node.parent;
+                }
+                d3.select("#tooltip")
+                    .html(`<strong>${path.join(" > ")}</strong><br>营收：${d.data.value.toLocaleString()}亿元`)
+                    .style("opacity", 1)
+                    .style("left", (e.pageX + 10) + "px")
+                    .style("top", (e.pageY - 20) + "px");
+            })
+            .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+
+        // 添加标签（仅显示足够大的节点）
+        cells.filter(d => (d.x1 - d.x0) > 50 && (d.y1 - d.y0) > 20)
+            .append("text")
+            .attr("class", "tree-label")
+            .attr("x", 5)
+            .attr("y", 15)
+            .text(d => d.data.name);
+    </script>
+</body>
+</html>
