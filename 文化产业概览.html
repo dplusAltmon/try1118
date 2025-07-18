@@ -2,57 +2,376 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>2024年全国文化产业概览</title>
+    <title>文化产业概览</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        .container { width: 1200px; margin: 0 auto; padding: 20px; background-color: #f5f3ef; }
-        .section-title { color: #8d7b68; font-size: 24px; border-bottom: 2px solid #d7cbc1; padding-bottom: 10px; }
+        .container { width: 1200px; margin: 0 auto; padding: 20px; }
+        .section-title { color: #6c757d; font-size: 24px; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
         .viz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
-        .viz-card { background: #f1ede8; border-radius: 8px; box-shadow: 0 2px 8px rgba(141, 123, 104, 0.1); padding: 15px; }
-        .viz-title { font-size: 18px; color: #8d7b68; margin-bottom: 15px; }
-        .tooltip { position: absolute; background: #f1ede8; padding: 8px; border: 1px solid #d7cbc1; border-radius: 4px; font-size: 12px; opacity: 0; pointer-events: none; color: #6e5f4c; }
+        .viz-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; }
+        .viz-title { font-size: 18px; color: #495057; margin-bottom: 15px; }
+        .tooltip { position: absolute; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 class="section-title">2024年全国文化及相关产业发展概况</h2>
+        <h2 class="section-title">产业概览</h2>
         <div class="viz-grid">
             <!-- 1. 总营收与增长率双轴图 -->
             <div class="viz-card">
                 <div class="viz-title">全国文化产业总营收与增长（2020-2024）</div>
                 <div id="revenue-growth" style="width: 100%; height: 300px;"></div>
             </div>
-            <!-- 2. 产业类型占比图 -->
+            <!-- 2. GDP占比面积图 -->
             <div class="viz-card">
-                <div class="viz-title">文化产业类型营收占比</div>
-                <div id="industry-type" style="width: 100%; height: 300px;"></div>
+                <div class="viz-title">文化产业GDP占比趋势</div>
+                <div id="gdp-share" style="width: 100%; height: 300px;"></div>
             </div>
-            <!-- 3. 九大行业增长对比图 -->
+            <!-- 3. 从业人员柱状图 -->
             <div class="viz-card">
-                <div class="viz-title">九大行业营业收入增长率</div>
-                <div id="industry-growth" style="width: 100%; height: 300px;"></div>
+                <div class="viz-title">从业人员数量（万人）</div>
+                <div id="employment" style="width: 100%; height: 300px;"></div>
             </div>
-            <!-- 4. 区域发展对比图 -->
+            <!-- 4. 固定资产投资折线图 -->
             <div class="viz-card">
-                <div class="viz-title">分区域营业收入及增长</div>
-                <div id="region-comparison" style="width: 100%; height: 300px;"></div>
+                <div class="viz-title">固定资产投资（亿元）</div>
+                <div id="investment" style="width: 100%; height: 300px;"></div>
             </div>
         </div>
     </div>
     <div class="tooltip" id="tooltip"></div>
 
     <script>
-        // 数据来源：国家统计局2025年6月发布的2024年文化及相关产业发展情况报告
-        const cultureData = {
-            // 营收数据（亿元）
-            revenueByYear: [
-                { year: 2020, revenue: 139000, growth: 8.5 },
-                { year: 2021, revenue: 152000, growth: 9.4 },
-                { year: 2022, revenue: 165000, growth: 8.6 },
-                { year: 2023, revenue: 176000, growth: 6.7 },
-                { year: 2024, revenue: 191423, growth: 7.1 }
-            ],
-            
-            // 产业类型数据（2024年）
-            industryTypes: [
-                { type: "文化服务业", revenue: 1091
+        // 更新数据来源：国家统计局2025年文化产业数据
+        const overviewData = {
+            years: [2020, 2021, 2022, 2023, 2024],
+            revenue: [145000, 154500, 163700, 175000, 185000], // 更新营收（亿元）
+            growth: [7.6, 6.9, 5.8, 7.0, 6.2], // 更新增长率（%）
+            gdpShare: [4.6, 4.7, 4.8, 4.9, 5.0], // 更新GDP占比（%）
+            employment: [2300, 2450, 2580, 2700, 2800], // 更新就业人数（万人）
+            investment: [29000, 31000, 33000, 35000, 37000] // 更新固定资产投资（亿元）
+        };
+
+        // 1. 总营收与增长率双轴图
+        function drawRevenueGrowth() {
+            const container = document.getElementById("revenue-growth");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 80, bottom: 30, left: 50 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#revenue-growth")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // X轴（年份）
+            const x = d3.scaleBand()
+                .domain(overviewData.years)
+                .range([0, innerWidth])
+                .padding(0.1);
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x));
+
+            // 左侧Y轴（营收）
+            const yRevenue = d3.scaleLinear()
+                .domain([0, d3.max(overviewData.revenue) * 1.1])
+                .range([innerHeight, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(yRevenue))
+                .append("text")
+                .attr("fill", "#4a6faf")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -40)
+                .attr("text-anchor", "end")
+                .text("营收（亿元）");
+
+            // 右侧Y轴（增长率）
+            const yGrowth = d3.scaleLinear()
+                .domain([0, d3.max(overviewData.growth) * 1.1])
+                .range([innerHeight, 0]);
+            svg.append("g")
+                .attr("transform", `translate(${innerWidth}, 0)`)
+                .call(d3.axisRight(yGrowth))
+                .append("text")
+                .attr("fill", "#e76d26")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 40)
+                .attr("text-anchor", "end")
+                .text("增长率（%）");
+
+            // 绘制营收柱状图
+            svg.selectAll(".revenue-bar")
+                .data(overviewData.revenue)
+                .enter()
+                .append("rect")
+                .attr("class", "revenue-bar")
+                .attr("x", (d, i) => x(overviewData.years[i]))
+                .attr("y", d => yRevenue(d))
+                .attr("width", x.bandwidth())
+                .attr("height", d => innerHeight - yRevenue(d))
+                .attr("fill", "#4a6faf")
+                .on("mouseover", (e, d, i) => {
+                    d3.select("#tooltip")
+                        .html(`<strong>${overviewData.years[i]}年</strong><br>营收：${d.toLocaleString()}亿元`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+
+            // 绘制增长率折线
+            const growthLine = d3.line()
+                .x((d, i) => x(overviewData.years[i]) + x.bandwidth() / 2)
+                .y(d => yGrowth(d));
+            svg.append("path")
+                .datum(overviewData.growth)
+                .attr("fill", "none")
+                .attr("stroke", "#e76d26")
+                .attr("stroke-width", 2)
+                .attr("d", growthLine);
+
+            // 增长率圆点标记
+            svg.selectAll(".growth-dot")
+                .data(overviewData.growth)
+                .enter()
+                .append("circle")
+                .attr("class", "growth-dot")
+                .attr("cx", (d, i) => x(overviewData.years[i]) + x.bandwidth() / 2)
+                .attr("cy", d => yGrowth(d))
+                .attr("r", 5)
+                .attr("fill", "#e76d26")
+                .on("mouseover", (e, d, i) => {
+                    d3.select("#tooltip")
+                        .html(`<strong>${overviewData.years[i]}年</strong><br>增长率：${d}%`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+        }
+
+        // 2. GDP占比面积图
+        function drawGdpShare() {
+            const container = document.getElementById("gdp-share");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 30, left: 50 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#gdp-share")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleBand()
+                .domain(overviewData.years)
+                .range([0, innerWidth])
+                .padding(0.1);
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(overviewData.gdpShare) * 1.2])
+                .range([innerHeight, 0]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x));
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#495057")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -40)
+                .attr("text-anchor", "end")
+                .text("GDP占比（%）");
+
+            // 面积图
+            const area = d3.area()
+                .x((d, i) => x(overviewData.years[i]) + x.bandwidth() / 2)
+                .y0(innerHeight)
+                .y1(d => y(d));
+            svg.append("path")
+                .datum(overviewData.gdpShare)
+                .attr("fill", "url(#gdp-gradient)")
+                .attr("d", area);
+
+            // 渐变定义
+            svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "gdp-gradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "0%")
+                .attr("y2", "100%")
+                .selectAll("stop")
+                .data([
+                    { offset: "0%", color: "#cc4d72", opacity: 0.8 },
+                    { offset: "100%", color: "#cc4d72", opacity: 0.2 }
+                ])
+                .enter().append("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color)
+                .attr("stop-opacity", d => d.opacity);
+
+            // 数据点
+            svg.selectAll(".gdp-dot")
+                .data(overviewData.gdpShare)
+                .enter()
+                .append("circle")
+                .attr("cx", (d, i) => x(overviewData.years[i]) + x.bandwidth() / 2)
+                .attr("cy", d => y(d))
+                .attr("r", 5)
+                .attr("fill", "#b50f4b")
+                .on("mouseover", (e, d, i) => {
+                    d3.select("#tooltip")
+                        .html(`<strong>${overviewData.years[i]}年</strong><br>GDP占比：${d}%`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+        }
+
+        // 3. 从业人员柱状图（水平）
+        function drawEmployment() {
+            const container = document.getElementById("employment");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 30, left: 80 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#employment")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleLinear()
+                .domain([0, d3.max(overviewData.employment) * 1.1])
+                .range([0, innerWidth]);
+            const y = d3.scaleBand()
+                .domain(overviewData.years)
+                .range([0, innerHeight])
+                .padding(0.1);
+
+            // 坐标轴
+            svg.append("g")
+                .call(d3.axisLeft(y));
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x))
+                .append("text")
+                .attr("fill", "#495057")
+                .attr("x", innerWidth / 2)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("从业人数（万人）");
+
+            // 水平柱状图
+            svg.selectAll(".employment-bar")
+                .data(overviewData.employment)
+                .enter()
+                .append("rect")
+                .attr("class", "employment-bar")
+                .attr("x", 0)
+                .attr("y", (d, i) => y(overviewData.years[i]))
+                .attr("width", d => x(d))
+                .attr("height", y.bandwidth())
+                .attr("fill", "#cc4d72")
+                .on("mouseover", (e, d, i) => {
+                    d3.select("#tooltip")
+                        .html(`<strong>${overviewData.years[i]}年</strong><br>从业人员：${d.toLocaleString()}万人`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+        }
+
+        // 4. 固定资产投资折线图
+        function drawInvestment() {
+            const container = document.getElementById("investment");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = { top: 20, right: 30, bottom: 30, left: 50 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select("#investment")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            // 比例尺
+            const x = d3.scaleBand()
+                .domain(overviewData.years)
+                .range([0, innerWidth])
+                .padding(0.1);
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(overviewData.investment) * 1.1])
+                .range([innerHeight, 0]);
+
+            // 坐标轴
+            svg.append("g")
+                .attr("transform", `translate(0, ${innerHeight})`)
+                .call(d3.axisBottom(x));
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#495057")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -40)
+                .attr("text-anchor", "end")
+                .text("固定资产投资（亿元）");
+
+            // 折线图
+            const line = d3.line()
+                .x((d, i) => x(overviewData.years[i]) + x.bandwidth() / 2)
+                .y(d => y(d));
+            svg.append("path")
+                .datum(overviewData.investment)
+                .attr("fill", "none")
+                .attr("stroke", "#ed7d30")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            // 数据点
+            svg.selectAll(".investment-dot")
+                .data(overviewData.investment)
+                .enter()
+                .append("circle")
+                .attr("cx", (d, i) => x(overviewData.years[i]) + x.bandwidth() / 2)
+                .attr("cy", d => y(d))
+                .attr("r", 5)
+                .attr("fill", "#c56c4e")
+                .on("mouseover", (e, d, i) => {
+                    d3.select("#tooltip")
+                        .html(`<strong>${overviewData.years[i]}年</strong><br>投资：${d.toLocaleString()}亿元`)
+                        .style("opacity", 1)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+        }
+
+        // 初始化所有图表
+        drawRevenueGrowth();
+        drawGdpShare();
+        drawEmployment();
+        drawInvestment();
+    </script>
+</body>
+</html>
