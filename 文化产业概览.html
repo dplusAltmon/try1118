@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>2024年全国文化产业概览</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .container { width: 1200px; margin: 0 auto; padding: 20px; background-color: #f5f3ef; }
+        .section-title { color: #8d7b68; font-size: 24px; border-bottom: 2px solid #d7cbc1; padding-bottom: 10px; }
+        .viz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
+        .viz-card { background: #f1ede8; border-radius: 8px; box-shadow: 0 2px 8px rgba(141, 123, 104, 0.1); padding: 15px; }
+        .viz-title { font-size: 18px; color: #8d7b68; margin-bottom: 15px; }
+        .tooltip { position: absolute; background: #f1ede8; padding: 8px; border: 1px solid #d7cbc1; border-radius: 4px; font-size: 12px; opacity: 0; pointer-events: none; color: #6e5f4c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="section-title">2024年全国文化及相关产业发展概况</h2>
+        <div class="viz-grid">
+            <!-- 1. 总营收与增长率双轴图 -->
+            <div class="viz-card">
+                <div class="viz-title">全国文化产业总营收与增长（2020-2024）</div>
+                <div id="revenue-growth" style="width: 100%; height: 300px;"></div>
+            </div>
+            <!-- 2. 产业类型占比图 -->
+            <div class="viz-card">
+                <div class="viz-title">文化产业类型营收占比</div>
+                <div id="industry-type" style="width: 100%; height: 300px;"></div>
+            </div>
+            <!-- 3. 九大行业增长对比图 -->
+            <div class="viz-card">
+                <div class="viz-title">九大行业营业收入增长率</div>
+                <div id="industry-growth" style="width: 100%; height: 300px;"></div>
+            </div>
+            <!-- 4. 区域发展对比图 -->
+            <div class="viz-card">
+                <div class="viz-title">分区域营业收入及增长</div>
+                <div id="region-comparison" style="width: 100%; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // 数据来源：国家统计局2025年6月发布的2024年文化及相关产业发展情况报告
+        const cultureData = {
+            // 营收数据（亿元）
+            revenueByYear: [
+                { year: 2020, revenue: 139000, growth: 8.5 },
+                { year: 2021, revenue: 152000, growth: 9.4 },
+                { year: 2022, revenue: 165000, growth: 8.6 },
+                { year: 2023, revenue: 176000, growth: 6.7 },
+                { year: 2024, revenue: 191423, growth: 7.1 }
+            ],
+            
+            // 产业类型数据（2024年）
+            industryTypes: [
+                { type: "文化服务业", revenue: 1091
