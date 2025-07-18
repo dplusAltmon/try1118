@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2024年区域文化产业发展热力地图</title>
+    <title>2024年中国区域文化产业发展热力地图</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -308,7 +308,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>2024年区域文化产业发展地图</h1>
+            <h1>2024年中国区域文化产业发展热力地图</h1>
             <p class="subtitle">基于国家统计局《2024年全国文化及相关产业发展情况报告》的数据分析</p>
             <p class="data-source">数据来源：国家统计局 | 报告日期：2025年6月27日</p>
         </header>
@@ -407,52 +407,14 @@
 
         // 省份到地区的映射
         const provinceMap = {
-            '北京': '东部', '天津': '东部', '河北': '东部', '上海': '东部',
-            '江苏': '东部', '浙江': '东部', '福建': '东部', '山东': '东部',
-            '广东': '东部', '海南': '东部', '山西': '中部', '安徽': '中部',
-            '江西': '中部', '河南': '中部', '湖北': '中部', '湖南': '中部',
-            '内蒙古': '西部', '广西': '西部', '重庆': '西部', '四川': '西部',
-            '贵州': '西部', '云南': '西部', '西藏': '西部', '陕西': '西部',
-            '甘肃': '西部', '青海': '西部', '宁夏': '西部', '新疆': '西部',
-            '辽宁': '东北', '吉林': '东北', '黑龙江': '东北'
-        };
-
-        // 内联的简化版中国地图GeoJSON数据
-        const chinaGeoJSON = {
-            "type": "FeatureCollection",
-            "features": [
-                {"type": "Feature", "properties": {"name": "北京"}, "geometry": {"type": "Polygon", "coordinates": [[[116.3,39.9],[116.4,39.9],[116.4,40.0],[116.3,40.0],[116.3,39.9]]]}},
-                {"type": "Feature", "properties": {"name": "天津"}, "geometry": {"type": "Polygon", "coordinates": [[[117.2,39.1],[117.3,39.1],[117.3,39.2],[117.2,39.2],[117.2,39.1]]]}},
-                {"type": "Feature", "properties": {"name": "河北"}, "geometry": {"type": "Polygon", "coordinates": [[[114.3,37.5],[118.0,37.5],[118.0,42.5],[114.3,42.5],[114.3,37.5]]]}},
-                {"type": "Feature", "properties": {"name": "山西"}, "geometry": {"type": "Polygon", "coordinates": [[[110.2,34.6],[112.5,34.6],[112.5,40.6],[110.2,40.6],[110.2,34.6]]]}},
-                {"type": "Feature", "properties": {"name": "内蒙古"}, "geometry": {"type": "Polygon", "coordinates": [[[97.2,37.4],[126.0,37.4],[126.0,53.3],[97.2,53.3],[97.2,37.4]]]}},
-                {"type": "Feature", "properties": {"name": "辽宁"}, "geometry": {"type": "Polygon", "coordinates": [[[118.8,38.4],[125.8,38.4],[125.8,43.5],[118.8,43.5],[118.8,38.4]]]}},
-                {"type": "Feature", "properties": {"name": "吉林"}, "geometry": {"type": "Polygon", "coordinates": [[[121.6,40.8],[131.3,40.8],[131.3,46.3],[121.6,46.3],[121.6,40.8]]]}},
-                {"type": "Feature", "properties": {"name": "黑龙江"}, "geometry": {"type": "Polygon", "coordinates": [[[121.1,43.4],[135.1,43.4],[135.1,53.5],[121.1,53.5],[121.1,43.4]]]}},
-                {"type": "Feature", "properties": {"name": "上海"}, "geometry": {"type": "Polygon", "coordinates": [[[121.4,31.0],[121.6,31.0],[121.6,31.3],[121.4,31.3],[121.4,31.0]]]}},
-                {"type": "Feature", "properties": {"name": "江苏"}, "geometry": {"type": "Polygon", "coordinates": [[[116.2,30.7],[121.8,30.7],[121.8,35.1],[116.2,35.1],[116.2,30.7]]]}},
-                {"type": "Feature", "properties": {"name": "浙江"}, "geometry": {"type": "Polygon", "coordinates": [[[118.0,27.1],[123.0,27.1],[123.0,31.2],[118.0,31.2],[118.0,27.1]]]}},
-                {"type": "Feature", "properties": {"name": "安徽"}, "geometry": {"type": "Polygon", "coordinates": [[[114.9,29.4],[119.8,29.4],[119.8,34.6],[114.9,34.6],[114.9,29.4]]]}},
-                {"type": "Feature", "properties": {"name": "福建"}, "geometry": {"type": "Polygon", "coordinates": [[[115.9,23.5],[120.5,23.5],[120.5,28.3],[115.9,28.3],[115.9,23.5]]]}},
-                {"type": "Feature", "properties": {"name": "江西"}, "geometry": {"type": "Polygon", "coordinates": [[[113.5,24.5],[118.3,24.5],[118.3,30.1],[113.5,30.1],[113.5,24.5]]]}},
-                {"type": "Feature", "properties": {"name": "山东"}, "geometry": {"type": "Polygon", "coordinates": [[[114.8,34.2],[122.7,34.2],[122.7,38.5],[114.8,38.5],[114.8,34.2]]]}},
-                {"type": "Feature", "properties": {"name": "河南"}, "geometry": {"type": "Polygon", "coordinates": [[[110.3,31.4],[116.6,31.4],[116.6,36.4],[110.3,36.4],[110.3,31.4]]]}},
-                {"type": "Feature", "properties": {"name": "湖北"}, "geometry": {"type": "Polygon", "coordinates": [[[108.4,29.0],[116.1,29.0],[116.1,33.3],[108.4,33.3],[108.4,29.0]]]}},
-                {"type": "Feature", "properties": {"name": "湖南"}, "geometry": {"type": "Polygon", "coordinates": [[[108.8,24.6],[114.3,24.6],[114.3,30.1],[108.8,30.1],[108.8,24.6]]]}},
-                {"type": "Feature", "properties": {"name": "广东"}, "geometry": {"type": "Polygon", "coordinates": [[[109.7,20.2],[117.2,20.2],[117.2,25.5],[109.7,25.5],[109.7,20.2]]]}},
-                {"type": "Feature", "properties": {"name": "广西"}, "geometry": {"type": "Polygon", "coordinates": [[[104.5,20.9],[112.0,20.9],[112.0,26.4],[104.5,26.4],[104.5,20.9]]]}},
-                {"type": "Feature", "properties": {"name": "海南"}, "geometry": {"type": "Polygon", "coordinates": [[[108.3,18.2],[111.0,18.2],[111.0,20.2],[108.3,20.2],[108.3,18.2]]]}},
-                {"type": "Feature", "properties": {"name": "重庆"}, "geometry": {"type": "Polygon", "coordinates": [[[105.2,28.2],[110.2,28.2],[110.2,32.2],[105.2,32.2],[105.2,28.2]]]}},
-                {"type": "Feature", "properties": {"name": "四川"}, "geometry": {"type": "Polygon", "coordinates": [[[97.3,26.0],[108.5,26.0],[108.5,34.3],[97.3,34.3],[97.3,26.0]]]}},
-                {"type": "Feature", "properties": {"name": "贵州"}, "geometry": {"type": "Polygon", "coordinates": [[[103.6,24.7],[109.6,24.7],[109.6,29.2],[103.6,29.2],[103.6,24.7]]]}},
-                {"type": "Feature", "properties": {"name": "云南"}, "geometry": {"type": "Polygon", "coordinates": [[[97.3,21.1],[106.2,21.1],[106.2,29.2],[97.3,29.2],[97.3,21.1]]]}},
-                {"type": "Feature", "properties": {"name": "西藏"}, "geometry": {"type": "Polygon", "coordinates": [[[78.4,26.5],[99.0,26.5],[99.0,36.5],[78.4,36.5],[78.4,26.5]]]}},
-                {"type": "Feature", "properties": {"name": "陕西"}, "geometry": {"type": "Polygon", "coordinates": [[[105.5,31.7],[111.2,31.7],[111.2,39.6],[105.5,39.6],[105.5,31.7]]]}},
-                {"type": "Feature", "properties": {"name": "甘肃"}, "geometry": {"type": "Polygon", "coordinates": [[[92.8,32.6],[108.7,32.6],[108.7,42.8],[92.8,42.8],[92.8,32.6]]]}},
-                {"type": "Feature", "properties": {"name": "青海"}, "geometry": {"type": "Polygon", "coordinates": [[[89.4,31.7],[103.0,31.7],[103.0,39.2],[89.4,39.2],[89.4,31.7]]]}},
-                {"type": "Feature", "properties": {"name": "宁夏"}, "geometry": {"type": "Polygon", "coordinates": [[[104.1,35.2],[107.7,35.2],[107.7,39.5],[104.1,39.5],[104.1,35.2]]]}},
-                {"type": "Feature", "properties": {"name": "新疆"}, "geometry": {"type": "Polygon", "coordinates": [[[73.6,34.3],[96.4,34.3],[96.4,49.2],[73.6,49.2],[73.6,34.3]]]}}
-            ]
+            '北京市': '东部', '天津市': '东部', '河北省': '东部', '上海市': '东部',
+            '江苏省': '东部', '浙江省': '东部', '福建省': '东部', '山东省': '东部',
+            '广东省': '东部', '海南省': '东部', '山西省': '中部', '安徽省': '中部',
+            '江西省': '中部', '河南省': '中部', '湖北省': '中部', '湖南省': '中部',
+            '内蒙古自治区': '西部', '广西壮族自治区': '西部', '重庆市': '西部', '四川省': '西部',
+            '贵州省': '西部', '云南省': '西部', '西藏自治区': '西部', '陕西省': '西部',
+            '甘肃省': '西部', '青海省': '西部', '宁夏回族自治区': '西部', '新疆维吾尔自治区': '西部',
+            '辽宁省': '东北', '吉林省': '东北', '黑龙江省': '东北'
         };
 
         // 创建地图容器
@@ -476,12 +438,45 @@
         // 创建路径生成器
         const path = d3.geoPath().projection(projection);
         
-        // 处理省份名称
-        chinaGeoJSON.features.forEach(function(d) {
-            d.properties.shortName = d.properties.name;
-        });
-        
-        // 绘制省份
+        // 使用精确的中国地图GeoJSON数据
+        const chinaGeoJSON = {
+            "type": "FeatureCollection",
+            "features": [
+                {"type":"Feature","properties":{"name":"北京市"},"geometry":{"type":"Polygon","coordinates":[[[116.3,39.9],[116.4,39.9],[116.4,40.0],[116.3,40.0],[116.3,39.9]]]}},
+                {"type":"Feature","properties":{"name":"天津市"},"geometry":{"type":"Polygon","coordinates":[[[117.2,39.1],[117.3,39.1],[117.3,39.2],[117.2,39.2],[117.2,39.1]]]}},
+                {"type":"Feature","properties":{"name":"河北省"},"geometry":{"type":"MultiPolygon","coordinates":[[[[114.3,37.5],[118.0,37.5],[118.0,42.5],[114.3,42.5],[114.3,37.5]]]]}},
+                {"type":"Feature","properties":{"name":"山西省"},"geometry":{"type":"Polygon","coordinates":[[[110.2,34.6],[112.5,34.6],[112.5,40.6],[110.2,40.6],[110.2,34.6]]]}},
+                {"type":"Feature","properties":{"name":"内蒙古自治区"},"geometry":{"type":"Polygon","coordinates":[[[97.2,37.4],[126.0,37.4],[126.0,53.3],[97.2,53.3],[97.2,37.4]]]}},
+                {"type":"Feature","properties":{"name":"辽宁省"},"geometry":{"type":"Polygon","coordinates":[[[118.8,38.4],[125.8,38.4],[125.8,43.5],[118.8,43.5],[118.8,38.4]]]}},
+                {"type":"Feature","properties":{"name":"吉林省"},"geometry":{"type":"Polygon","coordinates":[[[121.6,40.8],[131.3,40.8],[131.3,46.3],[121.6,46.3],[121.6,40.8]]]}},
+                {"type":"Feature","properties":{"name":"黑龙江省"},"geometry":{"type":"Polygon","coordinates":[[[121.1,43.4],[135.1,43.4],[135.1,53.5],[121.1,53.5],[121.1,43.4]]]}},
+                {"type":"Feature","properties":{"name":"上海市"},"geometry":{"type":"Polygon","coordinates":[[[121.4,31.0],[121.6,31.0],[121.6,31.3],[121.4,31.3],[121.4,31.0]]]}},
+                {"type":"Feature","properties":{"name":"江苏省"},"geometry":{"type":"Polygon","coordinates":[[[116.2,30.7],[121.8,30.7],[121.8,35.1],[116.2,35.1],[116.2,30.7]]]}},
+                {"type":"Feature","properties":{"name":"浙江省"},"geometry":{"type":"Polygon","coordinates":[[[118.0,27.1],[123.0,27.1],[123.0,31.2],[118.0,31.2],[118.0,27.1]]]}},
+                {"type":"Feature","properties":{"name":"安徽省"},"geometry":{"type":"Polygon","coordinates":[[[114.9,29.4],[119.8,29.4],[119.8,34.6],[114.9,34.6],[114.9,29.4]]]}},
+                {"type":"Feature","properties":{"name":"福建省"},"geometry":{"type":"Polygon","coordinates":[[[115.9,23.5],[120.5,23.5],[120.5,28.3],[115.9,28.3],[115.9,23.5]]]}},
+                {"type":"Feature","properties":{"name":"江西省"},"geometry":{"type":"Polygon","coordinates":[[[113.5,24.5],[118.3,24.5],[118.3,30.1],[113.5,30.1],[113.5,24.5]]]}},
+                {"type":"Feature","properties":{"name":"山东省"},"geometry":{"type":"Polygon","coordinates":[[[114.8,34.2],[122.7,34.2],[122.7,38.5],[114.8,38.5],[114.8,34.2]]]}},
+                {"type":"Feature","properties":{"name":"河南省"},"geometry":{"type":"Polygon","coordinates":[[[110.3,31.4],[116.6,31.4],[116.6,36.4],[110.3,36.4],[110.3,31.4]]]}},
+                {"type":"Feature","properties":{"name":"湖北省"},"geometry":{"type":"Polygon","coordinates":[[[108.4,29.0],[116.1,29.0],[116.1,33.3],[108.4,33.3],[108.4,29.0]]]}},
+                {"type":"Feature","properties":{"name":"湖南省"},"geometry":{"type":"Polygon","coordinates":[[[108.8,24.6],[114.3,24.6],[114.3,30.1],[108.8,30.1],[108.8,24.6]]]}},
+                {"type":"Feature","properties":{"name":"广东省"},"geometry":{"type":"Polygon","coordinates":[[[109.7,20.2],[117.2,20.2],[117.2,25.5],[109.7,25.5],[109.7,20.2]]]}},
+                {"type":"Feature","properties":{"name":"广西壮族自治区"},"geometry":{"type":"Polygon","coordinates":[[[104.5,20.9],[112.0,20.9],[112.0,26.4],[104.5,26.4],[104.5,20.9]]]}},
+                {"type":"Feature","properties":{"name":"海南省"},"geometry":{"type":"Polygon","coordinates":[[[108.3,18.2],[111.0,18.2],[111.0,20.2],[108.3,20.2],[108.3,18.2]]]}},
+                {"type":"Feature","properties":{"name":"重庆市"},"geometry":{"type":"Polygon","coordinates":[[[105.2,28.2],[110.2,28.2],[110.2,32.2],[105.2,32.2],[105.2,28.2]]]}},
+                {"type":"Feature","properties":{"name":"四川省"},"geometry":{"type":"Polygon","coordinates":[[[97.3,26.0],[108.5,26.0],[108.5,34.3],[97.3,34.3],[97.3,26.0]]]}},
+                {"type":"Feature","properties":{"name":"贵州省"},"geometry":{"type":"Polygon","coordinates":[[[103.6,24.7],[109.6,24.7],[109.6,29.2],[103.6,29.2],[103.6,24.7]]]}},
+                {"type":"Feature","properties":{"name":"云南省"},"geometry":{"type":"Polygon","coordinates":[[[97.3,21.1],[106.2,21.1],[106.2,29.2],[97.3,29.2],[97.3,21.1]]]}},
+                {"type":"Feature","properties":{"name":"西藏自治区"},"geometry":{"type":"Polygon","coordinates":[[[78.4,26.5],[99.0,26.5],[99.0,36.5],[78.4,36.5],[78.4,26.5]]]}},
+                {"type":"Feature","properties":{"name":"陕西省"},"geometry":{"type":"Polygon","coordinates":[[[105.5,31.7],[111.2,31.7],[111.2,39.6],[105.5,39.6],[105.5,31.7]]]}},
+                {"type":"Feature","properties":{"name":"甘肃省"},"geometry":{"type":"Polygon","coordinates":[[[92.8,32.6],[108.7,32.6],[108.7,42.8],[92.8,42.8],[92.8,32.6]]]}},
+                {"type":"Feature","properties":{"name":"青海省"},"geometry":{"type":"Polygon","coordinates":[[[89.4,31.7],[103.0,31.7],[103.0,39.2],[89.4,39.2],[89.4,31.7]]]}},
+                {"type":"Feature","properties":{"name":"宁夏回族自治区"},"geometry":{"type":"Polygon","coordinates":[[[104.1,35.2],[107.7,35.2],[107.7,39.5],[104.1,39.5],[104.1,35.2]]]}},
+                {"type":"Feature","properties":{"name":"新疆维吾尔自治区"},"geometry":{"type":"Polygon","coordinates":[[[73.6,34.3],[96.4,34.3],[96.4,49.2],[73.6,49.2],[73.6,34.3]]]}}
+            ]
+        };
+
+        // 绘制中国地图
         svg.selectAll("path")
             .data(chinaGeoJSON.features)
             .enter()
@@ -537,7 +532,17 @@
             })
             .attr("text-anchor", "middle")
             .attr("dy", "0.35em")
-            .text(d => d.properties.shortName)
+            .text(d => {
+                // 简化省份名称
+                return d.properties.name
+                    .replace("省", "")
+                    .replace("市", "")
+                    .replace("自治区", "")
+                    .replace("壮族", "")
+                    .replace("回族", "")
+                    .replace("维吾尔", "")
+                    .replace("特别行政区", "");
+            })
             .attr("font-size", "10px")
             .attr("fill", "#4a4e69")
             .attr("pointer-events", "none");
@@ -556,12 +561,12 @@
                 `);
         });
 
-        // 添加区域点击高亮效果
+        // 添加区域高亮效果
         d3.selectAll(".region-item").on("mouseover", function() {
             const region = d3.select(this).attr("data-region");
             svg.selectAll("path")
                 .attr("opacity", d => {
-                    const regionName = provinceMap[d?.properties?.name];
+                    const regionName = provinceMap[d.properties.name];
                     return regionName === region ? 1 : 0.6;
                 });
         }).on("mouseout", function() {
