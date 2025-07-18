@@ -1,0 +1,30 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #F4F1DE;
+    color: #2C3E50;
+}
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+section > div {
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 20px;
+    width: 45%;
+}
+
+header, footer {
+    text-align: center;
+    color: #34495E;
+}
