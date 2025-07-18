@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2024年区域文化产业发展热力地图</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/topojson@3.0.2/dist/topojson.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -51,7 +50,7 @@
         }
         
         h1 {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             margin-bottom: 15px;
             color: #f2e9e4;
             position: relative;
@@ -82,7 +81,7 @@
             margin-bottom: 30px;
         }
         
-        #map {
+        #map-container {
             flex: 3;
             background: rgba(255, 255, 255, 0.85);
             border-radius: 15px;
@@ -90,6 +89,12 @@
             height: 700px;
             position: relative;
             overflow: hidden;
+            padding: 20px;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
         }
         
         .info-panel {
@@ -250,13 +255,52 @@
             border-top: 1px solid rgba(154, 140, 152, 0.2);
         }
         
+        .insights {
+            background: rgba(201, 173, 167, 0.15);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .insights h2 {
+            margin-bottom: 20px;
+            color: #4a4e69;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+        
+        .insights ul {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding-left: 20px;
+        }
+        
+        .insights li {
+            margin-bottom: 15px;
+            line-height: 1.8;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            list-style-type: none;
+        }
+        
+        .insights li strong {
+            color: #4a4e69;
+        }
+        
         @media (max-width: 1200px) {
             .content {
                 flex-direction: column;
             }
             
-            #map {
-                height: 600px;
+            #map-container {
+                height: 500px;
+            }
+            
+            .insights ul {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -270,7 +314,8 @@
         </header>
         
         <div class="content">
-            <div id="map">
+            <div id="map-container">
+                <div id="map"></div>
                 <div class="tooltip" id="tooltip"></div>
                 <div class="heatmap-legend" id="legend"></div>
             </div>
@@ -347,7 +392,7 @@
         
         <div class="footer">
             <p>© 2025 文化产业分析小组 | 数据可视化期末项目</p>
-            <p>可视化工具：D3.js, TopoJSON | 数据来源：国家统计局</p>
+            <p>可视化工具：D3.js | 数据来源：国家统计局</p>
         </div>
     </div>
 
@@ -372,10 +417,10 @@
             '辽宁': '东北', '吉林': '东北', '黑龙江': '东北'
         };
 
-        // 创建SVG容器
+        // 创建地图容器
         const container = d3.select("#map");
-        const width = container.node().getBoundingClientRect().width;
-        const height = container.node().getBoundingClientRect().height;
+        const width = container.node().parentNode.clientWidth;
+        const height = container.node().parentNode.clientHeight;
         
         const svg = container.append("svg")
             .attr("width", width)
@@ -384,29 +429,41 @@
         // 创建工具提示
         const tooltip = d3.select("#tooltip");
         
-        // 加载地图数据
-        d3.json("https://cdn.jsdelivr.net/npm/province-china@9.0.0/data/geometry-province/topology.json").then(topology => {
-            const provinces = topojson.feature(topology, topology.objects["geometry-province"]).features;
-
-            // 创建投影
-            const projection = d3.geoMercator()
-                .center([105, 38])
-                .scale(850)
-                .translate([width / 2, height / 2]);
-
-            // 创建路径生成器
-            const path = d3.geoPath().projection(projection);
-
+        // 创建投影
+        const projection = d3.geoMercator()
+            .center([105, 38])
+            .scale(800)
+            .translate([width / 2, height / 2]);
+        
+        // 创建路径生成器
+        const path = d3.geoPath().projection(projection);
+        
+        // 加载中国地图数据（使用可靠的地理JSON数据源）
+        d3.json("https://raw.githubusercontent.com/lotusms/Local-China-Map-GeoJSON-Data/master/whole-china.geojson").then(function(geojson) {
+            // 处理省份名称
+            geojson.features.forEach(function(d) {
+                // 简化省份名称（移除"省"、"市"、"自治区"等后缀）
+                const name = d.properties.name;
+                d.properties.shortName = name
+                    .replace("省", "")
+                    .replace("市", "")
+                    .replace("自治区", "")
+                    .replace("壮族", "")
+                    .replace("回族", "")
+                    .replace("维吾尔", "")
+                    .replace("特别行政区", "");
+            });
+            
             // 绘制省份
             svg.selectAll("path")
-                .data(provinces)
+                .data(geojson.features)
                 .enter()
                 .append("path")
                 .attr("d", path)
                 .attr("stroke", "#fff")
                 .attr("stroke-width", 1)
                 .attr("fill", d => {
-                    const regionName = provinceMap[d.properties.name];
+                    const regionName = provinceMap[d.properties.shortName];
                     if (regionName) {
                         const region = regionData.find(r => r.name === `${regionName}地区`);
                         return region.color;
@@ -415,19 +472,19 @@
                 })
                 .attr("opacity", 0.9)
                 .on("mouseover", function(event, d) {
-                    const regionName = provinceMap[d.properties.name];
+                    const regionName = provinceMap[d.properties.shortName];
                     if (regionName) {
                         const region = regionData.find(r => r.name === `${regionName}地区`);
                         
-                        // 高亮当前区域
+                        // 高亮当前省份
                         svg.selectAll("path")
                             .attr("opacity", 0.6);
                         d3.select(this).attr("opacity", 1);
                         
                         // 更新工具提示
                         tooltip.html(`
-                            <h3>${region.name}</h3>
-                            <p><span class="label">省份:</span> <span class="value">${d.properties.name}</span></p>
+                            <h3>${d.properties.name}</h3>
+                            <p><span class="label">所属地区:</span> <span class="value">${regionName}地区</span></p>
                             <p><span class="label">营业收入:</span> <span class="value">${region.revenue.toLocaleString()}亿元</span></p>
                             <p><span class="label">增长率:</span> <span class="value">${region.growth}%</span></p>
                             <p><span class="label">全国占比:</span> <span class="value">${((region.revenue / 182900) * 100).toFixed(1)}%</span></p>
@@ -444,7 +501,7 @@
 
             // 添加省份标签
             svg.selectAll("text")
-                .data(provinces)
+                .data(geojson.features)
                 .enter()
                 .append("text")
                 .attr("transform", d => {
@@ -453,7 +510,7 @@
                 })
                 .attr("text-anchor", "middle")
                 .attr("dy", "0.35em")
-                .text(d => d.properties.name)
+                .text(d => d.properties.shortName)
                 .attr("font-size", "10px")
                 .attr("fill", "#4a4e69")
                 .attr("pointer-events", "none");
@@ -471,6 +528,15 @@
                         <div class="legend-label">${region.name}</div>
                     `);
             });
+        }).catch(function(error) {
+            // 如果地图加载失败，显示错误信息
+            console.error("地图数据加载失败:", error);
+            container.append("div")
+                .style("color", "#d32f2f")
+                .style("font-size", "18px")
+                .style("text-align", "center")
+                .style("padding", "50px")
+                .html("<h3>地图加载失败</h3><p>请检查网络连接或刷新页面重试</p>");
         });
 
         // 添加区域点击高亮效果
@@ -478,7 +544,7 @@
             const region = d3.select(this).attr("data-region");
             svg.selectAll("path")
                 .attr("opacity", d => {
-                    const regionName = provinceMap[d?.properties?.name];
+                    const regionName = provinceMap[d?.properties?.shortName];
                     return regionName === region ? 1 : 0.6;
                 });
         }).on("mouseout", function() {
@@ -486,25 +552,23 @@
         });
 
         // 窗口resize适配
-        window.addEventListener("resize", () => {
-            const newWidth = container.node().getBoundingClientRect().width;
-            const newHeight = container.node().getBoundingClientRect().height;
+        window.addEventListener("resize", function() {
+            const newWidth = container.node().parentNode.clientWidth;
+            const newHeight = container.node().parentNode.clientHeight;
             
             svg.attr("width", newWidth)
                .attr("height", newHeight);
             
             // 重新计算投影
-            const projection = d3.geoMercator()
-                .center([105, 38])
-                .scale(850)
-                .translate([newWidth / 2, newHeight / 2]);
+            projection.translate([newWidth / 2, newHeight / 2]);
             
-            svg.selectAll("path").attr("d", d3.geoPath().projection(projection));
+            // 更新路径
+            svg.selectAll("path").attr("d", path);
             
             // 更新标签位置
             svg.selectAll("text")
                 .attr("transform", d => {
-                    const centroid = d3.geoPath().projection(projection).centroid(d);
+                    const centroid = path.centroid(d);
                     return `translate(${centroid[0]},${centroid[1]})`;
                 });
         });
