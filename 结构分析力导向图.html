@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>文化产业行业关联力导向图</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .force-container { width: 1000px; height: 600px; margin: 20px auto; }
+        .node { stroke: #fff; stroke-width: 1.5px; cursor: pointer; }
+        .link { stroke: #999; stroke-opacity: 0.6; }
+        .node-label { font-size: 12px; pointer-events: none; }
+        .tooltip { position: absolute; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; opacity: 0; }
+    </style>
+</head>
+<body>
+    <h3 style="text-align: center;">文化产业行业关联力导向图（线条粗细表示关联强度）</h3>
+    <div class="force-container" id="force-container"></div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // 数据：节点（行业）+ 链接（关联强度）
+        const graphData = {
+            nodes: [
+                { id: "内容创作", size: 58000, group: 1 },
+                { id: "创意设计", size: 42000, group: 2 },
+                { id: "文化传播", size: 35000, group: 3 },
+                { id: "文化投资", size: 18000, group: 4 },
+                { id: "文化娱乐", size: 15000, group: 5 },
+                { id: "文化装备", size: 6000, group: 6 },
+                { id: "广告服务", size: 20000, group: 2 },
+                { id: "数字传播", size: 12000, group: 3 }
+            ],
+            links: [
+                { source: "内容创作", target: "文化传播", value: 8 }, // 强关联
+                { source: "内容创作", target: "文化娱乐", value: 6 },
+                { source: "创意设计", target: "广告服务", value: 9 },
+                { source: "创意设计", target: "内容创作", value: 5 },
+                { source: "文化传播", target: "数字传播", value: 7 },
+                { source: "文化投资", target: "内容创作", value: 4 },
+                { source: "文化投资", target: "文化装备", value: 3 },
+                { source: "文化装备", target: "内容创作", value: 2 },
+                { source: "文化娱乐", target: "文化传播", value: 5 }
+            ]
+        };
+
+        // 绘制力导向图
+        const width = 1000;
+        const height = 600;
+        const svg = d3.select("#force-container")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // 力导向布局
+        const simulation = d3.forceSimulation(graphData.nodes)
+            .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300)) // 排斥力
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius(d => Math.sqrt(d.size) / 10 + 10));
+
+        // 绘制连接线
+        const link = svg.append("g")
+            .selectAll("line")
+            .data(graphData.links)
+            .enter()
+            .append("line")
+            .attr("class", "link")
+            .attr("stroke-width", d => Math.sqrt(d.value));
+
+        // 绘制节点
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(graphData.nodes)
+            .enter()
+            .append("circle")
+            .attr("class", "node")
+            .attr("r", d => Math.sqrt(d.size) / 10) // 节点大小与规模正相关
+            .attr("fill", d => d3.schemeCategory10[d.group % 10])
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        // 节点标签
+        const label = svg.append("g")
+            .selectAll("text")
+            .data(graphData.nodes)
+            .enter()
+            .append("text")
+            .attr("class", "node-label")
+            .attr("dx", d => Math.sqrt(d.size) / 10 + 5)
+            .attr("dy", ".3em")
+            .text(d => d.id);
+
+        // 力导向更新
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("cx", d => d.x = Math.max(20, Math.min(width - 20, d.x)))
+                .attr("cy", d => d.y = Math.max(20, Math.min(height - 20, d.y)));
+
+            label
+                .attr("x", d => d.x)
+                .attr("y", d => d.y);
+        });
+
+        // 拖拽事件
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // 交互提示
+        node.on("mouseover", (e, d) => {
+            d3.select("#tooltip")
+                .html(`<strong>${d.id}</strong><br>规模：${d.size.toLocaleString()}亿元`)
+                .style("opacity", 1)
+                .style("left", (e.pageX + 10) + "px")
+                .style("top", (e.pageY - 20) + "px");
+        }).on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+    </script>
+</body>
+</html>
