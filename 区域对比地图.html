@@ -2,113 +2,156 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>中国各省文化产业营收地图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>区域文化产业热力地图</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson@3.0.2/dist/topojson.min.js"></script>
     <style>
-        .map-container { width: 1000px; height: 800px; margin: 20px auto; }
-        .province { stroke: #fff; stroke-width: 1px; cursor: pointer; }
-        .province-label { font-size: 12px; fill: #333; pointer-events: none; }
-        .南海诸岛 { transform: scale(1.5); transform-origin: center; }
-        .legend { position: absolute; top: 50px; right: 50px; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .legend-item { display: flex; align-items: center; margin: 5px 0; }
-        .legend-color { width: 15px; height: 15px; margin-right: 5px; }
-        .tooltip { position: absolute; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; opacity: 0; }
+        body { margin: 0; }
+        #map { width: 100%; height: 800px; }
+        .tooltip {
+            position: absolute;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .heatmap-legend {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
-    <h3 style="text-align: center;">2024年各省文化产业营收地图（亿元）</h3>
-    <div class="map-container" id="map-container">
-        <svg id="china-map" width="1000" height="800"></svg>
-        <div class="legend">
-            <div class="legend-item"><div class="legend-color" style="background:#edf8fb"></div><div>0-5000</div></div>
-            <div class="legend-item"><div class="legend-color" style="background:#b3cde3"></div><div>5000-10000</div></div>
-            <div class="legend-item"><div class="legend-color" style="background:#8c96c6"></div><div>10000-20000</div></div>
-            <div class="legend-item"><div class="legend-color" style="background:#8856a7"></div><div>20000-50000</div></div>
-            <div class="legend-item"><div class="legend-color" style="background:#810f7c"></div><div>50000以上</div></div>
-        </div>
-    </div>
+    <div id="map"></div>
     <div class="tooltip" id="tooltip"></div>
+    <div class="heatmap-legend" id="legend"></div>
 
     <script>
-        // 模拟省级数据（基于国家统计局区域数据拆分，实际需替换为标准省界数据）
-        const provinceData = [
-            { name: "北京", revenue: 18000 },
-            { name: "上海", revenue: 22000 },
-            { name: "广东", revenue: 62000 },
-            { name: "江苏", revenue: 48000 },
-            { name: "浙江", revenue: 35000 },
-            { name: "山东", revenue: 28000 },
-            { name: "河南", revenue: 12000 },
-            { name: "四川", revenue: 15000 },
-            { name: "湖北", revenue: 11000 },
-            { name: "陕西", revenue: 8000 },
-            // ... 其他省份数据省略（完整需31个省份）
+        // 区域数据（与用户提供的regionData一致）
+        const regionData = [
+            { name: "东部地区", revenue: 112800, growth: 7.5 },
+            { name: "中部地区", revenue: 38600, growth: 8.2 },
+            { name: "西部地区", revenue: 28500, growth: 8.8 },
+            { name: "东北地区", revenue: 8100, growth: 6.5 }
         ];
 
-        // 绘制地图（使用简化的中国省级边界GeoJSON，实际需用标准数据）
-        const width = 1000;
-        const height = 800;
-        const svg = d3.select("#china-map");
-
-        // 投影（适合中国地图的阿尔伯斯投影）
-        const projection = d3.geoAlbers()
-            .center([105, 35])
-            .rotate([-105, -35])
-            .parallels([25, 47])
-            .scale(800)
-            .translate([width / 2, height / 2]);
-
-        const path = d3.geoPath().projection(projection);
-
-        // 模拟省级GeoJSON（实际开发需加载国家测绘局审核的标准数据）
-        // 此处使用简化边界，完整数据需替换为权威数据源
-        const chinaGeo = {
-            "type": "FeatureCollection",
-            "features": provinceData.map(province => ({
-                "type": "Feature",
-                "properties": { name: province.name, revenue: province.revenue },
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [[/* 省略具体坐标，实际需填入标准省界坐标 */]]
-                }
-            }))
+        // 省份到地区的映射
+        const provinceMap = {
+            '北京': '东部', '天津': '东部', '河北': '东部', '上海': '东部',
+            '江苏': '东部', '浙江': '东部', '福建': '东部', '山东': '东部',
+            '广东': '东部', '海南': '东部', '山西': '中部', '安徽': '中部',
+            '江西': '中部', '河南': '中部', '湖北': '中部', '湖南': '中部',
+            '内蒙古': '西部', '广西': '西部', '重庆': '西部', '四川': '西部',
+            '贵州': '西部', '云南': '西部', '西藏': '西部', '陕西': '西部',
+            '甘肃': '西部', '青海': '西部', '宁夏': '西部', '新疆': '西部',
+            '辽宁': '东北', '吉林': '东北', '黑龙江': '东北'
         };
 
-        // 颜色比例尺（基于营收分级）
-        const color = d3.scaleThreshold()
-            .domain([5000, 10000, 20000, 50000])
-            .range(["#edf8fb", "#b3cde3", "#8c96c6", "#8856a7", "#810f7c"]);
+        // 加载地理数据（需替换为实际路径）
+        d3.json("https://geojson.cn/api/china/1.6.2/china.topo.json").then(topology => {
+            const provinces = topojson.feature(topology, topology.objects.provinces).features;
 
-        // 绘制省份
-        svg.selectAll(".province")
-            .data(chinaGeo.features)
-            .enter()
-            .append("path")
-            .attr("class", d => d.properties.name === "南海诸岛" ? "province 南海诸岛" : "province")
-            .attr("d", path)
-            .attr("fill", d => color(d.properties.revenue))
-            .on("mouseover", (e, d) => {
-                d3.select("#tooltip")
-                    .html(`<strong>${d.properties.name}</strong><br>2024年营收：${d.properties.revenue.toLocaleString()}亿元`)
-                    .style("opacity", 1)
-                    .style("left", (e.pageX + 10) + "px")
-                    .style("top", (e.pageY - 20) + "px");
-            })
-            .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+            // 预处理省份名称（去除自治区后缀）
+            provinces.forEach(province => {
+                const name = province.properties.name.replace(/自治区|省|市/g, '');
+                province.properties.name = name;
+            });
 
-        // 添加省份标签（基于质心）
-        svg.selectAll(".province-label")
-            .data(chinaGeo.features)
-            .enter()
-            .append("text")
-            .attr("class", "province-label")
-            .attr("transform", d => {
-                const centroid = path.centroid(d);
-                return `translate(${centroid[0]}, ${centroid[1]})`;
-            })
-            .text(d => d.properties.name)
-            .style("font-size", d => d.properties.revenue > 20000 ? "14px" : "12px");
+            // 创建热力图颜色比例尺（根据营收）
+            const revenueScale = d3.scaleSequential()
+                .interpolator(d3.interpolateReds)
+                .domain([0, d3.max(regionData, d => d.revenue)]);
+
+            // 创建地图投影
+            const projection = d3.geoMercator()
+                .center([107, 31])
+                .scale(860)
+                .translate([window.innerWidth/2, window.innerHeight/2]);
+
+            // 创建路径生成器
+            const path = d3.geoPath().projection(projection);
+
+            // 绘制地图
+            const svg = d3.select("#map").append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%");
+
+            svg.selectAll("path")
+                .data(provinces)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("fill", d => {
+                    const regionName = provinceMap[d.properties.name];
+                    if (regionName) {
+                        const region = regionData.find(r => r.name === `${regionName}地区`);
+                        return revenueScale(region.revenue);
+                    }
+                    return "#e0e0e0"; // 默认颜色
+                })
+                .on("mouseover", function(d) {
+                    const regionName = provinceMap[d.properties.name];
+                    if (regionName) {
+                        const region = regionData.find(r => r.name === `${regionName}地区`);
+                        const tooltip = d3.select("#tooltip");
+                        tooltip.html(`
+                            <h3>${regionName}地区</h3>
+                            <p>营业收入：${region.revenue.toLocaleString()}亿元</p>
+                            <p>增长率：${region.growth}%</p>
+                        `)
+                        .style("opacity", 1)
+                        .style("left", `${d3.event.pageX + 10}px`)
+                        .style("top", `${d3.event.pageY - 20}px`);
+                    }
+                })
+                .on("mouseout", () => {
+                    d3.select("#tooltip").style("opacity", 0);
+                });
+
+            // 创建热力图图例
+            const legend = d3.select("#legend");
+            revenueScale.quantiles(4).forEach((value, i) => {
+                const color = revenueScale(value);
+                legend.append("div")
+                    .classed("legend-item", true)
+                    .html(`
+                        <div class="legend-color" style="background: ${color}"></div>
+                        <span>${value.toLocaleString()}亿元以上</span>
+                    `);
+            });
+        });
+
+        // 窗口resize适配
+        window.addEventListener("resize", () => {
+            const svg = d3.select("#map svg");
+            svg.attr("width", window.innerWidth)
+               .attr("height", window.innerHeight);
+            // 重新计算投影
+            const projection = d3.geoMercator()
+                .center([107, 31])
+                .scale(860)
+                .translate([window.innerWidth/2, window.innerHeight/2]);
+            svg.selectAll("path").attr("d", d3.geoPath().projection(projection));
+        });
     </script>
 </body>
 </html>
