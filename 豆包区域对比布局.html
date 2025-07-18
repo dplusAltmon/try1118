@@ -9,14 +9,12 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.124.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         :root {
-            --primary: #1a365d;
-            --secondary: #3182ce;
-            --success: #48bb78;
-            --warning: #f6ad55;
-            --danger: #fc8181;
-            --light: #f7fafc;
-            --dark: #2d3748;
-            --gray: #e2e8f0;
+            --morandi-green: #9CAF88;
+            --morandi-blue: #6E7B8B;
+            --morandi-pink: #D4A5A5;
+            --morandi-beige: #F0E6D4;
+            --morandi-clay: #BF9A77;
+            --morandi-dark: #4A4A4A;
             --border-radius: 8px;
             --shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
@@ -29,24 +27,41 @@
         }
         
         body {
-            background: linear-gradient(135deg, #f0f4f8 0%, #e6f7ff 100%);
-            color: #333;
+            background: var(--morandi-beige);
+            color: var(--morandi-dark);
             line-height: 1.6;
             padding-bottom: 40px;
         }
         
         .header {
-            background: linear-gradient(to right, var(--primary), #2c5282);
+            background: linear-gradient(to right, var(--morandi-blue), var(--morandi-dark));
             color: white;
             padding: 2rem 0;
             text-align: center;
             margin-bottom: 2rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
         }
         
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 1px;
         }
         
         .header p {
@@ -54,6 +69,9 @@
             max-width: 800px;
             margin: 0 auto;
             opacity: 0.9;
+            position: relative;
+            z-index: 2;
+            font-weight: 300;
         }
         
         .container {
@@ -63,14 +81,15 @@
         }
         
         .section-title {
-            color: var(--primary);
+            color: var(--morandi-dark);
             font-size: 1.8rem;
             padding-bottom: 12px;
-            border-bottom: 2px solid var(--gray);
+            border-bottom: 2px solid rgba(158, 175, 136, 0.3);
             margin-bottom: 1.5rem;
             position: relative;
             display: flex;
             align-items: center;
+            font-weight: 600;
         }
         
         .section-title::after {
@@ -80,7 +99,8 @@
             left: 0;
             width: 120px;
             height: 3px;
-            background: var(--secondary);
+            background: var(--morandi-clay);
+            border-radius: 2px;
         }
         
         .viz-grid {
@@ -91,18 +111,19 @@
         }
         
         .viz-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.85);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             padding: 20px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(158, 175, 136, 0.2);
         }
         
         .viz-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.1);
         }
         
         .viz-card.full-width {
@@ -111,7 +132,7 @@
         
         .viz-title {
             font-size: 1.3rem;
-            color: var(--dark);
+            color: var(--morandi-dark);
             margin-bottom: 20px;
             font-weight: 600;
             display: flex;
@@ -121,22 +142,22 @@
         .viz-title i {
             margin-right: 10px;
             font-size: 1.2rem;
-            color: var(--secondary);
+            color: var(--morandi-clay);
         }
         
         .chart-container {
             width: 100%;
             height: 500px;
             position: relative;
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(158, 175, 136, 0.2);
             border-radius: 8px;
-            background: white;
+            background: rgba(255, 255, 255, 0.7);
         }
         
         .tooltip {
             position: absolute;
             background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #ddd;
+            border: 1px solid rgba(158, 175, 136, 0.3);
             border-radius: 4px;
             padding: 12px;
             font-size: 14px;
@@ -146,22 +167,25 @@
             z-index: 100;
             transition: opacity 0.2s;
             max-width: 300px;
+            color: var(--morandi-dark);
         }
         
         .tooltip h3 {
             margin-top: 0;
-            color: var(--primary);
-            border-bottom: 1px solid #eee;
+            color: var(--morandi-blue);
+            border-bottom: 1px solid rgba(158, 175, 136, 0.2);
             padding-bottom: 5px;
             margin-bottom: 8px;
+            font-size: 1.1rem;
         }
         
         .tooltip p {
             margin: 5px 0;
+            line-height: 1.4;
         }
         
         .tooltip .revenue {
-            color: var(--success);
+            color: var(--morandi-blue);
             font-weight: bold;
         }
         
@@ -177,10 +201,11 @@
             display: flex;
             align-items: center;
             font-size: 14px;
-            background: rgba(255,255,255,0.8);
-            padding: 4px 8px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.9);
+            padding: 6px 12px;
+            border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid rgba(158, 175, 136, 0.2);
         }
         
         .legend-color {
@@ -196,13 +221,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(240, 230, 212, 0.8);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 10;
             font-size: 18px;
-            color: var(--primary);
+            color: var(--morandi-dark);
         }
         
         .controls {
@@ -210,31 +235,36 @@
             justify-content: center;
             gap: 15px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         
         .control-btn {
-            background: var(--primary);
+            background: var(--morandi-blue);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 30px;
             cursor: pointer;
-            transition: background 0.3s;
-            font-weight: 600;
+            transition: all 0.3s;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .control-btn:hover {
-            background: #2c5282;
+            background: var(--morandi-dark);
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
         .footer {
             text-align: center;
             margin-top: 40px;
-            color: #718096;
+            color: var(--morandi-blue);
             font-size: 14px;
             padding: 20px 0;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid rgba(158, 175, 136, 0.3);
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
         }
         
         @media (max-width: 768px) {
@@ -261,25 +291,56 @@
             z-index: 50;
             max-width: 300px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(158, 175, 136, 0.2);
         }
         
         .info-panel h3 {
-            color: var(--primary);
+            color: var(--morandi-dark);
             margin-bottom: 10px;
             font-size: 1.2rem;
+            border-bottom: 1px solid rgba(158, 175, 136, 0.3);
+            padding-bottom: 5px;
         }
         
         .info-panel p {
             margin-bottom: 8px;
             font-size: 0.9rem;
             line-height: 1.4;
+            display: flex;
+            align-items: center;
         }
+        
+        .decoration {
+            position: absolute;
+            z-index: 1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .circle {
+            border-radius: 50%;
+            border: 1px solid var(--morandi-green);
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .viz-card {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .viz-card:nth-child(1) { animation-delay: 0.1s; }
+        .viz-card:nth-child(2) { animation-delay: 0.3s; }
+        .viz-card:nth-child(3) { animation-delay: 0.5s; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>区域文化产业数据三维可视化</h1>
-        <p>基于国家统计局2024年文化产业区域数据深度分析</p>
+        <p>22计传张颖惠202201083018｜22计传刘竹202201083025</p>
     </div>
     
     <div class="container">
@@ -287,6 +348,7 @@
             <button class="control-btn" onclick="resetView()">重置视图</button>
             <button class="control-btn" onclick="toggleGrid()">切换网格</button>
             <button class="control-btn" onclick="toggleRotation()">旋转控制</button>
+            <button class="control-btn" onclick="toggleLabels()">切换标签</button>
         </div>
         
         <div class="section-title">
@@ -296,9 +358,9 @@
         <div class="viz-card full-width">
             <div class="info-panel">
                 <h3>数据解读指南</h3>
-                <p><span style="display:inline-block; width:12px; height:12px; background:#3182ce; border-radius:2px; margin-right:5px;"></span> X轴：区域分布</p>
-                <p><span style="display:inline-block; width:12px; height:12px; background:#48bb78; border-radius:2px; margin-right:5px;"></span> Y轴：行业类别</p>
-                <p><span style="display:inline-block; width:12px; height:12px; background:#f6ad55; border-radius:2px; margin-right:5px;"></span> Z轴：营收金额</p>
+                <p><span style="display:inline-block; width:12px; height:12px; background: var(--morandi-blue); border-radius:2px; margin-right:5px;"></span> X轴：区域分布</p>
+                <p><span style="display:inline-block; width:12px; height:12px; background: var(--morandi-green); border-radius:2px; margin-right:5px;"></span> Y轴：行业类别</p>
+                <p><span style="display:inline-block; width:12px; height:12px; background: var(--morandi-clay); border-radius:2px; margin-right:5px;"></span> Z轴：营收金额</p>
                 <p>柱状高度代表营收金额，可旋转视图多角度观察</p>
             </div>
             
@@ -307,10 +369,10 @@
             </div>
             
             <div class="legend">
-                <div class="legend-item"><div class="legend-color" style="background: #3182ce;"></div>东部地区</div>
-                <div class="legend-item"><div class="legend-color" style="background: #48bb78;"></div>中部地区</div>
-                <div class="legend-item"><div class="legend-color" style="background: #f6ad55;"></div>西部地区</div>
-                <div class="legend-item"><div class="legend-color" style="background: #fc8181;"></div>东北地区</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--morandi-clay);"></div>东部地区</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--morandi-green);"></div>中部地区</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--morandi-blue);"></div>西部地区</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--morandi-pink);"></div>东北地区</div>
             </div>
         </div>
         
@@ -338,7 +400,7 @@
     <div class="tooltip" id="tooltip"></div>
     
     <div class="footer">
-        数据来源：国家统计局2024年文化产业区域数据 | 可视化设计 © 2024
+        数据来源：国家统计局《2024年全国文化及相关产业发展情况报告》 | 可视化设计 © 2024
     </div>
 
     <script>
@@ -346,62 +408,72 @@
         const regionData = [
             { 
                 name: "东部地区", 
-                revenue: 112800, 
-                growth: 7.5, 
-                perCapita: 3200, 
+                revenue: 141750, 
+                growth: 7.8, 
+                perCapita: 3800, 
                 industries: [
-                    { name: "内容创作", revenue: 35000 },
-                    { name: "创意设计", revenue: 28000 },
-                    { name: "文化传播", revenue: 22000 },
-                    { name: "文化投资", revenue: 12000 },
-                    { name: "其他", revenue: 15800 }
+                    { name: "内容创作", revenue: 42000 },
+                    { name: "创意设计", revenue: 35000 },
+                    { name: "文化传播", revenue: 28000 },
+                    { name: "数字内容", revenue: 22000 },
+                    { name: "其他", revenue: 14750 }
                 ]
             },
             { 
                 name: "中部地区", 
-                revenue: 38600, 
-                growth: 8.2, 
-                perCapita: 2100, 
+                revenue: 23111, 
+                growth: 6.5, 
+                perCapita: 2500, 
                 industries: [
-                    { name: "内容创作", revenue: 12000 },
-                    { name: "创意设计", revenue: 7500 },
-                    { name: "文化传播", revenue: 6800 },
-                    { name: "文化投资", revenue: 3500 },
-                    { name: "其他", revenue: 8800 }
+                    { name: "内容创作", revenue: 8000 },
+                    { name: "创意设计", revenue: 5500 },
+                    { name: "文化传播", revenue: 4500 },
+                    { name: "数字内容", revenue: 2500 },
+                    { name: "其他", revenue: 2611 }
                 ]
             },
             { 
                 name: "西部地区", 
-                revenue: 28500, 
-                growth: 8.8, 
-                perCapita: 1900, 
+                revenue: 18462, 
+                growth: 2.6, 
+                perCapita: 2200, 
                 industries: [
-                    { name: "内容创作", revenue: 9500 },
-                    { name: "创意设计", revenue: 5800 },
-                    { name: "文化传播", revenue: 5200 },
-                    { name: "文化投资", revenue: 2200 },
-                    { name: "其他", revenue: 5800 }
+                    { name: "内容创作", revenue: 6500 },
+                    { name: "创意设计", revenue: 4000 },
+                    { name: "文化传播", revenue: 3500 },
+                    { name: "数字内容", revenue: 2000 },
+                    { name: "其他", revenue: 2462 }
                 ]
             },
             { 
                 name: "东北地区", 
-                revenue: 8100, 
-                growth: 6.5, 
-                perCapita: 2300, 
+                revenue: 10100, 
+                growth: 3.2, 
+                perCapita: 2600, 
                 industries: [
-                    { name: "内容创作", revenue: 1500 },
-                    { name: "创意设计", revenue: 1200 },
-                    { name: "文化传播", revenue: 1800 },
-                    { name: "文化投资", revenue: 800 },
-                    { name: "其他", revenue: 2800 }
+                    { name: "内容创作", revenue: 2500 },
+                    { name: "创意设计", revenue: 2000 },
+                    { name: "文化传播", revenue: 2800 },
+                    { name: "数字内容", revenue: 1200 },
+                    { name: "其他", revenue: 1600 }
                 ]
             }
         ];
 
+        // 莫兰迪配色方案
+        const morandiColors = {
+            green: "#9CAF88",
+            blue: "#6E7B8B",
+            pink: "#D4A5A5",
+            beige: "#F0E6D4",
+            clay: "#BF9A77",
+            dark: "#4A4A4A"
+        };
+        
         // 区域颜色比例尺
         const regionColor = d3.scaleOrdinal()
             .domain(regionData.map(d => d.name))
-            .range(["#3182ce", "#48bb78", "#f6ad55", "#fc8181"]);
+            .range([morandiColors.clay, morandiColors.green, morandiColors.blue, morandiColors.pink]);
 
         // 行业列表
         const industries = regionData[0].industries.map(d => d.name);
@@ -410,6 +482,7 @@
         let scene, camera, renderer, controls;
         let rotationEnabled = true;
         let gridVisible = true;
+        let labelsVisible = true;
         
         // 1. Three.js三维行业×区域营收对比图
         function init3DChart() {
@@ -426,8 +499,8 @@
             try {
                 // 创建场景
                 scene = new THREE.Scene();
-                scene.background = new THREE.Color(0xf0f4f8);
-                scene.fog = new THREE.Fog(0xf0f4f8, 20, 100);
+                scene.background = new THREE.Color(morandiColors.beige);
+                scene.fog = new THREE.Fog(morandiColors.beige, 20, 100);
 
                 // 相机
                 camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
@@ -464,12 +537,8 @@
                 backLight.position.set(-20, -30, -20);
                 scene.add(backLight);
 
-                // 坐标轴辅助
-                const axesHelper = new THREE.AxesHelper(15);
-                scene.add(axesHelper);
-
                 // 网格辅助
-                const gridHelper = new THREE.GridHelper(30, 10, 0xcccccc, 0xcccccc);
+                const gridHelper = new THREE.GridHelper(30, 10, morandiColors.dark, morandiColors.dark);
                 gridHelper.visible = gridVisible;
                 scene.add(gridHelper);
 
@@ -575,6 +644,9 @@
                     loadingElement.style.display = 'none';
                 }
                 
+                // 添加装饰元素
+                addDecorations();
+                
             } catch (error) {
                 console.error("3D渲染错误:", error);
                 if (loadingElement) {
@@ -582,14 +654,34 @@
                 }
             }
         }
+        
+        // 添加装饰元素
+        function addDecorations() {
+            const container = document.getElementById("three-d-chart");
+            
+            // 添加圆形装饰
+            for (let i = 0; i < 8; i++) {
+                const circle = document.createElement("div");
+                circle.className = "decoration circle";
+                circle.style.width = Math.random() * 100 + 30 + "px";
+                circle.style.height = circle.style.width;
+                circle.style.left = Math.random() * 100 + "%";
+                circle.style.top = Math.random() * 100 + "%";
+                circle.style.opacity = Math.random() * 0.1 + 0.05;
+                circle.style.animationDelay = Math.random() * 5 + "s";
+                container.appendChild(circle);
+            }
+        }
 
         // 添加坐标轴标签
         function addAxisLabels(regions, industries, baseSize, gap) {
+            if (!labelsVisible) return;
+            
             // X轴标签（区域）
             regions.forEach((region, i) => {
                 const xPos = i * (baseSize + gap) - ((regions.length-1) * (baseSize + gap))/2;
                 const textGeometry = createTextGeometry(region, 1.5);
-                const textMaterial = new THREE.MeshBasicMaterial({ color: 0x1a365d });
+                const textMaterial = new THREE.MeshBasicMaterial({ color: morandiColors.dark });
                 const textMesh = new THREE.Mesh(textGeometry, textMaterial);
                 textMesh.position.set(xPos, -1, -((industries.length) * (baseSize + gap))/2 - 1);
                 textMesh.rotation.x = -Math.PI / 2;
@@ -600,7 +692,7 @@
             industries.forEach((industry, i) => {
                 const zPos = i * (baseSize + gap) - ((industries.length-1) * (baseSize + gap))/2;
                 const textGeometry = createTextGeometry(industry, 1.5);
-                const textMaterial = new THREE.MeshBasicMaterial({ color: 0x1a365d });
+                const textMaterial = new THREE.MeshBasicMaterial({ color: morandiColors.dark });
                 const textMesh = new THREE.Mesh(textGeometry, textMaterial);
                 textMesh.position.set(-((regions.length) * (baseSize + gap))/2 - 1, -1, zPos);
                 textMesh.rotation.x = -Math.PI / 2;
@@ -609,7 +701,7 @@
             
             // Y轴标签（营收）
             const textGeometry = createTextGeometry("营收 (亿元)", 2);
-            const textMaterial = new THREE.MeshBasicMaterial({ color: 0x1a365d });
+            const textMaterial = new THREE.MeshBasicMaterial({ color: morandiColors.dark });
             const textMesh = new THREE.Mesh(textGeometry, textMaterial);
             textMesh.position.set(0, 15, -((industries.length) * (baseSize + gap))/2 - 3);
             textMesh.rotation.x = -Math.PI / 2;
@@ -622,7 +714,7 @@
             const context = canvas.getContext('2d');
             canvas.width = 512;
             canvas.height = 256;
-            context.fillStyle = '#1a365d';
+            context.fillStyle = morandiColors.dark;
             context.font = 'Bold 80px Arial';
             context.textAlign = 'center';
             context.textBaseline = 'middle';
@@ -680,7 +772,7 @@
             svg.append("g")
                 .call(d3.axisLeft(y).ticks(6).tickFormat(d => (d/10000).toFixed(1) + "万亿"))
                 .append("text")
-                .attr("fill", "#333")
+                .attr("fill", morandiColors.dark)
                 .attr("transform", "rotate(-90)")
                 .attr("y", -50)
                 .attr("x", -innerHeight / 2)
@@ -723,7 +815,7 @@
                 .attr("text-anchor", "middle")
                 .style("font-size", "12px")
                 .style("font-weight", "600")
-                .style("fill", "#1a365d")
+                .style("fill", morandiColors.dark)
                 .text(d => (d.revenue / 10000).toFixed(1) + "万亿");
         }
 
@@ -769,7 +861,7 @@
             svg.append("g")
                 .call(d3.axisLeft(y))
                 .append("text")
-                .attr("fill", "#333")
+                .attr("fill", morandiColors.dark)
                 .attr("transform", "rotate(-90)")
                 .attr("y", -50)
                 .attr("x", -innerHeight / 2)
@@ -811,7 +903,7 @@
                 .attr("text-anchor", "middle")
                 .style("font-size", "12px")
                 .style("font-weight", "600")
-                .style("fill", "#1a365d")
+                .style("fill", morandiColors.dark)
                 .text(d => d.perCapita + "元");
         }
         
@@ -836,6 +928,12 @@
             if (controls) {
                 controls.autoRotate = rotationEnabled;
             }
+        }
+        
+        function toggleLabels() {
+            labelsVisible = !labelsVisible;
+            // 重新初始化3D图表以应用标签变化
+            init3DChart();
         }
 
         // 初始化图表
