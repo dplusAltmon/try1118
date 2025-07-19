@@ -75,7 +75,7 @@
             background: rgba(255, 255, 255, 0.85);
             border-radius: 12px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-            padding: 5px;
+            padding: 11px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             flex-direction: column;
@@ -721,105 +721,92 @@
         
         // 图表5：GDP与文化产业增速对比（雷达图）
         const drawChart5 = () => {
-            const data = [
-                {axis: "GDP总量", value: 5.2, max: 20},
-                {axis: "第一产业", value: 3.8, max: 20},
-                {axis: "第二产业", value: 4.8, max: 20},
-                {axis: "第三产业", value: 5.7, max: 20},
-                {axis: "文化产业", value: 7.1, max: 20}
-            ];
-            
-            const container = d3.select("#chart5");
-            const width = container.node().getBoundingClientRect().width;
-            const height = container.node().getBoundingClientRect().height - 40;
-            const radius = Math.min(width, height) / 2 - 20;
-            
-            const svg = container.append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", `translate(${width/2},${height/2})`);
-            
-            // 雷达图配置
-            const levels = 5;
-            const angleSlice = Math.PI * 2 / data.length;
-            
-            // 创建雷达网格
-            for (let level = 0; level < levels; level++) {
-                const levelFactor = radius * ((level + 1) / levels);
-                
-                svg.append("circle")
-                    .attr("class", "radar-grid")
-                    .attr("r", levelFactor)
-                    .attr("fill", "none");
-            }
-            
-            // 创建雷达轴
-            for (let i = 0; i < data.length; i++) {
-                const angle = angleSlice * i - Math.PI / 2;
-                
-                // 轴线
-                svg.append("line")
-                    .attr("class", "radar-axis")
-                    .attr("x1", 0)
-                    .attr("y1", 0)
-                    .attr("x2", radius * Math.cos(angle))
-                    .attr("y2", radius * Math.sin(angle));
-                
-                // 轴标签
-                svg.append("text")
-                    .attr("class", "radar-label")
-                    .attr("x", (radius + 20) * Math.cos(angle))
-                    .attr("y", (radius + 20) * Math.sin(angle))
-                    .text(data[i].axis);
-            }
-            
-            // 创建雷达区域
-            const radarLine = d3.lineRadial()
-                .angle((d, i) => angleSlice * i - Math.PI / 2)
-                .radius(d => radius * (d.value / d.max))
-                .curve(d3.curveLinearClosed);
-            
-            svg.append("path")
-                .datum(data)
-                .attr("class", "radar-area")
-                .attr("d", radarLine);
-            
-            // 添加数据点
-            svg.selectAll(".radar-point")
-                .data(data)
-                .enter()
-                .append("circle")
-                .attr("class", "radar-point")
-                .attr("r", 4)
-                .attr("cx", (d, i) => radius * (d.value / d.max) * Math.cos(angleSlice * i - Math.PI / 2))
-                .attr("cy", (d, i) => radius * (d.value / d.max) * Math.sin(angleSlice * i - Math.PI / 2))
-                .on("mouseover", function(event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`${d.axis}<br>同比增长: ${d.value}%`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-            
-            // 添加数值标签
-            svg.selectAll(".radar-value")
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("class", "radar-label")
-                .attr("x", (d, i) => (radius * (d.value / d.max) + 10) * Math.cos(angleSlice * i - Math.PI / 2))
-                .attr("y", (d, i) => (radius * (d.value / d.max) + 10) * Math.sin(angleSlice * i - Math.PI / 2))
-                .attr("text-anchor", "middle")
-                .attr("font-size", "10px")
-                .text(d => d.value + "%");
-        };
+    const data = [
+        {axis: "GDP总量", value: 5.2, max: 20},
+        {axis: "第一产业", value: 3.8, max: 20},
+        {axis: "第二产业", value: 4.8, max: 20},
+        {axis: "第三产业", value: 5.7, max: 20},
+        {axis: "文化产业", value: 7.1, max: 20}
+    ];
+    
+    const container = d3.select("#chart5");
+    const width = container.node().getBoundingClientRect().width;
+    const height = container.node().getBoundingClientRect().height - 40;
+    const radius = Math.min(width, height) / 2 - 40; // 减小半径
+    
+    const svg = container.append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width/2},${height/2})`);
+    
+    // 雷达图配置
+    const levels = 5;
+    const angleSlice = Math.PI * 2 / data.length;
+    
+    // 创建雷达网格
+    for (let level = 0; level < levels; level++) {
+        const levelFactor = radius * ((level + 1) / levels);
+        
+        svg.append("circle")
+            .attr("class", "radar-grid")
+            .attr("r", levelFactor)
+            .attr("fill", "none");
+    }
+    
+    // 创建雷达轴
+    for (let i = 0; i < data.length; i++) {
+        const angle = angleSlice * i - Math.PI / 2;
+        
+        // 轴线
+        svg.append("line")
+            .attr("class", "radar-axis")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", radius * Math.cos(angle))
+            .attr("y2", radius * Math.sin(angle));
+        
+        // 轴标签（减小偏移）
+        svg.append("text")
+            .attr("class", "radar-label")
+            .attr("x", (radius + 10) * Math.cos(angle))
+            .attr("y", (radius + 10) * Math.sin(angle))
+            .text(data[i].axis);
+    }
+    
+    // 创建雷达区域
+    const radarLine = d3.lineRadial()
+        .angle((d, i) => angleSlice * i - Math.PI / 2)
+        .radius(d => (radius * 0.8) * (d.value / d.max)) // 减小基数
+        .curve(d3.curveLinearClosed);
+    
+    svg.append("path")
+        .datum(data)
+        .attr("class", "radar-area")
+        .attr("d", radarLine);
+    
+    // 添加数据点（减小基数）
+    svg.selectAll(".radar-point")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("class", "radar-point")
+        .attr("r", 3) // 减小点的大小
+        .attr("cx", (d, i) => (radius * 0.8) * (d.value / d.max) * Math.cos(angleSlice * i - Math.PI / 2))
+        .attr("cy", (d, i) => (radius * 0.8) * (d.value / d.max) * Math.sin(angleSlice * i - Math.PI / 2));
+    
+    // 添加数值标签（减小基数和偏移）
+    svg.selectAll(".radar-value")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("class", "radar-label")
+        .attr("x", (d, i) => ((radius * 0.8) * (d.value / d.max) + 8) * Math.cos(angleSlice * i - Math.PI / 2))
+        .attr("y", (d, i) => ((radius * 0.8) * (d.value / d.max) + 8) * Math.sin(angleSlice * i - Math.PI / 2))
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px") // 减小字体
+        .text(d => d.value + "%");
+};
         
         // 图表6：行业资产与营收关系（Three.js 3D气泡图）
         const drawChart6 = () => {
