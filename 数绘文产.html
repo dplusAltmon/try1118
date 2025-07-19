@@ -521,7 +521,7 @@
             const container = d3.select("#chart3");
             const width = container.node().getBoundingClientRect().width;
             const height = container.node().getBoundingClientRect().height - 40;
-            const radius = Math.min(width, height) / 2 - 20;
+            const radius = Math.min(width, height) / 2 - 30;
             
             const svg = container.append("svg")
                 .attr("width", width)
@@ -875,6 +875,7 @@ const drawChart5 = () => {
             const maxRevenue = d3.max(data, d => d.revenue);
             const maxGrowth = d3.max(data, d => d.growth);
             
+            // 存储原始颜色
             data.forEach(d => {
                 const size = (d.growth / maxGrowth) * 5 + 1;
                 const geometry = new THREE.SphereGeometry(size, 32, 32);
@@ -896,7 +897,8 @@ const drawChart5 = () => {
                     industry: d.industry,
                     assets: d.assets,
                     revenue: d.revenue,
-                    growth: d.growth
+                    growth: d.growth,
+                    color: d.color  // 存储原始颜色
                 };
                 
                 scene.add(sphere);
@@ -911,62 +913,29 @@ const drawChart5 = () => {
             scene.add(gridHelper);
             
             // 添加X轴标签
-            const xLabelCanvas = document.createElement('canvas');
-            xLabelCanvas.width = 128;
-            xLabelCanvas.height = 64;
-            const xLabelContext = xLabelCanvas.getContext('2d');
-            xLabelContext.fillStyle = '#ffffff';
-            xLabelContext.fillRect(0, 0, xLabelCanvas.width, xLabelCanvas.height);
-            xLabelContext.fillStyle = '#333333';
-            xLabelContext.font = '14px Arial';
-            xLabelContext.textAlign = 'center';
-            xLabelContext.fillText('资产总计(亿元)', xLabelCanvas.width/2, 32);
-            
-            const xLabelTexture = new THREE.CanvasTexture(xLabelCanvas);
-            const xLabelMaterial = new THREE.SpriteMaterial({ map: xLabelTexture });
-            const xLabel = new THREE.Sprite(xLabelMaterial);
-            xLabel.position.set(0, -10, -20);
-            xLabel.scale.set(10, 5, 1);
-            scene.add(xLabel);
+            const xLabel = document.createElement('div');
+            xLabel.className = 'axis-label';
+            xLabel.textContent = '资产总计(亿元)';
+            xLabel.style.left = '50%';
+            xLabel.style.bottom = '10px';
+            container.appendChild(xLabel);
             
             // 添加Z轴标签
-            const zLabelCanvas = document.createElement('canvas');
-            zLabelCanvas.width = 128;
-            zLabelCanvas.height = 64;
-            const zLabelContext = zLabelCanvas.getContext('2d');
-            zLabelContext.fillStyle = '#ffffff';
-            zLabelContext.fillRect(0, 0, zLabelCanvas.width, zLabelCanvas.height);
-            zLabelContext.fillStyle = '#333333';
-            zLabelContext.font = '14px Arial';
-            zLabelContext.textAlign = 'center';
-            zLabelContext.fillText('营业收入(亿元)', zLabelCanvas.width/2, 32);
-            
-            const zLabelTexture = new THREE.CanvasTexture(zLabelCanvas);
-            const zLabelMaterial = new THREE.SpriteMaterial({ map: zLabelTexture });
-            const zLabel = new THREE.Sprite(zLabelMaterial);
-            zLabel.position.set(-20, -10, 0);
-            zLabel.scale.set(10, 5, 1);
-            scene.add(zLabel);
+            const zLabel = document.createElement('div');
+            zLabel.className = 'axis-label';
+            zLabel.textContent = '营业收入(亿元)';
+            zLabel.style.left = '10px';
+            zLabel.style.top = '50%';
+            zLabel.style.transform = 'translateY(-50%) rotate(-90deg)';
+            container.appendChild(zLabel);
             
             // 添加大小图例
-            const sizeLegendCanvas = document.createElement('canvas');
-            sizeLegendCanvas.width = 128;
-            sizeLegendCanvas.height = 64;
-            const sizeLegendContext = sizeLegendCanvas.getContext('2d');
-            sizeLegendContext.fillStyle = '#ffffff';
-            sizeLegendContext.fillRect(0, 0, sizeLegendCanvas.width, sizeLegendCanvas.height);
-            sizeLegendContext.fillStyle = '#333333';
-            sizeLegendContext.font = '12px Arial';
-            sizeLegendContext.textAlign = 'center';
-            sizeLegendContext.fillText('气泡大小表示增长率', sizeLegendCanvas.width/2, 20);
-            sizeLegendContext.fillText('越大表示增长越快', sizeLegendCanvas.width/2, 40);
-            
-            const sizeLegendTexture = new THREE.CanvasTexture(sizeLegendCanvas);
-            const sizeLegendMaterial = new THREE.SpriteMaterial({ map: sizeLegendTexture });
-            const sizeLegend = new THREE.Sprite(sizeLegendMaterial);
-            sizeLegend.position.set(20, 10, 0);
-            sizeLegend.scale.set(10, 5, 1);
-            scene.add(sizeLegend);
+            const sizeLegend = document.createElement('div');
+            sizeLegend.className = 'axis-label';
+            sizeLegend.style.top = '10px';
+            sizeLegend.style.right = '10px';
+            sizeLegend.innerHTML = '<div style="text-align:center">气泡大小表示增长率</div><div style="text-align:center">越大表示增长越快</div>';
+            container.appendChild(sizeLegend);
             
             // 鼠标交互
             const raycaster = new THREE.Raycaster();
@@ -988,7 +957,7 @@ const drawChart5 = () => {
                     if (hoveredObject !== intersects[0].object) {
                         // 恢复之前高亮的对象
                         if (hoveredObject) {
-                            hoveredObject.material.color.set(hoveredObject.userData.color);
+                            hoveredObject.material.color.set(new THREE.Color(hoveredObject.userData.color));
                             hoveredObject.scale.set(1, 1, 1);
                         }
                         
@@ -1008,7 +977,7 @@ const drawChart5 = () => {
                     }
                 } else {
                     if (hoveredObject) {
-                        hoveredObject.material.color.set(hoveredObject.userData.color);
+                        hoveredObject.material.color.set(new THREE.Color(hoveredObject.userData.color));
                         hoveredObject.scale.set(1, 1, 1);
                         hoveredObject = null;
                         tooltip.transition()
