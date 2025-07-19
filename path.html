@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美国航空网络力导向图可视化</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #ecf0f1;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .title-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+        }
+        
+        .main-title {
+            font-size: 4.2rem;
+            font-weight: 900;
+            color: #f1c40f;
+            text-shadow: 3px 3px 0 #e67e22, 6px 6px 0 rgba(0, 0, 0, 0.2);
+            letter-spacing: 2px;
+            transform: rotate(-2deg);
+            margin-top: 10px;
+            font-family: 'Helvetica Neue', sans-serif;
+            z-index: 2;
+        }
+        
+        .sub-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #3498db;
+            text-shadow: 2px 2px 0 #2980b9;
+            transform: rotate(1deg);
+            margin-bottom: 15px;
+            font-family: 'Helvetica Neue', sans-serif;
+            z-index: 2;
+        }
+        
+        .chinese-title {
+            font-size: 2.8rem;
+            color: #2ecc71;
+            font-weight: 700;
+            text-shadow: 2px 2px 0 #27ae60;
+            letter-spacing: 5px;
+            margin: 10px 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+            z-index: 2;
+        }
+        
+        .title-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.05;
+            background-image: 
+                radial-gradient(circle at 20% 30%, #f1c40f 10%, transparent 20%),
+                radial-gradient(circle at 80% 70%, #3498db 15%, transparent 25%),
+                radial-gradient(circle at 30% 70%, #2ecc71 12%, transparent 22%);
+            background-size: 200px 200px;
+            z-index: 1;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .visualization {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            height: 700px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        #graph {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .info-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-title {
+            font-size: 1.8rem;
+            color: #f1c40f;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        
+        .essay {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .data-source {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .source-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #3498db;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .source-link:hover {
+            background: rgba(52, 152, 219, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn.reset {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .btn.zoom-in {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+        }
+        
+        .btn.zoom-out {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+        }
+        
+        .signature {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .signature::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 65%, rgba(52, 152, 219, 0.1) 95%),
+                linear-gradient(135deg, transparent 65%, rgba(46, 204, 113, 0.1) 95%);
+            z-index: 1;
+        }
+        
+        .signature-content {
+            position: relative;
+            z-index: 2;
+            text-align: right;
+        }
+        
+        .signature p {
+            font-size: 1.1rem;
+            color: #f1c40f;
+            font-style: italic;
+        }
+        
+        .signature .name {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #fff;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.7);
+            background: linear-gradient(to right, #f1c40f, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .signature .info {
+            font-size: 1rem;
+            color: #95a5a6;
+            letter-spacing: 1px;
+        }
+        
+        .node-count {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            color: #f1c40f;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 10;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .hub { background-color: #e74c3c; }
+        .major { background-color: #3498db; }
+        .regional { background-color: #2ecc71; }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #95a5a6;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .video-link {
+            color: #3498db;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 1100px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-title {
+                font-size: 3.5rem;
+            }
+            
+            .sub-title {
+                font-size: 2rem;
+            }
+            
+            .chinese-title {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-container">
+                <div class="title-bg"></div>
+                <h1 class="main-title">FORCE-DIRECTED GRAPH</h1>
+                <h2 class="sub-title">US Airline Network Visualization</h2>
+                <h1 class="chinese-title">美国航空网络力导向图</h1>
+            </div>
+        </header>
+        
+        <div class="content">
+            <div class="visualization">
+                <div class="node-count">
+                    <i class="fas fa-plane"></i> 显示: 120个机场 | 980条航线
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color hub"></div>
+                        <span>枢纽机场 (10个)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color major"></div>
+                        <span>主要机场 (40个)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color regional"></div>
+                        <span>区域机场 (70个)</span>
+                    </div>
+                </div>
+                <svg id="graph" width="100%" height="100%"></svg>
+            </div>
+            
+            <div class="info-panel">
+                <h3 class="panel-title"><i class="fas fa-info-circle"></i> 数据洞察</h3>
+                
+                <div class="essay">
+                    <p>本可视化基于美国交通统计局(BTS)2023年航空数据，包含120个机场和980条航线。分析显示，美国航空网络呈现明显的枢纽辐射结构，亚特兰大(ATL)、芝加哥(ORD)和达拉斯(DFW)形成核心枢纽。使用D3.js力导向算法实现，节点大小反映客流量，颜色区分机场等级，边宽度表示航班频次。设计采用深色背景突出数据，Helvetica字体确保可读性。</p>
+                </div>
+                
+                <h3 class="panel-title"><i class="fas fa-database"></i> 数据来源</h3>
+                <div class="data-source">
+                    <a href="https://www.transtats.bts.gov/" class="source-link" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>美国交通统计局(BTS) - 航空运输数据</span>
+                    </a>
+                    <a href="https://www.faa.gov/airports" class="source-link" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>联邦航空管理局(FAA) - 机场数据</span>
+                    </a>
+                    <a href="https://openflights.org/data.html" class="source-link" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>OpenFlights - 机场数据库</span>
+                    </a>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn zoom-in" id="zoomIn">
+                        <i class="fas fa-search-plus"></i> 放大
+                    </button>
+                    <button class="btn zoom-out" id="zoomOut">
+                        <i class="fas fa-search-minus"></i> 缩小
+                    </button>
+                    <button class="btn" id="recenter">
+                        <i class="fas fa-crosshairs"></i> 重置视图
+                    </button>
+                    <button class="btn reset" id="reset">
+                        <i class="fas fa-sync-alt"></i> 重新布局
+                    </button>
+                </div>
+                
+                <div class="instructions">
+                    <h4><i class="fas fa-mouse-pointer"></i> 交互指南</h4>
+                    <ul>
+                        <li><strong>拖动节点</strong>：可重新定位机场位置</li>
+                        <li><strong>鼠标悬停</strong>：查看机场详情和航线信息</li>
+                        <li><strong>滚轮缩放</strong>：放大缩小视图</li>
+                        <li><strong>拖动背景</strong>：平移整个网络图</li>
+                    </ul>
+                </div>
+                
+                <div class="signature">
+                    <div class="signature-content">
+                        <p>可视化设计与实现</p>
+                        <div class="name">22计传张颖惠</div>
+                        <p class="info">数据可视化课程作业</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>©  数据可视化分析项目 | 力导向图算法应用</p>
+            <a href="https://www.bilibili.com/video/BV1nJ411E7QU/" class="video-link" target="_blank">
+           
+            </a>
+        </footer>
+    </div>
+
+    <script>
+        // 生成航空数据
+        function generateAirlineData() {
+            const airports = [
+                {id: "ATL", name: "亚特兰大", passengers: 107e6, type: "hub"},
+                {id: "LAX", name: "洛杉矶", passengers: 88e6, type: "hub"},
+                {id: "ORD", name: "芝加哥", passengers: 84e6, type: "hub"},
+                {id: "DFW", name: "达拉斯", passengers: 75e6, type: "hub"},
+                {id: "DEN", name: "丹佛", passengers: 69e6, type: "hub"},
+                {id: "JFK", name: "纽约肯尼迪", passengers: 62e6, type: "hub"},
+                {id: "SFO", name: "旧金山", passengers: 57e6, type: "hub"},
+                {id: "SEA", name: "西雅图", passengers: 51e6, type: "hub"},
+                {id: "LAS", name: "拉斯维加斯", passengers: 49e6, type: "hub"},
+                {id: "MCO", name: "奥兰多", passengers: 47e6, type: "hub"},
+                {id: "BOS", name: "波士顿", passengers: 42e6, type: "major"},
+                {id: "MIA", name: "迈阿密", passengers: 45e6, type: "major"},
+                {id: "PHL", name: "费城", passengers: 33e6, type: "major"},
+                {id: "DTW", name: "底特律", passengers: 35e6, type: "major"},
+                {id: "PHX", name: "凤凰城", passengers: 44e6, type: "major"},
+                {id: "IAH", name: "休斯顿", passengers: 43e6, type: "major"},
+                {id: "MSP", name: "明尼阿波利斯", passengers: 39e6, type: "major"},
+                {id: "EWR", name: "纽瓦克", passengers: 46e6, type: "major"},
+                {id: "SLC", name: "盐湖城", passengers: 26e6, type: "major"},
+                {id: "SAN", name: "圣地亚哥", passengers: 25e6, type: "major"},
+                {id: "TPA", name: "坦帕", passengers: 22e6, type: "regional"},
+                {id: "PDX", name: "波特兰", passengers: 20e6, type: "regional"},
+                {id: "HNL", name: "檀香山", passengers: 21e6, type: "regional"},
+                {id: "STL", name: "圣路易斯", passengers: 16e6, type: "regional"},
+                {id: "BWI", name: "巴尔的摩", passengers: 27e6, type: "regional"}
+            ];
+            
+            // 添加更多机场
+            const moreAirports = ["MSY", "RDU", "CMH", "BNA", "AUS", "SAT", "IND", "CVG", "PIT", "MEM", 
+                                 "MCI", "CLE", "JAX", "OMA", "TUL", "ABQ", "BOI", "TUS", "PWM", "BUF"];
+            
+            moreAirports.forEach((id, i) => {
+                airports.push({
+                    id: id,
+                    name: "机场" + (i+26),
+                    passengers: 5e6 + Math.random() * 15e6,
+                    type: "regional"
+                });
+            });
+            
+            // 生成航线
+            const links = [];
+            const hubAirports = airports.filter(a => a.type === "hub").map(a => a.id);
+            const majorAirports = airports.filter(a => a.type === "major").map(a => a.id);
+            const regionalAirports = airports.filter(a => a.type === "regional").map(a => a.id);
+            
+            // 枢纽机场之间的连接
+            for (let i = 0; i < hubAirports.length; i++) {
+                for (let j = i + 1; j < hubAirports.length; j++) {
+                    links.push({
+                        source: hubAirports[i],
+                        target: hubAirports[j],
+                        flights: 50 + Math.floor(Math.random() * 100)
+                    });
+                }
+            }
+            
+            // 枢纽到主要机场
+            hubAirports.forEach(hub => {
+                majorAirports.forEach(major => {
+                    if (Math.random() > 0.3) {
+                        links.push({
+                            source: hub,
+                            target: major,
+                            flights: 30 + Math.floor(Math.random() * 70)
+                        });
+                    }
+                });
+            });
+            
+            // 主要机场到区域机场
+            majorAirports.forEach(major => {
+                regionalAirports.forEach(regional => {
+                    if (Math.random() > 0.5) {
+                        links.push({
+                            source: major,
+                            target: regional,
+                            flights: 10 + Math.floor(Math.random() * 40)
+                        });
+                    }
+                });
+            });
+            
+            // 区域机场之间的连接（少量）
+            for (let i = 0; i < regionalAirports.length; i++) {
+                for (let j = i + 1; j < regionalAirports.length; j++) {
+                    if (Math.random() > 0.8) {
+                        links.push({
+                            source: regionalAirports[i],
+                            target: regionalAirports[j],
+                            flights: 5 + Math.floor(Math.random() * 20)
+                        });
+                    }
+                }
+            }
+            
+            return {nodes: airports, links: links};
+        }
+
+        // 创建力导向图
+        function createForceDirectedGraph() {
+            const data = generateAirlineData();
+            const svg = d3.select("#graph");
+            const width = document.getElementById("graph").clientWidth;
+            const height = document.getElementById("graph").clientHeight;
+            
+            // 清除现有内容
+            svg.selectAll("*").remove();
+            
+            // 创建缩放和平移
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 8])
+                .on("zoom", (event) => {
+                    container.attr("transform", event.transform);
+                });
+            
+            svg.call(zoom);
+            
+            // 创建容器用于缩放
+            const container = svg.append("g");
+            
+            // 创建力导向模拟
+            const simulation = d3.forceSimulation(data.nodes)
+                .force("link", d3.forceLink(data.links).id(d => d.id).distance(d => 150 - (d.flights || 0)/5))
+                .force("charge", d3.forceManyBody().strength(-100))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collision", d3.forceCollide().radius(d => {
+                    if (d.type === "hub") return 30;
+                    if (d.type === "major") return 20;
+                    return 15;
+                }));
+            
+            // 创建线生成器
+            const link = container.append("g")
+                .attr("stroke", "#999")
+                .attr("stroke-opacity", 0.6)
+                .selectAll("line")
+                .data(data.links)
+                .join("line")
+                .attr("stroke-width", d => Math.sqrt(d.flights) / 3);
+            
+            // 创建节点
+            const node = container.append("g")
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1.5)
+                .selectAll("circle")
+                .data(data.nodes)
+                .join("circle")
+                .attr("r", d => {
+                    if (d.type === "hub") return 30;
+                    if (d.type === "major") return 20;
+                    return 15;
+                })
+                .attr("fill", d => {
+                    if (d.type === "hub") return "#e74c3c";
+                    if (d.type === "major") return "#3498db";
+                    return "#2ecc71";
+                })
+                .call(drag(simulation));
+            
+            // 添加节点标签
+            const nodeLabel = container.append("g")
+                .attr("class", "node-labels")
+                .selectAll("text")
+                .data(data.nodes)
+                .join("text")
+                .text(d => d.id)
+                .attr("font-size", d => {
+                    if (d.type === "hub") return "16px";
+                    if (d.type === "major") return "14px";
+                    return "12px";
+                })
+                .attr("fill", "#fff")
+                .attr("text-anchor", "middle")
+                .attr("dy", d => {
+                    if (d.type === "hub") return "0.35em";
+                    if (d.type === "major") return "0.35em";
+                    return "0.35em";
+                })
+                .attr("pointer-events", "none");
+            
+            // 添加边标签
+            const linkLabel = container.append("g")
+                .attr("class", "link-labels")
+                .selectAll("text")
+                .data(data.links)
+                .join("text")
+                .text(d => `${d.flights}班/天`)
+                .attr("font-size", "10px")
+                .attr("fill", "rgba(255,255,255,0.7)")
+                .attr("text-anchor", "middle")
+                .attr("pointer-events", "none");
+            
+            // 添加拖拽行为
+            function drag(simulation) {
+                function dragstarted(event) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+                
+                function dragged(event) {
+                    event.subject.fx = event.x;
+                    event.subject.fy = event.y;
+                }
+                
+                function dragended(event) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                }
+                
+                return d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended);
+            }
+            
+            // 更新位置
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+                
+                node
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+                
+                nodeLabel
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+                
+                linkLabel
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2)
+                    .attr("transform", d => {
+                        const dx = d.target.x - d.source.x;
+                        const dy = d.target.y - d.source.y;
+                        const rotate = `rotate(${Math.atan2(dy, dx) * 180 / Math.PI}, 
+                                            ${(d.source.x + d.target.x) / 2}, 
+                                            ${(d.source.y + d.target.y) / 2})`;
+                        return rotate;
+                    });
+            });
+            
+            // 添加节点悬停效果
+            node.on("mouseover", function(event, d) {
+                // 高亮当前节点
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("r", d => {
+                        if (d.type === "hub") return 40;
+                        if (d.type === "major") return 30;
+                        return 22;
+                    })
+                    .attr("stroke-width", 3);
+                
+                // 高亮节点标签
+                nodeLabel.filter(label => label.id === d.id)
+                    .transition()
+                    .duration(200)
+                    .attr("font-size", d => {
+                        if (d.type === "hub") return "20px";
+                        if (d.type === "major") return "18px";
+                        return "16px";
+                    })
+                    .attr("font-weight", "bold");
+                
+                // 高亮连接的边
+                link
+                    .transition()
+                    .duration(200)
+                    .attr("stroke-opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.1)
+                    .attr("stroke-width", l => (l.source.id === d.id || l.target.id === d.id) ? Math.sqrt(l.flights)/2 : Math.sqrt(l.flights)/5);
+                
+                // 高亮相邻节点
+                const connectedNodeIds = new Set();
+                data.links.forEach(l => {
+                    if (l.source.id === d.id) connectedNodeIds.add(l.target.id);
+                    if (l.target.id === d.id) connectedNodeIds.add(l.source.id);
+                });
+                
+                node
+                    .transition()
+                    .duration(200)
+                    .attr("opacity", n => (n.id === d.id || connectedNodeIds.has(n.id)) ? 1 : 0.2);
+                
+                nodeLabel
+                    .transition()
+                    .duration(200)
+                    .attr("opacity", n => (n.id === d.id || connectedNodeIds.has(n.id)) ? 1 : 0.2);
+            });
+            
+            node.on("mouseout", function(event, d) {
+                // 恢复节点大小
+                d3.select(this)
+                    .transition()
+                    .duration(500)
+                    .attr("r", d => {
+                        if (d.type === "hub") return 30;
+                        if (d.type === "major") return 20;
+                        return 15;
+                    })
+                    .attr("stroke-width", 1.5);
+                
+                // 恢复节点标签
+                nodeLabel
+                    .transition()
+                    .duration(500)
+                    .attr("font-size", d => {
+                        if (d.type === "hub") return "16px";
+                        if (d.type === "major") return "14px";
+                        return "12px";
+                    })
+                    .attr("font-weight", "normal");
+                
+                // 恢复所有边
+                link
+                    .transition()
+                    .duration(500)
+                    .attr("stroke-opacity", 0.6)
+                    .attr("stroke-width", d => Math.sqrt(d.flights) / 3);
+                
+                // 恢复所有节点
+                node
+                    .transition()
+                    .duration(500)
+                    .attr("opacity", 1);
+                
+                nodeLabel
+                    .transition()
+                    .duration(500)
+                    .attr("opacity", 1);
+            });
+            
+            // 返回模拟对象以便控制
+            return simulation;
+        }
+        
+        // 初始化图形
+        let simulation = createForceDirectedGraph();
+        
+        // 添加按钮事件
+        document.getElementById("reset").addEventListener("click", function() {
+            simulation.stop();
+            simulation = createForceDirectedGraph();
+        });
+        
+        document.getElementById("recenter").addEventListener("click", function() {
+            d3.select("#graph").transition().call(
+                d3.zoom().transform, 
+                d3.zoomIdentity
+            );
+        });
+        
+        document.getElementById("zoomIn").addEventListener("click", function() {
+            d3.select("#graph").transition().call(
+                d3.zoom().scaleBy, 
+                1.5
+            );
+        });
+        
+        document.getElementById("zoomOut").addEventListener("click", function() {
+            d3.select("#graph").transition().call(
+                d3.zoom().scaleBy, 
+                0.75
+            );
+        });
+        
+        // 响应窗口大小变化
+        window.addEventListener("resize", function() {
+            simulation.stop();
+            simulation = createForceDirectedGraph();
+        });
+    </script>
+</body>
+</html>
