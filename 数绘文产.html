@@ -778,7 +778,7 @@ const drawChart5 = () => {
       .attr("text-anchor", "middle"); // 优化文本对齐
   }
 
-  // 创建雷达路径（关键修复：确保与轴、点逻辑完全一致）
+  // 创建雷达路径
   const radarLine = d3.lineRadial()
     .angle((d, i) => angleSlice * i - Math.PI / 2) // 复用角度
     .radius(d => {
@@ -796,7 +796,7 @@ const drawChart5 = () => {
     .attr("stroke", "rgba(123, 104, 238, 1)")
     .attr("stroke-width", 2);
 
-  // 添加数据点（与路径、轴逻辑一致）
+  // 添加数据点
   svg.selectAll(".radar-point")
     .data(data)
     .enter()
@@ -813,7 +813,7 @@ const drawChart5 = () => {
       // tooltip 逻辑保持不变
     });
 
-  // 添加数值标签（与路径逻辑一致）
+  // 添加数值标签
   svg.selectAll(".radar-value")
     .data(data)
     .enter()
