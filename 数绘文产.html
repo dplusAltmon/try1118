@@ -521,7 +521,7 @@
             const container = d3.select("#chart3");
             const width = container.node().getBoundingClientRect().width;
             const height = container.node().getBoundingClientRect().height - 40;
-            const radius = Math.min(width, height) / 2 - 20;
+            const radius = Math.min(width, height) / 2 - 40;
             
             const svg = container.append("svg")
                 .attr("width", width)
@@ -595,129 +595,130 @@
                 .text(d => `${d.type}: ${d.value.toLocaleString()}亿元`);
         };
         
-        // 图表4：零售业态增长情况（热力图）
-        const drawChart4 = () => {
-            const data = [
-                {category: "便利店", growth: 7.5, color: colors.primary[0]},
-                {category: "超市", growth: 5.4, color: colors.primary[1]},
-                {category: "百货店", growth: 1.2, color: colors.primary[3]},
-                {category: "专业店", growth: 6.4, color: colors.primary[0]},
-                {category: "品牌专卖店", growth: 2.4, color: colors.primary[2]}
-            ];
-            
-            const container = d3.select("#chart4");
-            const width = container.node().getBoundingClientRect().width;
-            const height = container.node().getBoundingClientRect().height - 40;
-            const margin = {top: 30, right: 20, bottom: 40, left: 20};
-            
-            const svg = container.append("svg")
-                .attr("width", width)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
-            
-            // 创建热力方块
-            const cellSize = Math.min((width - margin.left - margin.right) / data.length, 70);
-            const cellPadding = 10;
-            
-            svg.selectAll("rect")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("x", (d, i) => i * (cellSize + cellPadding))
-                .attr("y", height/2 - cellSize/2)
-                .attr("width", cellSize)
-                .attr("height", cellSize)
-                .attr("fill", d => {
-                    // 根据增长率设置颜色深浅
-                    const intensity = d.growth / 10;
-                    return d3.rgb(d.color).brighter(1 - intensity);
-                })
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 2)
-                .attr("rx", 6)
-                .attr("ry", 6)
-                .on("mouseover", function(event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`${d.category}<br>同比增长: ${d.growth}%`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-            
-            // 添加增长率标签
-            svg.selectAll("text.value")
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("x", (d, i) => i * (cellSize + cellPadding) + cellSize/2)
-                .attr("y", height/2 + 5)
-                .attr("text-anchor", "middle")
-                .attr("font-size", "16px")
-                .attr("fill", "#fff")
-                .attr("font-weight", "bold")
-                .text(d => d.growth + "%");
-            
-            // 添加类别标签
-            svg.selectAll("text.label")
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("x", (d, i) => i * (cellSize + cellPadding) + cellSize/2)
-                .attr("y", height/2 - cellSize/2 - 10)
-                .attr("text-anchor", "middle")
-                .attr("font-size", "12px")
-                .attr("fill", "#5a5a5a")
-                .text(d => d.category);
-            
-            // 添加图例
-            const legend = svg.append("g")
-                .attr("transform", `translate(0,${height - 20})`);
-            
-            const gradient = legend.append("defs")
-                .append("linearGradient")
-                .attr("id", "heatmap-gradient")
-                .attr("x1", "0%")
-                .attr("y1", "0%")
-                .attr("x2", "100%")
-                .attr("y2", "0%");
-            
-            gradient.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", d3.rgb(colors.primary[3]).brighter(0.8));
-                
-            gradient.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", d3.rgb(colors.primary[0]).brighter(0.2));
-            
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", width - margin.left - margin.right)
-                .attr("height", 15)
-                .attr("fill", "url(#heatmap-gradient)");
-            
-            legend.append("text")
-                .attr("x", 0)
-                .attr("y", -5)
-                .attr("font-size", "10px")
-                .attr("fill", "#5a5a5a")
-                .text("增长率低");
-            
-            legend.append("text")
-                .attr("x", width - margin.left - margin.right)
-                .attr("y", -5)
-                .attr("text-anchor", "end")
-                .attr("font-size", "10px")
-                .attr("fill", "#5a5a5a")
-                .text("增长率高");
-        };
+    
+      // 图表4：零售业态增长情况（热力图）
+const drawChart4 = () => {
+    const data = [
+        {category: "便利店", growth: 7.5, color: colors.primary[0]},
+        {category: "超市", growth: 5.4, color: colors.primary[1]},
+        {category: "百货店", growth: 1.2, color: colors.primary[3]},
+        {category: "专业店", growth: 6.4, color: colors.primary[0]},
+        {category: "品牌专卖店", growth: 2.4, color: colors.primary[2]}
+    ];
+    
+    const container = d3.select("#chart4");
+    const width = container.node().getBoundingClientRect().width;
+    const height = container.node().getBoundingClientRect().height - 40;
+    const margin = {top: 30, right: 20, bottom: 40, left: 20};
+    
+    const svg = container.append("svg")
+        .attr("width", width)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    // 创建热力方块
+    const cellSize = Math.min((width - margin.left - margin.right) / data.length, 70);
+    const cellPadding = 10;
+    
+    svg.selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", (d, i) => i * (cellSize + cellPadding))
+        .attr("y", height/2 - cellSize/2)
+        .attr("width", cellSize)
+        .attr("height", cellSize)
+        .attr("fill", d => {
+            // 根据增长率设置颜色深浅
+            const intensity = d.growth / 10;
+            return d3.rgb(d.color).brighter(1 - intensity);
+        })
+        .attr("stroke", "#333") // 将边框颜色从白色改为深灰色
+        .attr("stroke-width", 1.5) // 适当减小边框宽度
+        .attr("rx", 6)
+        .attr("ry", 6)
+        .on("mouseover", function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html(`${d.category}<br>同比增长: ${d.growth}%`)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+    
+    // 添加增长率标签
+    svg.selectAll("text.value")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("x", (d, i) => i * (cellSize + cellPadding) + cellSize/2)
+        .attr("y", height/2 + 5)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "16px")
+        .attr("fill", "#333") // 将文本颜色从白色改为深灰色
+        .attr("font-weight", "bold")
+        .text(d => d.growth + "%");
+    
+    // 添加类别标签
+    svg.selectAll("text.label")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("x", (d, i) => i * (cellSize + cellPadding) + cellSize/2)
+        .attr("y", height/2 - cellSize/2 - 10)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("fill", "#5a5a5a")
+        .text(d => d.category);
+    
+    // 添加图例
+    const legend = svg.append("g")
+        .attr("transform", `translate(0,${height - 20})`);
+    
+    const gradient = legend.append("defs")
+        .append("linearGradient")
+        .attr("id", "heatmap-gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+    
+    gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", d3.rgb(colors.primary[3]).brighter(0.8));
+        
+    gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", d3.rgb(colors.primary[0]).brighter(0.2));
+    
+    legend.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", width - margin.left - margin.right)
+        .attr("height", 15)
+        .attr("fill", "url(#heatmap-gradient)");
+    
+    legend.append("text")
+        .attr("x", 0)
+        .attr("y", -5)
+        .attr("font-size", "10px")
+        .attr("fill", "#5a5a5a")
+        .text("增长率低");
+    
+    legend.append("text")
+        .attr("x", width - margin.left - margin.right)
+        .attr("y", -5)
+        .attr("text-anchor", "end")
+        .attr("font-size", "10px")
+        .attr("fill", "#5a5a5a")
+        .text("增长率高");
+};
 
         //图表5:雷达图
         
@@ -827,212 +828,214 @@ const drawChart5 = () => {
 };
         
         // 图表6：行业资产与营收关系（Three.js 3D气泡图）
-        const drawChart6 = () => {
-            const data = [
-                {industry: "新闻信息服务", assets: 37652, revenue: 22276, growth: 8.6, color: colors.primary[0]},
-                {industry: "内容创作生产", assets: 65356, revenue: 38877, growth: 8.4, color: colors.primary[1]},
-                {industry: "创意设计服务", assets: 42115, revenue: 38900, growth: 7.2, color: colors.primary[2]},
-                {industry: "文化传播渠道", assets: 27490, revenue: 19898, growth: 4.5, color: colors.primary[3]},
-                {industry: "文化娱乐休闲服务", assets: 38430, revenue: 4227, growth: 1.2, color: colors.primary[4]},
-                {industry: "文化辅助生产", assets: 42407, revenue: 26598, growth: 6.2, color: colors.accent[0]},
-                {industry: "文化装备生产", assets: 7887, revenue: 7820, growth: 11.2, color: colors.accent[1]},
-                {industry: "文化消费终端生产", assets: 23151, revenue: 31382, growth: 6.8, color: colors.accent[2]}
-            ];
-            
-            const container = document.getElementById('chart6');
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-            
-            // 创建场景
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf5f5f5);
-            
-            // 创建相机
-            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-            camera.position.set(0, 20, 50);
-            camera.lookAt(0, 0, 0);
-            
-            // 创建渲染器
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(width, height);
-            container.appendChild(renderer.domElement);
-            
-            // 添加轨道控制器
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            
-            // 添加光源
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 20, 10);
-            scene.add(directionalLight);
-            
-            // 创建气泡
-            const maxAssets = d3.max(data, d => d.assets);
-            const maxRevenue = d3.max(data, d => d.revenue);
-            const maxGrowth = d3.max(data, d => d.growth);
-            
-            data.forEach(d => {
-                const size = (d.growth / maxGrowth) * 5 + 1;
-                const geometry = new THREE.SphereGeometry(size, 32, 32);
-                const material = new THREE.MeshPhongMaterial({ 
-                    color: new THREE.Color(d.color),
-                    specular: 0x111111,
-                    shininess: 30,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                const sphere = new THREE.Mesh(geometry, material);
-                
-                // 位置映射
-                sphere.position.x = (d.assets / maxAssets) * 30 - 15;
-                sphere.position.z = (d.revenue / maxRevenue) * 30 - 15;
-                
-                // 添加交互标签
-                sphere.userData = {
-                    industry: d.industry,
-                    assets: d.assets,
-                    revenue: d.revenue,
-                    growth: d.growth
-                };
-                
-                scene.add(sphere);
-            });
-            
-            // 添加坐标轴辅助
-            const axesHelper = new THREE.AxesHelper(20);
-            scene.add(axesHelper);
-            
-            // 添加网格地面
-            const gridHelper = new THREE.GridHelper(30, 30, 0x888888, 0xcccccc);
-            scene.add(gridHelper);
-            
-            // 添加X轴标签
-            const xLabelCanvas = document.createElement('canvas');
-            xLabelCanvas.width = 128;
-            xLabelCanvas.height = 64;
-            const xLabelContext = xLabelCanvas.getContext('2d');
-            xLabelContext.fillStyle = '#ffffff';
-            xLabelContext.fillRect(0, 0, xLabelCanvas.width, xLabelCanvas.height);
-            xLabelContext.fillStyle = '#333333';
-            xLabelContext.font = '14px Arial';
-            xLabelContext.textAlign = 'center';
-            xLabelContext.fillText('资产总计(亿元)', xLabelCanvas.width/2, 32);
-            
-            const xLabelTexture = new THREE.CanvasTexture(xLabelCanvas);
-            const xLabelMaterial = new THREE.SpriteMaterial({ map: xLabelTexture });
-            const xLabel = new THREE.Sprite(xLabelMaterial);
-            xLabel.position.set(0, -10, -20);
-            xLabel.scale.set(10, 5, 1);
-            scene.add(xLabel);
-            
-            // 添加Z轴标签
-            const zLabelCanvas = document.createElement('canvas');
-            zLabelCanvas.width = 128;
-            zLabelCanvas.height = 64;
-            const zLabelContext = zLabelCanvas.getContext('2d');
-            zLabelContext.fillStyle = '#ffffff';
-            zLabelContext.fillRect(0, 0, zLabelCanvas.width, zLabelCanvas.height);
-            zLabelContext.fillStyle = '#333333';
-            zLabelContext.font = '14px Arial';
-            zLabelContext.textAlign = 'center';
-            zLabelContext.fillText('营业收入(亿元)', zLabelCanvas.width/2, 32);
-            
-            const zLabelTexture = new THREE.CanvasTexture(zLabelCanvas);
-            const zLabelMaterial = new THREE.SpriteMaterial({ map: zLabelTexture });
-            const zLabel = new THREE.Sprite(zLabelMaterial);
-            zLabel.position.set(-20, -10, 0);
-            zLabel.scale.set(10, 5, 1);
-            scene.add(zLabel);
-            
-            // 添加大小图例
-            const sizeLegendCanvas = document.createElement('canvas');
-            sizeLegendCanvas.width = 128;
-            sizeLegendCanvas.height = 64;
-            const sizeLegendContext = sizeLegendCanvas.getContext('2d');
-            sizeLegendContext.fillStyle = '#ffffff';
-            sizeLegendContext.fillRect(0, 0, sizeLegendCanvas.width, sizeLegendCanvas.height);
-            sizeLegendContext.fillStyle = '#333333';
-            sizeLegendContext.font = '12px Arial';
-            sizeLegendContext.textAlign = 'center';
-            sizeLegendContext.fillText('气泡大小表示增长率', sizeLegendCanvas.width/2, 20);
-            sizeLegendContext.fillText('越大表示增长越快', sizeLegendCanvas.width/2, 40);
-            
-            const sizeLegendTexture = new THREE.CanvasTexture(sizeLegendCanvas);
-            const sizeLegendMaterial = new THREE.SpriteMaterial({ map: sizeLegendTexture });
-            const sizeLegend = new THREE.Sprite(sizeLegendMaterial);
-            sizeLegend.position.set(20, 10, 0);
-            sizeLegend.scale.set(10, 5, 1);
-            scene.add(sizeLegend);
-            
-            // 鼠标交互
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2();
-            let hoveredObject = null;
-            
-            container.addEventListener('mousemove', (event) => {
-                // 计算鼠标位置归一化坐标
-                mouse.x = (event.clientX - container.getBoundingClientRect().left) / container.clientWidth * 2 - 1;
-                mouse.y = - (event.clientY - container.getBoundingClientRect().top) / container.clientHeight * 2 + 1;
-                
-                // 更新射线
-                raycaster.setFromCamera(mouse, camera);
-                
-                // 计算相交对象
-                const intersects = raycaster.intersectObjects(scene.children);
-                
-                if (intersects.length > 0 && intersects[0].object.userData.industry) {
-                    if (hoveredObject !== intersects[0].object) {
-                        // 恢复之前高亮的对象
-                        if (hoveredObject) {
-                            hoveredObject.material.color.set(hoveredObject.userData.color);
-                            hoveredObject.scale.set(1, 1, 1);
-                        }
-                        
-                        // 高亮新对象
-                        hoveredObject = intersects[0].object;
-                        hoveredObject.material.color.set(0xff0000);
-                        hoveredObject.scale.set(1.2, 1.2, 1.2);
-                        
-                        // 显示工具提示
-                        const data = hoveredObject.userData;
-                        tooltip.transition()
-                            .duration(200)
-                            .style("opacity", .9);
-                        tooltip.html(`${data.industry}<br>资产: ${data.assets.toLocaleString()}亿元<br>营收: ${data.revenue.toLocaleString()}亿元<br>增速: ${data.growth}%`)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    }
-                } else {
-                    if (hoveredObject) {
-                        hoveredObject.material.color.set(hoveredObject.userData.color);
-                        hoveredObject.scale.set(1, 1, 1);
-                        hoveredObject = null;
-                        tooltip.transition()
-                            .duration(500)
-                            .style("opacity", 0);
-                    }
-                }
-            });
-            
-            // 动画循环
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
-            }
-            animate();
-            
-            // 响应式调整
-            window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-            });
+const drawChart6 = () => {
+    const data = [
+        {industry: "新闻信息服务", assets: 37652, revenue: 22276, growth: 8.6, color: colors.primary[0]},
+        {industry: "内容创作生产", assets: 65356, revenue: 38877, growth: 8.4, color: colors.primary[1]},
+        {industry: "创意设计服务", assets: 42115, revenue: 38900, growth: 7.2, color: colors.primary[2]},
+        {industry: "文化传播渠道", assets: 27490, revenue: 19898, growth: 4.5, color: colors.primary[3]},
+        {industry: "文化娱乐休闲服务", assets: 38430, revenue: 4227, growth: 1.2, color: colors.primary[4]},
+        {industry: "文化辅助生产", assets: 42407, revenue: 26598, growth: 6.2, color: colors.accent[0]},
+        {industry: "文化装备生产", assets: 7887, revenue: 7820, growth: 11.2, color: colors.accent[1]},
+        {industry: "文化消费终端生产", assets: 23151, revenue: 31382, growth: 6.8, color: colors.accent[2]}
+    ];
+    
+    const container = document.getElementById('chart6');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    // 创建场景
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf5f5f5);
+    
+    // 创建相机
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    camera.position.set(0, 20, 50);
+    camera.lookAt(0, 0, 0);
+    
+    // 创建渲染器
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    container.appendChild(renderer.domElement);
+    
+    // 添加轨道控制器
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    
+    // 添加光源
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 20, 10);
+    scene.add(directionalLight);
+    
+    // 创建气泡
+    const maxAssets = d3.max(data, d => d.assets);
+    const maxRevenue = d3.max(data, d => d.revenue);
+    const maxGrowth = d3.max(data, d => d.growth);
+    
+    data.forEach(d => {
+        const size = (d.growth / maxGrowth) * 5 + 1;
+        const geometry = new THREE.SphereGeometry(size, 32, 32);
+        const material = new THREE.MeshPhongMaterial({ 
+            color: new THREE.Color(d.color),
+            specular: 0x111111,
+            shininess: 30,
+            transparent: true,
+            opacity: 0.8
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+        
+        // 位置映射
+        sphere.position.x = (d.assets / maxAssets) * 30 - 15;
+        sphere.position.z = (d.revenue / maxRevenue) * 30 - 15;
+        
+        // 添加交互标签：保存原始颜色用于恢复
+        sphere.userData = {
+            industry: d.industry,
+            assets: d.assets,
+            revenue: d.revenue,
+            growth: d.growth,
+            originalColor: d.color // 关键：保存原始颜色
         };
+        
+        scene.add(sphere);
+    });
+    
+    // 添加坐标轴辅助
+    const axesHelper = new THREE.AxesHelper(20);
+    scene.add(axesHelper);
+    
+    // 添加网格地面
+    const gridHelper = new THREE.GridHelper(30, 30, 0x888888, 0xcccccc);
+    scene.add(gridHelper);
+    
+    // 添加X轴标签
+    const xLabelCanvas = document.createElement('canvas');
+    xLabelCanvas.width = 128;
+    xLabelCanvas.height = 64;
+    const xLabelContext = xLabelCanvas.getContext('2d');
+    xLabelContext.fillStyle = '#ffffff';
+    xLabelContext.fillRect(0, 0, xLabelCanvas.width, xLabelCanvas.height);
+    xLabelContext.fillStyle = '#333333';
+    xLabelContext.font = '14px Arial';
+    xLabelContext.textAlign = 'center';
+    xLabelContext.fillText('资产总计(亿元)', xLabelCanvas.width/2, 32);
+    
+    const xLabelTexture = new THREE.CanvasTexture(xLabelCanvas);
+    const xLabelMaterial = new THREE.SpriteMaterial({ map: xLabelTexture });
+    const xLabel = new THREE.Sprite(xLabelMaterial);
+    xLabel.position.set(0, -10, -20);
+    xLabel.scale.set(10, 5, 1);
+    scene.add(xLabel);
+    
+    // 添加Z轴标签
+    const zLabelCanvas = document.createElement('canvas');
+    zLabelCanvas.width = 128;
+    zLabelCanvas.height = 64;
+    const zLabelContext = zLabelCanvas.getContext('2d');
+    zLabelContext.fillStyle = '#ffffff';
+    zLabelContext.fillRect(0, 0, zLabelCanvas.width, zLabelCanvas.height);
+    zLabelContext.fillStyle = '#333333';
+    zLabelContext.font = '14px Arial';
+    zLabelContext.textAlign = 'center';
+    zLabelContext.fillText('营业收入(亿元)', zLabelCanvas.width/2, 32);
+    
+    const zLabelTexture = new THREE.CanvasTexture(zLabelCanvas);
+    const zLabelMaterial = new THREE.SpriteMaterial({ map: zLabelTexture });
+    const zLabel = new THREE.Sprite(zLabelMaterial);
+    zLabel.position.set(-20, -10, 0);
+    zLabel.scale.set(10, 5, 1);
+    scene.add(zLabel);
+    
+    // 添加大小图例
+    const sizeLegendCanvas = document.createElement('canvas');
+    sizeLegendCanvas.width = 128;
+    sizeLegendCanvas.height = 64;
+    const sizeLegendContext = sizeLegendCanvas.getContext('2d');
+    sizeLegendContext.fillStyle = '#ffffff';
+    sizeLegendContext.fillRect(0, 0, sizeLegendCanvas.width, sizeLegendCanvas.height);
+    sizeLegendContext.fillStyle = '#333333';
+    sizeLegendContext.font = '12px Arial';
+    sizeLegendContext.textAlign = 'center';
+    sizeLegendContext.fillText('气泡大小表示增长率', sizeLegendCanvas.width/2, 20);
+    sizeLegendContext.fillText('越大表示增长越快', sizeLegendCanvas.width/2, 40);
+    
+    const sizeLegendTexture = new THREE.CanvasTexture(sizeLegendCanvas);
+    const sizeLegendMaterial = new THREE.SpriteMaterial({ map: sizeLegendTexture });
+    const sizeLegend = new THREE.Sprite(sizeLegendMaterial);
+    sizeLegend.position.set(20, 10, 0);
+    sizeLegend.scale.set(10, 5, 1);
+    scene.add(sizeLegend);
+    
+    // 鼠标交互
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hoveredObject = null;
+    
+    container.addEventListener('mousemove', (event) => {
+        // 计算鼠标位置归一化坐标
+        mouse.x = (event.clientX - container.getBoundingClientRect().left) / container.clientWidth * 2 - 1;
+        mouse.y = - (event.clientY - container.getBoundingClientRect().top) / container.clientHeight * 2 + 1;
+        
+        // 更新射线
+        raycaster.setFromCamera(mouse, camera);
+        
+        // 计算相交对象
+        const intersects = raycaster.intersectObjects(scene.children);
+        
+        if (intersects.length > 0 && intersects[0].object.userData.industry) {
+            if (hoveredObject !== intersects[0].object) {
+                // 恢复之前高亮的对象：使用保存的原始颜色
+                if (hoveredObject) {
+                    hoveredObject.material.color.set(new THREE.Color(hoveredObject.userData.originalColor));
+                    hoveredObject.scale.set(1, 1, 1);
+                }
+                
+                // 高亮新对象
+                hoveredObject = intersects[0].object;
+                hoveredObject.material.color.set(0xff0000); // 高亮颜色（红色）
+                hoveredObject.scale.set(1.2, 1.2, 1.2);
+                
+                // 显示工具提示
+                const data = hoveredObject.userData;
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(`${data.industry}<br>资产: ${data.assets.toLocaleString()}亿元<br>营收: ${data.revenue.toLocaleString()}亿元<br>增速: ${data.growth}%`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            }
+        } else {
+            // 鼠标离开时恢复颜色：使用保存的原始颜色
+            if (hoveredObject) {
+                hoveredObject.material.color.set(new THREE.Color(hoveredObject.userData.originalColor));
+                hoveredObject.scale.set(1, 1, 1);
+                hoveredObject = null;
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            }
+        }
+    });
+    
+    // 动画循环
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+    
+    // 响应式调整
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+};
         
         // 图表7：GDP季度增速趋势
         const drawChart7 = () => {
