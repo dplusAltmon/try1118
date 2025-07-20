@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>优化后的词云图</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cuc.yingshinet.com/V7/CH12/d3.layout.ruyicloud.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+
+       .wordcloud-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 30px auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        svg {
+            width: 100%;
+            height: 600px;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>词云可视化展示</h1>
+    <div class="wordcloud-container">
+        <svg></svg>
+    </div>
+    <script>
+        // 加载CSV数据，使用相对路径
+        d3.csv('Sight2Sound.csv').then(data => {
+            // 整理数据
+            const words = data.map(d => ({
+                text: d.text,
+                size: +d.size
+            }));
+
+            // 设置词云的尺寸和布局
+            const width = document.querySelector('.wordcloud-container').clientWidth;
+            const height = 600;
+
+            const layout = d3.layout.ruyicloud()
+               .size([width, height])
+               .words(words)
+               .padding(5)
+               .rotate(() => ~~(Math.random() * 2) * 90)
+               .fontSize(d => d.size * 2) // 适当放大字体，可根据实际调整
+               .on('end', draw);
+
+            layout.start();
+
+            function draw(words) {
+                const svg = d3.select('svg');
+                svg.selectAll('*').remove();
+
+                const g = svg.append('g')
+                   .attr('transform', `translate(${width / 2}, ${height / 2})`);
+
+                g.selectAll('text')
+                   .data(words)
+                   .enter().append('text')
+                   .style('font-size', d => d.size + 'px')
+                   .style('fill', () => d3.schemeCategory10[~~(Math.random() * 10)])
+                   .attr('text-anchor','middle')
+                   .attr('transform', d => `translate(${d.x}, ${d.y}) rotate(${d.rotate})`)
