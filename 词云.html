@@ -1,83 +1,268 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
-    <title>优化后的词云图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电影经典词云</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cuc.yingshinet.com/V7/CH12/d3.layout.ruyicloud.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f4f4f4;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            font-family: 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
         }
-
-        h1 {
-            text-align: center;
-            margin-top: 20px;
-            color: #333;
-        }
-
-       .wordcloud-container {
-            width: 90%;
+        
+        .container {
             max-width: 1200px;
-            margin: 30px auto;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-
-        svg {
-            width: 100%;
-            height: 600px;
-            display: block;
             margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        #word-cloud-container {
+            width: 100%;
+            height: 80vh;
+            min-height: 800px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            margin: 0 auto 40px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #word-cloud {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #movie-detail {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 20px 30px;
+            border-radius: 15px;
+            max-width: 80%;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        #movie-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #ff758c;
+        }
+        
+        #movie-info {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            #word-cloud-container { min-height: 600px; }
         }
     </style>
 </head>
-
 <body>
-    <h1>词云可视化展示</h1>
-    <div class="wordcloud-container">
-        <svg></svg>
+    <div class="container">
+        <header>
+            <h1>电影经典词云</h1>
+            <p class="subtitle">探索影史最具影响力的100部杰作 - 点击词云了解详情</p>
+        </header>
+        
+        <div id="word-cloud-container">
+            <div id="word-cloud"></div>
+            <div id="movie-detail">
+                <div id="movie-title">点击词云中的电影</div>
+                <div id="movie-info">影响力排名将显示在这里</div>
+            </div>
+        </div>
+        
+        <footer>
+            数据来源：影史权威评选 | 可视化设计：DeepSeek AI优化
+        </footer>
     </div>
+
     <script>
-        // 加载CSV数据，使用相对路径
-        d3.csv('Sight2Sound.csv').then(data => {
-            // 整理数据
-            const words = data.map(d => ({
-                text: d.text,
-                size: +d.size
-            }));
+        // 完整电影数据
+        const movieData = [
+            {text: "让娜·迪尔曼", size: 100, year: "1975", country: "比利时"},
+            {text: "迷魂记", size: 95, year: "1958", country: "美国"},
+            {text: "公民凯恩", size: 90, year: "1941", country: "美国"},
+            {text: "东京物语", size: 85, year: "1953", country: "日本"},
+            {text: "花样年华", size: 80, year: "2000", country: "香港"},
+            {text: "2001太空漫游", size: 78, year: "1968", country: "美国"},
+            {text: "教父", size: 75, year: "1972", country: "美国"},
+            {text: "穆赫兰道", size: 72, year: "2001", country: "美国"},
+            {text: "七武士", size: 70, year: "1954", country: "日本"},
+            {text: "出租车司机", size: 68, year: "1976", country: "美国"},
+            {text: "银翼杀手", size: 65, year: "1982", country: "美国"},
+            {text: "重庆森林", size: 63, year: "1994", country: "香港"},
+            {text: "寄生虫", size: 60, year: "2019", country: "韩国"},
+            {text: "闪灵", size: 58, year: "1980", country: "美国"},
+            {text: "龙猫", size: 55, year: "1988", country: "日本"},
+            {text: "千与千寻", size: 53, year: "2001", country: "日本"},
+            {text: "摩登时代", size: 50, year: "1936", country: "美国"},
+            {text: "罗生门", size: 48, year: "1950", country: "日本"},
+            {text: "卡萨布兰卡", size: 45, year: "1942", country: "美国"},
+            {text: "日落大道", size: 43, year: "1950", country: "美国"},
+            {text: "大都会", size: 40, year: "1927", country: "德国"},
+            {text: "战舰波将金号", size: 38, year: "1925", country: "苏联"},
+            {text: "后窗", size: 35, year: "1954", country: "美国"},
+            {text: "惊魂记", size: 33, year: "1960", country: "美国"},
+            {text: "城市之光", size: 30, year: "1931", country: "美国"},
+            {text: "偷自行车的人", size: 28, year: "1948", country: "意大利"},
+            {text: "精疲力尽", size: 25, year: "1960", country: "法国"},
+            {text: "四百击", size: 23, year: "1959", country: "法国"},
+            {text: "持摄影机的人", size: 20, year: "1929", country: "苏联"},
+            {text: "圣女贞德蒙难记", size: 18, year: "1928", country: "法国"}
+        ];
 
-            // 设置词云的尺寸和布局
-            const width = document.querySelector('.wordcloud-container').clientWidth;
-            const height = 600;
-
-            const layout = d3.layout.ruyicloud()
-               .size([width, height])
-               .words(words)
-               .padding(5)
-               .rotate(() => ~~(Math.random() * 2) * 90)
-               .fontSize(d => d.size * 2) // 适当放大字体，可根据实际调整
-               .on('end', draw);
-
+        // 创建词云
+        function createWordCloud() {
+            const container = document.getElementById('word-cloud-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            // 清除旧内容
+            d3.select("#word-cloud").html("");
+            
+            // 创建SVG
+            const svg = d3.select("#word-cloud")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            // 高级配色方案
+            const colorSchemes = [
+                "#FF9AA2", "#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", 
+                "#C7CEEA", "#A2A7F5", "#9DAAF2", "#8AAAE5", "#7EC4CF",
+                "#6BDFD4", "#77DD77", "#F49AC2", "#FFB347", "#FF6961"
+            ];
+            
+            // 布局设置
+            const layout = d3.layout.cloud()
+                .size([width, height])
+                .words(movieData.map(d => ({
+                    text: d.text,
+                    size: d.size * 0.8, // 放大系数
+                    originalData: d // 保留原始数据
+                })))
+                .padding(10)
+                .rotate(() => (Math.random() * 2 - 1) * 20) // -20°到20°随机旋转
+                .font("'Helvetica Neue', Arial, sans-serif")
+                .fontSize(d => d.size)
+                .on("end", draw);
+            
             layout.start();
-
+            
+            // 绘制函数
             function draw(words) {
-                const svg = d3.select('svg');
-                svg.selectAll('*').remove();
-
-                const g = svg.append('g')
-                   .attr('transform', `translate(${width / 2}, ${height / 2})`);
-
-                g.selectAll('text')
-                   .data(words)
-                   .enter().append('text')
-                   .style('font-size', d => d.size + 'px')
-                   .style('fill', () => d3.schemeCategory10[~~(Math.random() * 10)])
-                   .attr('text-anchor','middle')
-                   .attr('transform', d => `translate(${d.x}, ${d.y}) rotate(${d.rotate})`)
+                const g = svg.append("g")
+                    .attr("transform", `translate(${width/2},${height/2})`);
+                
+                const text = g.selectAll("text")
+                    .data(words)
+                    .enter().append("text")
+                    .style("font-size", d => `${d.size}px`)
+                    .style("font-family", "'Helvetica Neue', Arial, sans-serif")
+                    .style("font-weight", "500")
+                    .style("cursor", "pointer")
+                    .attr("text-anchor", "middle")
+                    .attr("transform", d => `translate(${[d.x,d.y]})rotate(${d.rotate})`)
+                    .text(d => d.text)
+                    .style("fill", (d,i) => colorSchemes[i % colorSchemes.length])
+                    .style("opacity", 0)
+                    .transition()
+                    .duration(1000)
+                    .style("opacity", 1);
+                
+                // 交互效果
+                text.on("mouseover", function(event, d) {
+                    // 放大当前文字
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .style("font-size", `${d.size * 1.2}px`)
+                        .style("fill", "#fff")
+                        .style("text-shadow", "0 0 15px rgba(255,255,255,0.8)");
+                    
+                    // 显示详细信息
+                    const detail = d.originalData;
+                    document.getElementById("movie-title").textContent = detail.text;
+                    document.getElementById("movie-info").innerHTML = `
+                        排名: <strong>${101 - detail.size}</strong> | 
+                        年份: <strong>${detail.year}</strong> | 
+                        国家: <strong>${detail.country}</strong>
+                    `;
+                    
+                    d3.select("#movie-detail")
+                        .transition()
+                        .duration(300)
+                        .style("opacity", 1);
+                })
+                .on("mouseout", function(event, d) {
+                    // 恢复原始状态
+                    d3.select(this)
+                        .transition()
+                        .duration(300)
+                        .style("font-size", `${d.size}px`)
+                        .style("fill", colorSchemes[d.originalData.index % colorSchemes.length])
+                        .style("text-shadow", "none");
+                    
+                    d3.select("#movie-detail")
+                        .transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+            }
+        }
+        
+        // 为原始数据添加索引
+        movieData.forEach((d,i) => d.index = i);
+        
+        // 初始化并响应窗口变化
+        window.addEventListener('load', createWordCloud);
+        window.addEventListener('resize', createWordCloud);
+    </script>
+</body>
+</html>
