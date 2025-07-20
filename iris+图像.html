@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据可视化与图像处理</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ml-kmeans@4.0.0/dist/ml-kmeans.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            background: linear-gradient(to right, #ff8a00, #da1b60);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .card {
+            background: rgba(25, 25, 50, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card h2 i {
+            font-size: 1.5rem;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .canvas-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        canvas {
+            max-width: 100%;
+            border-radius: 8px;
+            background: #000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .color-bars {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .color-bar {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .color-bar:hover {
+            transform: scale(1.1);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .info-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>数据可视化与图像处理</h1>
+            <p class="subtitle">此应用结合了Iris数据集可视化、图像处理功能和图片色彩提取功能，使用D3.js和ml-kmeans库实现</p>
+        </header>
+        
+        <div class="dashboard">
+            <!-- Iris数据集可视化 -->
+            <div class="card">
+                <h2>📊 Iris数据集可视化</h2>
+                <p>展示Iris数据集的散点图分布和K-means聚类结果</p>
+                <div class="controls">
+                    <button id="showScatter">
+                        <span>显示散点图</span>
+                    </button>
+                    <button id="runKmeans">
+                        <span>运行K-means聚类</span>
+                    </button>
+                </div>
+                <div class="canvas-container">
+                    <div id="scatterPlot"></div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ff6b6b;"></div>
+                            <span>Iris-setosa</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #4ecdc4;"></div>
+                            <span>Iris-versicolor</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ffd166;"></div>
+                            <span>Iris-virginica</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图像处理 -->
+            <div class="card">
+                <h2>🖼️ 图像处理功能</h2>
+                <p>上传图片并应用不同的图像处理效果</p>
+                <div class="controls">
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    <button id="uploadBtn">
+                        <span>上传图片</span>
+                    </button>
+                    <button id="negativeBtn">
+                        <span>负片效果</span>
+                    </button>
+                    <button id="grayscaleBtn">
+                        <span>灰度化</span>
+                    </button>
+                    <button id="resetBtn">
+                        <span>重置</span>
+                    </button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="imageCanvas" width="400" height="300"></canvas>
+                </div>
+            </div>
+            
+            <!-- 图片色彩提取 -->
+            <div class="card">
+                <h2>🎨 图片色彩提取</h2>
+                <p>使用K-means算法提取图片中的主要颜色</p>
+                <div class="controls">
+                    <button id="extractBtn">
+                        <span>提取主色</span>
+                    </button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="extractCanvas" width="400" height="300"></canvas>
+                    <div class="color-bars" id="colorBars"></div>
+                </div>
+                <div class="info-panel">
+                    <p>K-means算法将图像中的颜色聚类为5个主要颜色，每个颜色块代表一个聚类中心。</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>数据可视化与图像处理应用 | 使用D3.js和ml-kmeans实现</p>
+        </footer>
+    </div>
+
+    <script>
+        // Iris数据
+        const irisData = [
+            {id:1, SepalLengthCm:5.1, SepalWidthCm:3.5, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:2, SepalLengthCm:4.9, SepalWidthCm:3.0, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:3, SepalLengthCm:4.7, SepalWidthCm:3.2, PetalLengthCm:1.3, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:4, SepalLengthCm:4.6, SepalWidthCm:3.1, PetalLengthCm:1.5, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:5, SepalLengthCm:5.0, SepalWidthCm:3.6, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:6, SepalLengthCm:5.4, SepalWidthCm:3.9, PetalLengthCm:1.7, PetalWidthCm:0.4, Species:"Iris-setosa"},
+            {id:7, SepalLengthCm:4.6, SepalWidthCm:3.4, PetalLengthCm:1.4, PetalWidthCm:0.3, Species:"Iris-setosa"},
+            {id:8, SepalLengthCm:5.0, SepalWidthCm:3.4, PetalLengthCm:1.5, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:9, SepalLengthCm:4.4, SepalWidthCm:2.9, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:10, SepalLengthCm:4.9, SepalWidthCm:3.1, PetalLengthCm:1.5, PetalWidthCm:0.1, Species:"Iris-setosa"},
+            {id:11, SepalLengthCm:5.4, SepalWidthCm:3.7, PetalLengthCm:1.5, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:12, SepalLengthCm:4.8, SepalWidthCm:3.4, PetalLengthCm:1.6, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:13, SepalLengthCm:4.8, SepalWidthCm:3.0, PetalLengthCm:1.4, PetalWidthCm:0.1, Species:"Iris-setosa"},
+            {id:14, SepalLengthCm:4.3, SepalWidthCm:3.0, PetalLengthCm:1.1, PetalWidthCm:0.1, Species:"Iris-setosa"},
+            {id:15, SepalLengthCm:5.8, SepalWidthCm:4.0, PetalLengthCm:1.2, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:16, SepalLengthCm:5.7, SepalWidthCm:4.4, PetalLengthCm:1.5, PetalWidthCm:0.4, Species:"Iris-setosa"},
+            {id:17, SepalLengthCm:5.4, SepalWidthCm:3.9, PetalLengthCm:1.3, PetalWidthCm:0.4, Species:"Iris-setosa"},
+            {id:18, SepalLengthCm:5.1, SepalWidthCm:3.5, PetalLengthCm:1.4, PetalWidthCm:0.3, Species:"Iris-setosa"},
+            {id:19, SepalLengthCm:5.7, SepalWidthCm:3.8, PetalLengthCm:1.7, PetalWidthCm:0.3, Species:"Iris-setosa"},
+            {id:20, SepalLengthCm:5.1, SepalWidthCm:3.8, PetalLengthCm:1.5, PetalWidthCm:0.3, Species:"Iris-setosa"},
+            {id:21, SepalLengthCm:5.4, SepalWidthCm:3.4, PetalLengthCm:1.7, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:22, SepalLengthCm:5.1, SepalWidthCm:3.7, PetalLengthCm:1.5, PetalWidthCm:0.4, Species:"Iris-setosa"},
+            {id:23, SepalLengthCm:4.6, SepalWidthCm:3.6, PetalLengthCm:1.0, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:24, SepalLengthCm:5.1, SepalWidthCm:3.3, PetalLengthCm:1.7, PetalWidthCm:0.5, Species:"Iris-setosa"},
+            {id:25, SepalLengthCm:4.8, SepalWidthCm:3.4, PetalLengthCm:1.9, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:26, SepalLengthCm:5.0, SepalWidthCm:3.0, PetalLengthCm:1.6, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:27, SepalLengthCm:5.0, SepalWidthCm:3.4, PetalLengthCm:1.6, PetalWidthCm:0.4, Species:"Iris-setosa"},
+            {id:28, SepalLengthCm:5.2, SepalWidthCm:3.5, PetalLengthCm:1.5, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:29, SepalLengthCm:5.2, SepalWidthCm:3.4, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:30, SepalLengthCm:4.7, SepalWidthCm:3.2, PetalLengthCm:1.6, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:31, SepalLengthCm:4.8, SepalWidthCm:3.1, PetalLengthCm:1.6, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:32, SepalLengthCm:5.4, SepalWidthCm:3.4, PetalLengthCm:1.5, PetalWidthCm:0.4, Species:"Iris-setosa"},
+            {id:33, SepalLengthCm:5.2, SepalWidthCm:4.1, PetalLengthCm:1.5, PetalWidthCm:0.1, Species:"Iris-setosa"},
+            {id:34, SepalLengthCm:5.5, SepalWidthCm:4.2, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:35, SepalLengthCm:4.9, SepalWidthCm:3.1, PetalLengthCm:1.5, PetalWidthCm:0.1, Species:"Iris-setosa"},
+            {id:36, SepalLengthCm:5.0, SepalWidthCm:3.2, PetalLengthCm:1.2, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:37, SepalLengthCm:5.5, SepalWidthCm:3.5, PetalLengthCm:1.3, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:38, SepalLengthCm:4.9, SepalWidthCm:3.1, PetalLengthCm:1.5, PetalWidthCm:0.1, Species:"Iris-setosa"},
+            {id:39, SepalLengthCm:4.4, SepalWidthCm:3.0, PetalLengthCm:1.3, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:40, SepalLengthCm:5.1, SepalWidthCm:3.4, PetalLengthCm:1.5, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:41, SepalLengthCm:5.0, SepalWidthCm:3.5, PetalLengthCm:1.3, PetalWidthCm:0.3, Species:"Iris-setosa"},
+            {id:42, SepalLengthCm:4.5, SepalWidthCm:2.3, PetalLengthCm:1.3, PetalWidthCm:0.3, Species:"Iris-setosa"},
+            {id:43, SepalLengthCm:4.4, SepalWidthCm:3.2, PetalLengthCm:1.3, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:44, SepalLengthCm:5.0, SepalWidthCm:3.5, PetalLengthCm:1.6, PetalWidthCm:0.6, Species:"Iris-setosa"},
+            {id:45, SepalLengthCm:5.1, SepalWidthCm:3.8, PetalLengthCm:1.9, PetalWidthCm:0.4, Species:"Iris-setosa"},
+            {id:46, SepalLengthCm:4.8, SepalWidthCm:3.0, PetalLengthCm:1.4, PetalWidthCm:0.3, Species:"Iris-setosa"},
+            {id:47, SepalLengthCm:5.1, SepalWidthCm:3.8, PetalLengthCm:1.6, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:48, SepalLengthCm:4.6, SepalWidthCm:3.2, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:49, SepalLengthCm:5.3, SepalWidthCm:3.7, PetalLengthCm:1.5, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:50, SepalLengthCm:5.0, SepalWidthCm:3.3, PetalLengthCm:1.4, PetalWidthCm:0.2, Species:"Iris-setosa"},
+            {id:51, SepalLengthCm:7.0, SepalWidthCm:3.2, PetalLengthCm:4.7, PetalWidthCm:1.4, Species:"Iris-versicolor"},
+            {id:52, SepalLengthCm:6.4, SepalWidthCm:3.2, PetalLengthCm:4.5, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:53, SepalLengthCm:6.9, SepalWidthCm:3.1, PetalLengthCm:4.9, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:54, SepalLengthCm:5.5, SepalWidthCm:2.3, PetalLengthCm:4.0, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:55, SepalLengthCm:6.5, SepalWidthCm:2.8, PetalLengthCm:4.6, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:56, SepalLengthCm:5.7, SepalWidthCm:2.8, PetalLengthCm:4.5, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:57, SepalLengthCm:6.3, SepalWidthCm:3.3, PetalLengthCm:4.7, PetalWidthCm:1.6, Species:"Iris-versicolor"},
+            {id:58, SepalLengthCm:4.9, SepalWidthCm:2.4, PetalLengthCm:3.3, PetalWidthCm:1.0, Species:"Iris-versicolor"},
+            {id:59, SepalLengthCm:6.6, SepalWidthCm:2.9, PetalLengthCm:4.6, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:60, SepalLengthCm:5.2, SepalWidthCm:2.7, PetalLengthCm:3.9, PetalWidthCm:1.4, Species:"Iris-versicolor"},
+            {id:61, SepalLengthCm:5.0, SepalWidthCm:2.0, PetalLengthCm:3.5, PetalWidthCm:1.0, Species:"Iris-versicolor"},
+            {id:62, SepalLengthCm:5.9, SepalWidthCm:3.0, PetalLengthCm:4.2, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:63, SepalLengthCm:6.0, SepalWidthCm:2.2, PetalLengthCm:4.0, PetalWidthCm:1.0, Species:"Iris-versicolor"},
+            {id:64, SepalLengthCm:6.1, SepalWidthCm:2.9, PetalLengthCm:4.7, PetalWidthCm:1.4, Species:"Iris-versicolor"},
+            {id:65, SepalLengthCm:5.6, SepalWidthCm:2.9, PetalLengthCm:3.6, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:66, SepalLengthCm:6.7, SepalWidthCm:3.1, PetalLengthCm:4.4, PetalWidthCm:1.4, Species:"Iris-versicolor"},
+            {id:67, SepalLengthCm:5.6, SepalWidthCm:3.0, PetalLengthCm:4.5, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:68, SepalLengthCm:5.8, SepalWidthCm:2.7, PetalLengthCm:4.1, PetalWidthCm:1.0, Species:"Iris-versicolor"},
+            {id:69, SepalLengthCm:6.2, SepalWidthCm:2.2, PetalLengthCm:4.5, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:70, SepalLengthCm:5.6, SepalWidthCm:2.5, PetalLengthCm:3.9, PetalWidthCm:1.1, Species:"Iris-versicolor"},
+            {id:71, SepalLengthCm:5.9, SepalWidthCm:3.2, PetalLengthCm:4.8, PetalWidthCm:1.8, Species:"Iris-versicolor"},
+            {id:72, SepalLengthCm:6.1, SepalWidthCm:2.8, PetalLengthCm:4.0, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:73, SepalLengthCm:6.3, SepalWidthCm:2.5, PetalLengthCm:4.9, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:74, SepalLengthCm:6.1, SepalWidthCm:2.8, PetalLengthCm:4.7, PetalWidthCm:1.2, Species:"Iris-versicolor"},
+            {id:75, SepalLengthCm:6.4, SepalWidthCm:2.9, PetalLengthCm:4.3, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:76, SepalLengthCm:6.6, SepalWidthCm:3.0, PetalLengthCm:4.4, PetalWidthCm:1.4, Species:"Iris-versicolor"},
+            {id:77, SepalLengthCm:6.8, SepalWidthCm:2.8, PetalLengthCm:4.8, PetalWidthCm:1.4, Species:"Iris-versicolor"},
+            {id:78, SepalLengthCm:6.7, SepalWidthCm:3.0, PetalLengthCm:5.0, PetalWidthCm:1.7, Species:"Iris-versicolor"},
+            {id:79, SepalLengthCm:6.0, SepalWidthCm:2.9, PetalLengthCm:4.5, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:80, SepalLengthCm:5.7, SepalWidthCm:2.6, PetalLengthCm:3.5, PetalWidthCm:1.0, Species:"Iris-versicolor"},
+            {id:81, SepalLengthCm:5.5, SepalWidthCm:2.4, PetalLengthCm:3.8, PetalWidthCm:1.1, Species:"Iris-versicolor"},
+            {id:82, SepalLengthCm:5.5, SepalWidthCm:2.4, PetalLengthCm:3.7, PetalWidthCm:1.0, Species:"Iris-versicolor"},
+            {id:83, SepalLengthCm:5.8, SepalWidthCm:2.7, PetalLengthCm:3.9, PetalWidthCm:1.2, Species:"Iris-versicolor"},
+            {id:84, SepalLengthCm:6.0, SepalWidthCm:2.7, PetalLengthCm:5.1, PetalWidthCm:1.6, Species:"Iris-versicolor"},
+            {id:85, SepalLengthCm:5.4, SepalWidthCm:3.0, PetalLengthCm:4.5, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:86, SepalLengthCm:6.0, SepalWidthCm:3.4, PetalLengthCm:4.5, PetalWidthCm:1.6, Species:"Iris-versicolor"},
+            {id:87, SepalLengthCm:6.7, SepalWidthCm:3.1, PetalLengthCm:4.7, PetalWidthCm:1.5, Species:"Iris-versicolor"},
+            {id:88, SepalLengthCm:6.3, SepalWidthCm:2.3, PetalLengthCm:4.4, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:89, SepalLengthCm:5.6, SepalWidthCm:3.0, PetalLengthCm:4.1, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:90, SepalLengthCm:5.5, SepalWidthCm:2.5, PetalLengthCm:4.0, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:91, SepalLengthCm:5.5, SepalWidthCm:2.6, PetalLengthCm:4.4, PetalWidthCm:1.2, Species:"Iris-versicolor"},
+            {id:92, SepalLengthCm:6.1, SepalWidthCm:3.0, PetalLengthCm:4.6, PetalWidthCm:1.4, Species:"Iris-versicolor"},
+            {id:93, SepalLengthCm:5.8, SepalWidthCm:2.6, PetalLengthCm:4.0, PetalWidthCm:1.2, Species:"Iris-versicolor"},
+            {id:94, SepalLengthCm:5.0, SepalWidthCm:2.3, PetalLengthCm:3.3, PetalWidthCm:1.0, Species:"Iris-versicolor"},
+            {id:95, SepalLengthCm:5.6, SepalWidthCm:2.7, PetalLengthCm:4.2, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:96, SepalLengthCm:5.7, SepalWidthCm:3.0, PetalLengthCm:4.2, PetalWidthCm:1.2, Species:"Iris-versicolor"},
+            {id:97, SepalLengthCm:5.7, SepalWidthCm:2.9, PetalLengthCm:4.2, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:98, SepalLengthCm:6.2, SepalWidthCm:2.9, PetalLengthCm:4.3, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:99, SepalLengthCm:5.1, SepalWidthCm:2.5, PetalLengthCm:3.0, PetalWidthCm:1.1, Species:"Iris-versicolor"},
+            {id:100, SepalLengthCm:5.7, SepalWidthCm:2.8, PetalLengthCm:4.1, PetalWidthCm:1.3, Species:"Iris-versicolor"},
+            {id:101, SepalLengthCm:6.3, SepalWidthCm:3.3, PetalLengthCm:6.0, PetalWidthCm:2.5, Species:"Iris-virginica"},
+            {id:102, SepalLengthCm:5.8, SepalWidthCm:2.7, PetalLengthCm:5.1, PetalWidthCm:1.9, Species:"Iris-virginica"},
+            {id:103, SepalLengthCm:7.1, SepalWidthCm:3.0, PetalLengthCm:5.9, PetalWidthCm:2.1, Species:"Iris-virginica"},
+            {id:104, SepalLengthCm:6.3, SepalWidthCm:2.9, PetalLengthCm:5.6, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:105, SepalLengthCm:6.5, SepalWidthCm:3.0, PetalLengthCm:5.8, PetalWidthCm:2.2, Species:"Iris-virginica"},
+            {id:106, SepalLengthCm:7.6, SepalWidthCm:3.0, PetalLengthCm:6.6, PetalWidthCm:2.1, Species:"Iris-virginica"},
+            {id:107, SepalLengthCm:4.9, SepalWidthCm:2.5, PetalLengthCm:4.5, PetalWidthCm:1.7, Species:"Iris-virginica"},
+            {id:108, SepalLengthCm:7.3, SepalWidthCm:2.9, PetalLengthCm:6.3, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:109, SepalLengthCm:6.7, SepalWidthCm:2.5, PetalLengthCm:5.8, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:110, SepalLengthCm:7.2, SepalWidthCm:3.6, PetalLengthCm:6.1, PetalWidthCm:2.5, Species:"Iris-virginica"},
+            {id:111, SepalLengthCm:6.5, SepalWidthCm:3.2, PetalLengthCm:5.1, PetalWidthCm:2.0, Species:"Iris-virginica"},
+            {id:112, SepalLengthCm:6.4, SepalWidthCm:2.7, PetalLengthCm:5.3, PetalWidthCm:1.9, Species:"Iris-virginica"},
+            {id:113, SepalLengthCm:6.8, SepalWidthCm:3.0, PetalLengthCm:5.5, PetalWidthCm:2.1, Species:"Iris-virginica"},
+            {id:114, SepalLengthCm:5.7, SepalWidthCm:2.5, PetalLengthCm:5.0, PetalWidthCm:2.0, Species:"Iris-virginica"},
+            {id:115, SepalLengthCm:5.8, SepalWidthCm:2.8, PetalLengthCm:5.1, PetalWidthCm:2.4, Species:"Iris-virginica"},
+            {id:116, SepalLengthCm:6.4, SepalWidthCm:3.2, PetalLengthCm:5.3, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:117, SepalLengthCm:6.5, SepalWidthCm:3.0, PetalLengthCm:5.5, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:118, SepalLengthCm:7.7, SepalWidthCm:3.8, PetalLengthCm:6.7, PetalWidthCm:2.2, Species:"Iris-virginica"},
+            {id:119, SepalLengthCm:7.7, SepalWidthCm:2.6, PetalLengthCm:6.9, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:120, SepalLengthCm:6.0, SepalWidthCm:2.2, PetalLengthCm:5.0, PetalWidthCm:1.5, Species:"Iris-virginica"},
+            {id:121, SepalLengthCm:6.9, SepalWidthCm:3.2, PetalLengthCm:5.7, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:122, SepalLengthCm:5.6, SepalWidthCm:2.8, PetalLengthCm:4.9, PetalWidthCm:2.0, Species:"Iris-virginica"},
+            {id:123, SepalLengthCm:7.7, SepalWidthCm:2.8, PetalLengthCm:6.7, PetalWidthCm:2.0, Species:"Iris-virginica"},
+            {id:124, SepalLengthCm:6.3, SepalWidthCm:2.7, PetalLengthCm:4.9, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:125, SepalLengthCm:6.7, SepalWidthCm:3.3, PetalLengthCm:5.7, PetalWidthCm:2.1, Species:"Iris-virginica"},
+            {id:126, SepalLengthCm:7.2, SepalWidthCm:3.2, PetalLengthCm:6.0, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:127, SepalLengthCm:6.2, SepalWidthCm:2.8, PetalLengthCm:4.8, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:128, SepalLengthCm:6.1, SepalWidthCm:3.0, PetalLengthCm:4.9, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:129, SepalLengthCm:6.4, SepalWidthCm:2.8, PetalLengthCm:5.6, PetalWidthCm:2.1, Species:"Iris-virginica"},
+            {id:130, SepalLengthCm:7.2, SepalWidthCm:3.0, PetalLengthCm:5.8, PetalWidthCm:1.6, Species:"Iris-virginica"},
+            {id:131, SepalLengthCm:7.4, SepalWidthCm:2.8, PetalLengthCm:6.1, PetalWidthCm:1.9, Species:"Iris-virginica"},
+            {id:132, SepalLengthCm:7.9, SepalWidthCm:3.8, PetalLengthCm:6.4, PetalWidthCm:2.0, Species:"Iris-virginica"},
+            {id:133, SepalLengthCm:6.4, SepalWidthCm:2.8, PetalLengthCm:5.6, PetalWidthCm:2.2, Species:"Iris-virginica"},
+            {id:134, SepalLengthCm:6.3, SepalWidthCm:2.8, PetalLengthCm:5.1, PetalWidthCm:1.5, Species:"Iris-virginica"},
+            {id:135, SepalLengthCm:6.1, SepalWidthCm:2.6, PetalLengthCm:5.6, PetalWidthCm:1.4, Species:"Iris-virginica"},
+            {id:136, SepalLengthCm:7.7, SepalWidthCm:3.0, PetalLengthCm:6.1, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:137, SepalLengthCm:6.3, SepalWidthCm:3.4, PetalLengthCm:5.6, PetalWidthCm:2.4, Species:"Iris-virginica"},
+            {id:138, SepalLengthCm:6.4, SepalWidthCm:3.1, PetalLengthCm:5.5, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:139, SepalLengthCm:6.0, SepalWidthCm:3.0, PetalLengthCm:4.8, PetalWidthCm:1.8, Species:"Iris-virginica"},
+            {id:140, SepalLengthCm:6.9, SepalWidthCm:3.1, PetalLengthCm:5.4, PetalWidthCm:2.1, Species:"Iris-virginica"},
+            {id:141, SepalLengthCm:6.7, SepalWidthCm:3.1, PetalLengthCm:5.6, PetalWidthCm:2.4, Species:"Iris-virginica"},
+            {id:142, SepalLengthCm:6.9, SepalWidthCm:3.1, PetalLengthCm:5.1, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:143, SepalLengthCm:5.8, SepalWidthCm:2.7, PetalLengthCm:5.1, PetalWidthCm:1.9, Species:"Iris-virginica"},
+            {id:144, SepalLengthCm:6.8, SepalWidthCm:3.2, PetalLengthCm:5.9, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:145, SepalLengthCm:6.7, SepalWidthCm:3.3, PetalLengthCm:5.7, PetalWidthCm:2.5, Species:"Iris-virginica"},
+            {id:146, SepalLengthCm:6.7, SepalWidthCm:3.0, PetalLengthCm:5.2, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:147, SepalLengthCm:6.3, SepalWidthCm:2.5, PetalLengthCm:5.0, PetalWidthCm:1.9, Species:"Iris-virginica"},
+            {id:148, SepalLengthCm:6.5, SepalWidthCm:3.0, PetalLengthCm:5.2, PetalWidthCm:2.0, Species:"Iris-virginica"},
+            {id:149, SepalLengthCm:6.2, SepalWidthCm:3.4, PetalLengthCm:5.4, PetalWidthCm:2.3, Species:"Iris-virginica"},
+            {id:150, SepalLengthCm:5.9, SepalWidthCm:3.0, PetalLengthCm:5.1, PetalWidthCm:1.8, Species:"Iris-virginica"}
+        ];
+        
+        // 物种颜色映射
+        const speciesColor = {
+            "Iris-setosa": "#ff6b6b",
+            "Iris-versicolor": "#4ecdc4",
+            "Iris-virginica": "#ffd166"
+        };
+        
+        // 创建散点图
+        function createScatterPlot() {
+            const margin = {top: 30, right: 30, bottom: 60, left: 60};
+            const width = 400 - margin.left - margin.right;
+            const height = 300 - margin.top - margin.bottom;
+            
+            d3.select("#scatterPlot").html("");
+            
+            const svg = d3.select("#scatterPlot")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            // X轴 - 花萼长度
+            const x = d3.scaleLinear()
+                .domain([4, d3.max(irisData, d => d.SepalLengthCm) + 1])
+                .range([0, width]);
+            
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .append("text")
+                .attr("class", "axis-label")
+                .attr("x", width / 2)
+                .attr("y", 40)
+                .attr("fill", "#fff")
+                .text("花萼长度 (cm)");
+            
+            // Y轴 - 花瓣长度
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(irisData, d => d.PetalLengthCm) + 1])
+                .range([height, 0]);
+            
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("class", "axis-label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -40)
+                .attr("x", -height / 2)
+                .attr("fill", "#fff")
+                .text("花瓣长度 (cm)");
+            
+            // 添加数据点
+            svg.selectAll(".dot")
+                .data(irisData)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => x(d.SepalLengthCm))
+                .attr("cy", d => y(d.PetalLengthCm))
+                .attr("r", 5)
+                .attr("fill", d => speciesColor[d.Species])
+                .attr("opacity", 0.8);
+        }
+        
+        // 运行K-means聚类
+        function runKmeans() {
+            // 准备K-means数据
+            const kmeansData = irisData.map(d => [d.SepalLengthCm, d.PetalLengthCm]);
+            
+            // 运行K-means聚类（3个中心）
+            const result = ml.KMeans(kmeansData, 3);
+            
+            // 获取聚类中心
+            const centroids = result.centroids;
+            
+            // 在散点图上显示聚类中心
+            const svg = d3.select("#scatterPlot svg g");
+            
+            svg.selectAll(".centroid").remove();
+            
+            svg.selectAll(".centroid")
+                .data(centroids)
+                .enter().append("circle")
+                .attr("class", "centroid")
+                .attr("cx", d => d[0] * 40 + 30) // 简单映射
+                .attr("cy", d => 250 - d[1] * 30) // 简单映射
+                .attr("r", 8)
+                .attr("fill", "none")
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 3)
+                .attr("opacity", 0.9);
+        }
+        
+        // 图片处理功能
+        const imageCanvas = document.getElementById("imageCanvas");
+        const imageCtx = imageCanvas.getContext("2d");
+        let originalImageData = null;
+        
+        // 上传图片
+        document.getElementById("uploadBtn").addEventListener("click", () => {
+            document.getElementById("imageUpload").click();
+        });
+        
+        document.getElementById("imageUpload").addEventListener("change", function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // 调整图片大小以适应画布
+                        const scale = Math.min(imageCanvas.width / img.width, imageCanvas.height / img.height);
+                        const newWidth = img.width * scale;
+                        const newHeight = img.height * scale;
+                        
+                        imageCtx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+                        imageCtx.drawImage(img, 0, 0, newWidth, newHeight);
+                        
+                        // 保存原始图像数据
+                        originalImageData = imageCtx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        // 负片效果
+        document.getElementById("negativeBtn").addEventListener("click", function() {
+            if (!originalImageData) return;
+            
+            const imageData = imageCtx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = 255 - data[i];       // 红色
+                data[i + 1] = 255 - data[i + 1]; // 绿色
+                data[i + 2] = 255 - data[i + 2]; // 蓝色
+            }
+            
+            imageCtx.putImageData(imageData, 0, 0);
+        });
+        
+        // 灰度化
+        document.getElementById("grayscaleBtn").addEventListener("click", function() {
+            if (!originalImageData) return;
+            
+            const imageData = imageCtx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = avg;       // 红色
+                data[i + 1] = avg;   // 绿色
+                data[i + 2] = avg;   // 蓝色
+            }
+            
+            imageCtx.putImageData(imageData, 0, 0);
+        });
+        
+        // 重置图片
+        document.getElementById("resetBtn").addEventListener("click", function() {
+            if (originalImageData) {
+                imageCtx.putImageData(originalImageData, 0, 0);
+            }
+        });
+        
+        // 图片色彩提取
+        const extractCanvas = document.getElementById("extractCanvas");
+        const extractCtx = extractCanvas.getContext("2d");
+        
+        // 使用默认图片
+        const defaultImg = new Image();
+        defaultImg.crossOrigin = "Anonymous";
+        defaultImg.src = "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
+        defaultImg.onload = function() {
+            const scale = Math.min(extractCanvas.width / defaultImg.width, extractCanvas.height / defaultImg.height);
+            const newWidth = defaultImg.width * scale;
+            const newHeight = defaultImg.height * scale;
+            
+            extractCtx.clearRect(0, 0, extractCanvas.width, extractCanvas.height);
+            extractCtx.drawImage(defaultImg, 0, 0, newWidth, newHeight);
+        };
+        
+        // 提取主色
+        document.getElementById("extractBtn").addEventListener("click", function() {
+            const imageData = extractCtx.getImageData(0, 0, extractCanvas.width, extractCanvas.height);
+            const data = imageData.data;
+            
+            // 准备K-means数据 (每4个值代表一个像素的RGBA)
+            const pixelData = [];
+            for (let i = 0; i < data.length; i += 4) {
+                // 只取RGB值，忽略Alpha
+                pixelData.push([data[i], data[i + 1], data[i + 2]]);
+            }
+            
+            // 运行K-means聚类 (5个主色)
+            const k = 5;
+            const result = ml.KMeans(pixelData, k, { initialization: 'random' });
+            
+            // 显示主色
+            displayMainColors(result.centroids);
+        });
+        
+        // 显示主色
+        function displayMainColors(centroids) {
+            const colorBars = document.getElementById("colorBars");
+            colorBars.innerHTML = "";
+            
+            centroids.forEach(centroid => {
+                const r = Math.round(centroid.centroid[0]);
+                const g = Math.round(centroid.centroid[1]);
+                const b = Math.round(centroid.centroid[2]);
+                
+                const colorBar = document.createElement("div");
+                colorBar.className = "color-bar";
+                colorBar.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                colorBar.title = `RGB: ${r}, ${g}, ${b}`;
+                
+                colorBars.appendChild(colorBar);
+            });
+        }
+        
+        // 初始化页面
+        document.addEventListener("DOMContentLoaded", function() {
+            // 默认显示Iris散点图
+            createScatterPlot();
+            
+            // 按钮事件
+            document.getElementById("showScatter").addEventListener("click", createScatterPlot);
+            document.getElementById("runKmeans").addEventListener("click", runKmeans);
+        });
+    </script>
+</body>
+</html>
