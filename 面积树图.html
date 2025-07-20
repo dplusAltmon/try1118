@@ -50,10 +50,10 @@
         }
         
         .charts-container {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 30px;
-            justify-content: center;
+            margin-bottom: 30px;
         }
         
         .chart {
@@ -61,9 +61,7 @@
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-            width: 100%;
-            max-width: 800px;
-            min-height: 600px;
+            min-height: 500px;
             display: flex;
             flex-direction: column;
         }
@@ -71,7 +69,7 @@
         .chart-title {
             text-align: center;
             margin-bottom: 20px;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: #ffd700;
         }
         
@@ -83,94 +81,102 @@
         }
         
         .description {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 10px;
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            font-size: 0.95rem;
-            line-height: 1.6;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
         
         .tooltip {
             position: absolute;
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: rgba(0, 0, 0, 0.85);
-            border-radius: 6px;
+            border-radius: 5px;
             pointer-events: none;
-            font-size: 14px;
+            font-size: 13px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-            max-width: 300px;
+            max-width: 250px;
             z-index: 10;
         }
         
         .tooltip h3 {
-            margin: 5px 0;
+            margin: 3px 0;
             color: #ffd700;
+            font-size: 14px;
         }
         
         .tooltip p {
-            margin: 3px 0;
+            margin: 2px 0;
+            font-size: 12px;
         }
         
         .legend {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.8rem;
         }
         
         .legend-item {
             display: flex;
             align-items: center;
-            font-size: 0.85rem;
         }
         
         .legend-color {
-            width: 16px;
-            height: 16px;
-            margin-right: 5px;
-            border-radius: 3px;
+            width: 12px;
+            height: 12px;
+            margin-right: 4px;
+            border-radius: 2px;
         }
         
         .signature {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 20px;
             padding-top: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: rgba(255, 255, 255, 0.7);
         }
         
         .controls {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
         
         .control-btn {
             background: rgba(255, 215, 0, 0.2);
             color: white;
             border: 1px solid rgba(255, 215, 0, 0.4);
-            border-radius: 20px;
-            padding: 8px 15px;
+            border-radius: 15px;
+            padding: 6px 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
         }
         
         .control-btn:hover {
             background: rgba(255, 215, 0, 0.3);
         }
         
+        rect {
+            stroke: #fff;
+            stroke-width: 1px;
+        }
+        
         @media (max-width: 768px) {
             .charts-container {
-                flex-direction: column;
-                align-items: center;
+                grid-template-columns: 1fr;
             }
             
             .chart {
-                max-width: 100%;
+                min-height: 400px;
             }
         }
     </style>
@@ -179,26 +185,38 @@
     <div class="container">
         <header>
             <h1>Flare 数据层次结构可视化</h1>
-            <p class="subtitle">探索Flare框架的层次结构数据，通过旭日图和泡泡图两种方式展示模块之间的关系与大小</p>
+            <p class="subtitle">三种可视化方式展示Flare框架的层次结构数据：面积树图、旭日图和泡泡图</p>
         </header>
         
         <div class="controls">
+            <button class="control-btn" onclick="resetZoom('treemap')">重置面积树图</button>
             <button class="control-btn" onclick="resetZoom('sunburst')">重置旭日图</button>
             <button class="control-btn" onclick="resetZoom('bubble')">重置泡泡图</button>
         </div>
         
         <div class="charts-container">
             <div class="chart">
+                <h2 class="chart-title">面积树图 (Treemap)</h2>
+                <div class="chart-wrapper" id="treemap-chart"></div>
+                <div class="description">
+                    <p>面积树图使用嵌套矩形表示层次结构，矩形面积与节点值成正比，颜色表示不同类别。</p>
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-color" style="background: #4e79a7;"></div>分析模块</div>
+                        <div class="legend-item"><div class="legend-color" style="background: #f28e2b;"></div>动画模块</div>
+                        <div class="legend-item"><div class="legend-color" style="background: #e15759;"></div>数据模块</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart">
                 <h2 class="chart-title">旭日图 (Sunburst)</h2>
                 <div class="chart-wrapper" id="sunburst-chart"></div>
                 <div class="description">
                     <p>旭日图以放射状布局展示层次结构数据，每个环代表一个层级，角度大小表示节点值。</p>
                     <div class="legend">
-                        <div class="legend-item"><div class="legend-color" style="background: #4e79a7;"></div>分析模块</div>
-                        <div class="legend-item"><div class="legend-color" style="background: #f28e2b;"></div>动画模块</div>
-                        <div class="legend-item"><div class="legend-color" style="background: #e15759;"></div>数据模块</div>
                         <div class="legend-item"><div class="legend-color" style="background: #76b7b2;"></div>显示模块</div>
                         <div class="legend-item"><div class="legend-color" style="background: #59a14f;"></div>物理模块</div>
+                        <div class="legend-item"><div class="legend-color" style="background: #edc948;"></div>查询模块</div>
                     </div>
                 </div>
             </div>
@@ -209,7 +227,6 @@
                 <div class="description">
                     <p>泡泡图使用嵌套圆形表示层次结构，圆形大小与节点值成正比，颜色表示不同类别。</p>
                     <div class="legend">
-                        <div class="legend-item"><div class="legend-color" style="background: #edc948;"></div>查询模块</div>
                         <div class="legend-item"><div class="legend-color" style="background: #b07aa1;"></div>缩放模块</div>
                         <div class="legend-item"><div class="legend-color" style="background: #ff9da7;"></div>工具模块</div>
                         <div class="legend-item"><div class="legend-color" style="background: #9c755f;"></div>可视化模块</div>
@@ -219,13 +236,18 @@
         </div>
         
         <div class="signature">
-            <p>数据可视化项目 | Flare框架分析 | 基于D3.js实现 | 设计原则: Overview first, zoom and filter, details on demand</p>
+            <p>数据可视化作业 | 22计传张颖惠 | Flare框架分析 | 基于D3.js实现</p>
+            <p>设计原则: Overview first, zoom and filter, details on demand</p>
         </div>
     </div>
 
     <script>
         // 定义颜色方案
         const colorSchemes = {
+            treemap: d3.scaleOrdinal()
+                .domain(["analytics", "animate", "data", "display", "physics", "query", "scale", "util", "vis"])
+                .range(["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f"]),
+            
             sunburst: d3.scaleOrdinal()
                 .domain(["analytics", "animate", "data", "display", "physics", "query", "scale", "util", "vis"])
                 .range(["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f"]),
@@ -243,6 +265,7 @@
 
         // 加载数据并创建图表
         d3.json("flare.json").then(data => {
+            createTreemap(data);
             createSunburst(data);
             createBubbleChart(data);
         }).catch(error => {
@@ -250,10 +273,83 @@
             alert("无法加载数据，请确保flare.json文件存在");
         });
 
+        // 创建面积树图
+        function createTreemap(data) {
+            const width = 400;
+            const height = 400;
+            
+            // 清除旧图表
+            d3.select("#treemap-chart").selectAll("*").remove();
+            
+            const svg = d3.select("#treemap-chart")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            // 创建层次结构
+            const root = d3.hierarchy(data)
+                .sum(d => d.value ? d.value : 0)
+                .sort((a, b) => b.value - a.value);
+            
+            // 创建树图布局
+            const treemap = d3.treemap()
+                .size([width, height])
+                .padding(1)
+                .round(true);
+            
+            treemap(root);
+            
+            // 绘制矩形
+            const cell = svg.selectAll("g")
+                .data(root.descendants())
+                .enter()
+                .append("g")
+                .attr("transform", d => `translate(${d.x0},${d.y0})`);
+            
+            cell.append("rect")
+                .attr("width", d => d.x1 - d.x0)
+                .attr("height", d => d.y1 - d.y0)
+                .attr("fill", d => colorSchemes.treemap(d.parent ? d.parent.data.name : d.data.name))
+                .attr("fill-opacity", 0.8)
+                .on("mouseover", function(event, d) {
+                    if (d.depth === 0) return;
+                    
+                    tooltip.transition().duration(200).style("opacity", 0.9);
+                    tooltip.html(`
+                        <h3>${d.data.name}</h3>
+                        <p>路径: ${getAncestors(d).reverse().map(d => d.data.name).join(" > ")}</p>
+                        <p>值: ${d.value}</p>
+                        <p>面积: ${Math.round((d.x1 - d.x0) * (d.y1 - d.y0))} px²</p>
+                    `)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+                    
+                    d3.select(this)
+                        .attr("stroke-width", 2)
+                        .attr("fill-opacity", 1);
+                })
+                .on("mouseout", function() {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                    d3.select(this)
+                        .attr("stroke-width", 1)
+                        .attr("fill-opacity", 0.8);
+                });
+            
+            // 添加文本标签
+            cell.filter(d => (d.x1 - d.x0) > 40 && (d.y1 - d.y0) > 20 && d.depth > 0)
+                .append("text")
+                .attr("x", 5)
+                .attr("y", 15)
+                .attr("font-size", d => Math.min(12, (d.x1 - d.x0) / 8))
+                .text(d => d.data.name)
+                .attr("fill", "#fff")
+                .attr("pointer-events", "none");
+        }
+
         // 创建旭日图
         function createSunburst(data) {
-            const width = 600;
-            const height = 500;
+            const width = 400;
+            const height = 400;
             const radius = Math.min(width, height) / 2;
             
             // 清除旧图表
@@ -320,7 +416,7 @@
                     event.stopPropagation();
                 });
             
-            // 添加文本标签（仅显示足够大的节点）
+            // 添加文本标签
             svg.selectAll("text")
                 .data(root.descendants().filter(d => (d.x1 - d.x0) > 0.1 && d.depth > 0))
                 .enter()
@@ -333,17 +429,13 @@
                 })
                 .attr("dy", "0.35em")
                 .attr("text-anchor", "middle")
-                .attr("font-size", d => Math.min(12, (d.x1 - d.x0) * radius / 8) + "px")
+                .attr("font-size", d => Math.min(10, (d.x1 - d.x0) * radius / 8) + "px")
                 .text(d => d.data.name)
                 .attr("fill", "#fff")
                 .attr("pointer-events", "none");
             
-            // 存储root用于缩放
-            window.sunburstRoot = root;
-            
             // 缩放函数
             function zoomSunburst(d) {
-                // 计算新的比例和位置
                 const xd = d3.interpolate(0, d.x1 - d.x0);
                 const yd = d3.interpolate(0, d.y1 - d.y0);
                 const yr = d3.interpolate(0, radius);
@@ -360,8 +452,8 @@
         
         // 创建泡泡图
         function createBubbleChart(data) {
-            const width = 600;
-            const height = 500;
+            const width = 400;
+            const height = 400;
             
             // 清除旧图表
             d3.select("#bubble-chart").selectAll("*").remove();
@@ -429,24 +521,20 @@
             
             // 添加文本标签
             svg.selectAll("text")
-                .data(root.descendants().filter(d => d.depth > 0 && d.r > 20))
+                .data(root.descendants().filter(d => d.depth > 0 && d.r > 15))
                 .enter()
                 .append("text")
                 .attr("x", d => d.x)
                 .attr("y", d => d.y)
                 .attr("text-anchor", "middle")
                 .attr("dy", "0.35em")
-                .attr("font-size", d => Math.min(12, d.r / 4))
+                .attr("font-size", d => Math.min(10, d.r / 4))
                 .text(d => d.data.name)
                 .attr("fill", "#fff")
                 .attr("pointer-events", "none");
             
-            // 存储root用于缩放
-            window.bubbleRoot = root;
-            
             // 缩放函数
             function zoomBubble(d) {
-                // 计算新的比例和位置
                 const k = width / (d.r * 2);
                 const x = width / 2 - d.x * k;
                 const y = height / 2 - d.y * k;
@@ -470,16 +558,18 @@
         
         // 重置缩放
         window.resetZoom = function(chartType) {
-            if (chartType === 'sunburst') {
+            if (chartType === 'treemap') {
+                // 面积树图不需要特殊重置
+            } else if (chartType === 'sunburst') {
                 d3.select("#sunburst-chart svg g")
                     .transition()
                     .duration(750)
-                    .attr("transform", `translate(${600/2},${500/2})`);
+                    .attr("transform", `translate(${400/2},${400/2})`);
             } else if (chartType === 'bubble') {
                 d3.select("#bubble-chart svg g")
                     .transition()
                     .duration(750)
-                    .attr("transform", `translate(${600/2},${500/2})`);
+                    .attr("transform", `translate(${400/2},${400/2})`);
             }
         }
     </script>
