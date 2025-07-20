@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京市行政区划可视化</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        .title-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .main-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .sub-title {
+            font-size: 16px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .map-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .province {
+            stroke: #fff;
+            stroke-width: 1.5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .province:hover {
+            stroke: #ff7d00;
+            stroke-width: 2px;
+        }
+        
+        .district-label {
+            font-size: 12px;
+            fill: #333;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+        
+        .tooltip {
+            position: absolute;
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+        
+        .legend {
+            margin: 20px auto;
+            text-align: center;
+            max-width: 800px;
+        }
+        
+        .legend-title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin: 0 10px;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            display: inline-block;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+        }
+        
+        .signature {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-container">
+        <h1 class="main-title">北京市行政区划地图可视化</h1>
+        <h3 class="sub-title">基于真实GeoJSON数据的区域分布展示</h3>
+    </div>
+    
+    <div class="map-container" id="map"></div>
+    <div class="tooltip" id="tooltip"></div>
+    
+    <div class="legend">
+        <div class="legend-title">区域颜色标识</div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #a6cee3;"></div>
+            <span>城区</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #1f78b4;"></div>
+            <span>近郊区</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #b2df8a;"></div>
+            <span>远郊区</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #33a02c;"></div>
+            <span>县</span>
+        </div>
+    </div>
+    
+    <div class="signature">
+        数据来源：北京市地理信息公共服务平台 |  22计传张颖惠制作
+    </div>
+
+    <script>
+        // 设置地图尺寸
+        const width = window.innerWidth * 0.9;
+        const height = window.innerHeight * 0.7;
+        
+        // 创建SVG容器
+        const svg = d3.select("#map")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+        
+        // 定义投影（聚焦北京）
+        const projection = d3.geoMercator()
+            .center([116.3956, 39.93])  // 北京中心坐标
+            .scale(12000)               // 放大比例
+            .translate([width / 2, height / 2]);
+        
+        // 创建路径生成器
+        const geoPath = d3.geoPath().projection(projection);
+        
+        // 自定义颜色方案（按区域类型分类）
+        const getColor = (name) => {
+            // 城区
+            const urban = ["东城区", "西城区", "朝阳区", "海淀区", "丰台区", "石景山区"];
+            // 近郊区
+            const suburban = ["通州区", "顺义区", "房山区", "大兴区", "昌平区"];
+            // 远郊区
+            const outer = ["门头沟区", "平谷区", "怀柔区", "密云区", "延庆区"];
+            
+            if (urban.includes(name)) return "#a6cee3";
+            if (suburban.includes(name)) return "#1f78b4";
+            if (outer.includes(name)) return "#b2df8a";
+            return "#33a02c";  // 县
+        };
+        
+        // 加载并绘制地图数据
+        d3.json("beijing.geojson").then(data => {
+            console.log("地图数据加载完成：", data);
+            
+            // 绘制行政区
+            const districts = svg.append("g")
+                .selectAll("path")
+                .data(data.features)
+                .enter()
+                .append("path")
+                .attr("class", "province")
+                .attr("d", geoPath)
+                .attr("fill", d => {
+                    // 尝试从GeoJSON中获取区域名称，适配不同格式的GeoJSON
+                    const name = d.properties.name || d.properties.NAME || d.properties.district;
+                    return getColor(name);
+                })
+                .on("mouseover", (event, d) => {
+                    // 鼠标悬停效果
+                    d3.select(event.currentTarget)
+                        .attr("fill", "#ffd700");
+                    
+                    // 从GeoJSON中获取区域属性
+                    const props = d.properties;
+                    
+                    // 显示tooltip，尝试从不同属性名获取数据
+                    const tooltip = d3.select("#tooltip");
+                    tooltip.html(`
+                        <div><strong>${props.name || props.NAME || props.district || "未知区域"}</strong></div>
+                        <div>面积：${props.area || props.AREA || "未知"} km²</div>
+                        <div>人口：${props.population || props.POPULATION || "未知"} 万</div>
+                        <div>GDP：${props.gdp || props.GDP || "未知"} 亿元</div>
+                    `)
+                    .style("opacity", 1)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+                })
+                .on("mouseout", (event, d) => {
+                    // 恢复原色
+                    const name = d.properties.name || d.properties.NAME || d.properties.district;
+                    d3.select(event.currentTarget)
+                        .attr("fill", getColor(name));
+                    
+                    // 隐藏tooltip
+                    d3.select("#tooltip").style("opacity", 0);
+                });
+            
+            // 添加区域标签
+            svg.append("g")
+                .selectAll("text")
+                .data(data.features)
+                .enter()
+                .append("text")
+                .attr("class", "district-label")
+                .attr("transform", d => {
+                    const center = geoPath.centroid(d);  // 计算区域中心点
+                    return `translate(${center[0]}, ${center[1]})`;
+                })
+                .text(d => d.properties.name || d.properties.NAME || d.properties.district || "")
+                .attr("dy", "0.3em");  // 垂直居中
+        }).catch(error => {
+            console.error("数据加载失败：", error);
+            d3.select("#map").append("div")
+                .style("padding", "20px")
+                .style("color", "red")
+                .text("地图数据加载失败，请确保beijing.geojson文件正确且在同一目录下");
+        });
+    </script>
+</body>
+</html>
